@@ -26,7 +26,6 @@ export const Layout: React.FC = () => {
     advanceList,
     deductionList,
     payoutList,
-    password: currentPassword,
     changePassword,
     logout
   } = useStore();
@@ -39,14 +38,10 @@ export const Layout: React.FC = () => {
   const [changePassError, setChangePassError] = useState('');
   const [changePassSuccess, setChangePassSuccess] = useState('');
 
-  const handleChangePasswordSubmit = (e: React.FormEvent) => {
+  const handleChangePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!oldPassInput || !newPassInput || !confirmPassInput) {
       setChangePassError('Please fill in all fields.');
-      return;
-    }
-    if (oldPassInput !== currentPassword) {
-      setChangePassError('Incorrect old password.');
       return;
     }
     if (newPassInput.length < 4) {
@@ -58,7 +53,13 @@ export const Layout: React.FC = () => {
       return;
     }
 
-    changePassword(newPassInput);
+    try {
+      await changePassword(oldPassInput, newPassInput);
+    } catch (error) {
+      setChangePassError(error instanceof Error ? error.message : 'Failed to change password.');
+      return;
+    }
+
     setChangePassError('');
     setChangePassSuccess('Password changed successfully.');
     setOldPassInput('');

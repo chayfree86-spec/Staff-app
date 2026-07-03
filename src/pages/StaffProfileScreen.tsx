@@ -603,17 +603,7 @@ export const StaffProfileScreen: React.FC = () => {
     setIsEditTxOpen(false);
   };
 
-  const getStaffRole = (name: string) => {
-    if (name.includes('Arjun')) return 'Manager';
-    if (name.includes('Sunita')) return 'Server';
-    if (name.includes('Ramesh') || name.includes('Kumar')) return 'Head cook';
-    if (name.includes('Imran')) return 'Barista';
-    if (name.includes('Priya')) return 'Cashier';
-    if (name.includes('Vijay')) return 'Cleaner';
-    if (name.includes('Anjali')) return 'Server';
-    if (name.includes('Mohammed') || name.includes('Ali')) return 'Helper';
-    return 'Staff Member';
-  };
+  const getStaffRole = () => `${staff.salaryType} • ${staff.calculationBasis}`;
 
   const getAvatarBg = (name: string) => {
     const colors = [
@@ -783,7 +773,7 @@ export const StaffProfileScreen: React.FC = () => {
               {staff.name}
             </h2>
             <p className="text-[11px] text-white/80 mt-1 leading-none font-medium">
-              {getStaffRole(staff.name)} • {staff.mobile}
+              {getStaffRole()} • {staff.mobile}
             </p>
             <p className="text-[10px] text-white/70 mt-1.5 leading-none">
               {staff.status === 'Active' ? 'Active employee' : 'Inactive employee'}
@@ -1377,7 +1367,7 @@ export const StaffProfileScreen: React.FC = () => {
             <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Father's Name</label>
             <input
               type="text"
-              placeholder="e.g. Ramesh Patel"
+              placeholder="Enter staff full name"
               value={editFatherName}
               onChange={(e) => setEditFatherName(e.target.value)}
               className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary font-bold focus:outline-none focus:border-primary transition-all"

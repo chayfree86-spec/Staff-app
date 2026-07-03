@@ -1,31 +1,26 @@
--- Staff App database schema
+-- Migration: 001_create_staff_database
 -- Target database: MySQL 8+ / MariaDB 10.4+
--- Money values are stored in paise to avoid decimal rounding issues.
--- Store date/time values in Indian local time (Asia/Kolkata). Set the backend DB session timezone to +05:30.
-
-CREATE DATABASE IF NOT EXISTS staff
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+-- Shared hosting note: create/select the `staff` database in cPanel/phpMyAdmin before importing.
 
 USE staff;
 
-CREATE TABLE schema_migrations (
+CREATE TABLE IF NOT EXISTS schema_migrations (
   version VARCHAR(50) PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
   applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE businesses (
+CREATE TABLE IF NOT EXISTS businesses (
   id CHAR(36) PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
-  logo_url MEDIUMTEXT,
+  logo_url VARCHAR(500),
   mobile VARCHAR(20),
   address TEXT,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE app_users (
+CREATE TABLE IF NOT EXISTS app_users (
   id CHAR(36) PRIMARY KEY,
   business_id CHAR(36) NOT NULL,
   name VARCHAR(150) NOT NULL,
@@ -44,7 +39,7 @@ CREATE TABLE app_users (
     FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE business_settings (
+CREATE TABLE IF NOT EXISTS business_settings (
   business_id CHAR(36) PRIMARY KEY,
   weekly_holidays JSON NOT NULL,
   weekly_holiday_paid ENUM('paid', 'unpaid') NOT NULL DEFAULT 'paid',
@@ -65,16 +60,16 @@ CREATE TABLE business_settings (
   CONSTRAINT chk_salary_hold_days CHECK (new_staff_salary_hold_days BETWEEN 0 AND 31)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE staff (
+CREATE TABLE IF NOT EXISTS staff (
   id CHAR(36) PRIMARY KEY,
   business_id CHAR(36) NOT NULL,
   name VARCHAR(150) NOT NULL,
   father_name VARCHAR(150),
-  mobile VARCHAR(20),
+  mobile VARCHAR(20) NOT NULL,
   mobile2 VARCHAR(20),
   address TEXT,
   avatar_initials VARCHAR(4),
-  profile_image_url MEDIUMTEXT,
+  profile_image_url VARCHAR(500),
   monthly_salary_paise INT UNSIGNED NOT NULL DEFAULT 0,
   per_day_salary_paise INT UNSIGNED NOT NULL DEFAULT 0,
   salary_type ENUM('monthly', 'daily') NOT NULL DEFAULT 'monthly',
@@ -99,7 +94,7 @@ CREATE TABLE staff (
   )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE attendance_records (
+CREATE TABLE IF NOT EXISTS attendance_records (
   id CHAR(36) PRIMARY KEY,
   business_id CHAR(36) NOT NULL,
   staff_id CHAR(36) NOT NULL,
@@ -120,7 +115,7 @@ CREATE TABLE attendance_records (
     FOREIGN KEY (marked_by) REFERENCES app_users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE staff_transactions (
+CREATE TABLE IF NOT EXISTS staff_transactions (
   id CHAR(36) PRIMARY KEY,
   business_id CHAR(36) NOT NULL,
   staff_id CHAR(36) NOT NULL,
@@ -141,7 +136,7 @@ CREATE TABLE staff_transactions (
   CONSTRAINT chk_transaction_amount_positive CHECK (amount_paise > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE salary_payouts (
+CREATE TABLE IF NOT EXISTS salary_payouts (
   id CHAR(36) PRIMARY KEY,
   business_id CHAR(36) NOT NULL,
   staff_id CHAR(36) NOT NULL,
@@ -164,7 +159,7 @@ CREATE TABLE salary_payouts (
   CONSTRAINT chk_salary_month_first_day CHECK (DAYOFMONTH(salary_month) = 1)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE salary_slip_snapshots (
+CREATE TABLE IF NOT EXISTS salary_slip_snapshots (
   id CHAR(36) PRIMARY KEY,
   business_id CHAR(36) NOT NULL,
   staff_id CHAR(36) NOT NULL,
@@ -193,3 +188,7 @@ CREATE TABLE salary_slip_snapshots (
     FOREIGN KEY (generated_by) REFERENCES app_users(id) ON DELETE SET NULL,
   CONSTRAINT chk_salary_slip_month_first_day CHECK (DAYOFMONTH(salary_month) = 1)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO schema_migrations (version, name)
+VALUES ('001', 'create_staff_database')
+ON DUPLICATE KEY UPDATE applied_at = applied_at;

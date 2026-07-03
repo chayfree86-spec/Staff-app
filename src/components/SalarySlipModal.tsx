@@ -147,7 +147,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
 
   // 5. Share Handler
   const handleShare = () => {
-    const shareText = `Salary Slip - ${monthLabel}\n-------------------------\nBusiness: ${businessInfo.name}\nEmployee: ${staff.name}\nRole: ${staff.calculationBasis === 'Fixed Salary' ? 'Fixed Salary' : 'Attendance Based'}\nEarned: ₹${earned.toLocaleString('en-IN')}\nHeld: ₹${holdAmount.toLocaleString('en-IN')}\nReleased: ₹${releasedAmount.toLocaleString('en-IN')}\nDeductions/Advances: ₹${(totalAdv + deduction).toLocaleString('en-IN')}\nNet Paid: ₹${paid.toLocaleString('en-IN')}\nStatus: ${paid >= netPayable ? 'Fully Paid' : paid > 0 ? 'Partially Paid' : 'Unpaid'}\n-------------------------`;
+    const shareText = `Salary Slip - ${monthLabel}\n-------------------------\nBusiness: ${businessInfo.name}\nEmployee: ${staff.name}\nRole: ${staff.calculationBasis === 'Fixed Salary' ? 'Fixed Salary' : 'Attendance Based'}\nEarned: ₹${earned.toLocaleString('en-IN')}\nHeld: ₹${holdAmount.toLocaleString('en-IN')}\nReleased: ₹${releasedAmount.toLocaleString('en-IN')}\nDeductions/Advances: ₹${(advanceAdjusted + deduction).toLocaleString('en-IN')}\nNet Paid: ₹${paid.toLocaleString('en-IN')}\nStatus: ${paid >= netPayable ? 'Fully Paid' : paid > 0 ? 'Partially Paid' : 'Unpaid'}\n-------------------------`;
     
     if (navigator.share) {
       navigator.share({
@@ -160,16 +160,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
     }
   };
 
-  const getStaffRoleText = (name: string) => {
-    if (name.includes('Arjun')) return 'Manager';
-    if (name.includes('Sunita')) return 'Server';
-    if (name.includes('Ramesh') || name.includes('Kumar')) return 'Head cook';
-    if (name.includes('Imran')) return 'Barista';
-    if (name.includes('Priya')) return 'Cashier';
-    if (name.includes('Vijay')) return 'Cleaner';
-    if (name.includes('Anjali')) return 'Server';
-    return 'Staff Member';
-  };
+  const getStaffRoleText = () => `${staff.salaryType} • ${staff.calculationBasis}`;
 
   const netPayWords = capitalizeWords(numberToWords(paid > 0 ? paid : netPayable)) + ' Rupees Only';
 
@@ -202,13 +193,13 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
             <div className="flex justify-between items-center border-b-2 border-primary pb-3 gap-4">
               <div>
                 <h2 className="text-sm font-black text-app-text-primary leading-none uppercase">
-                  {businessInfo.name || 'Staff Management App'}
+                  {businessInfo.name}
                 </h2>
                 <p className="text-[8.5px] text-app-text-secondary font-bold mt-1 leading-none">
-                  {businessInfo.address || '12, Connaught Place, Block E, New Delhi'}
+                  {businessInfo.address}
                 </p>
                 <p className="text-[8.5px] text-app-text-secondary font-bold leading-none mt-0.5">
-                  Phone: {businessInfo.mobile || '9876543210'}
+                  Phone: {businessInfo.mobile}
                 </p>
               </div>
               <div className="text-right">
@@ -230,7 +221,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
                 </div>
                 <div className="flex justify-between border-b border-app-border/10 pb-0.5">
                   <span className="text-app-text-secondary font-semibold">Designation:</span>
-                  <span className="font-bold text-app-text-primary">{getStaffRoleText(staff.name)}</span>
+                  <span className="font-bold text-app-text-primary">{getStaffRoleText()}</span>
                 </div>
                 <div className="flex justify-between border-b border-app-border/10 pb-0.5">
                   <span className="text-app-text-secondary font-semibold">Mobile:</span>

@@ -178,16 +178,8 @@ export const ReportsScreen: React.FC = () => {
     return gradients[hash % gradients.length];
   };
 
-  const getStaffRoleText = (name: string) => {
-    if (name.includes('Arjun')) return 'Manager';
-    if (name.includes('Sunita')) return 'Server';
-    if (name.includes('Ramesh') || name.includes('Kumar')) return 'Head cook';
-    if (name.includes('Imran')) return 'Barista';
-    if (name.includes('Priya')) return 'Cashier';
-    if (name.includes('Vijay')) return 'Cleaner';
-    if (name.includes('Anjali')) return 'Server';
-    return 'Staff Member';
-  };
+  const getStaffRoleText = (staff: { salaryType: string; calculationBasis: string }) =>
+    `${staff.salaryType} • ${staff.calculationBasis}`;
 
   const handleOpenSlip = (staffId: string) => {
     setSlipStaffId(staffId);
@@ -299,7 +291,7 @@ export const ReportsScreen: React.FC = () => {
                           </div>
                           <div>
                             <div className="font-bold text-app-text-primary text-xs">{staff.name}</div>
-                            <div className="text-[9px] text-app-text-secondary mt-0.5">{getStaffRoleText(staff.name)}</div>
+                            <div className="text-[9px] text-app-text-secondary mt-0.5">{getStaffRoleText(staff)}</div>
                           </div>
                         </td>
 

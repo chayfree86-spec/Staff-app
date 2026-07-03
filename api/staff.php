@@ -1,0 +1,160 @@
+<?php
+
+require_once __DIR__ . '/_bootstrap.php';
+
+require_post();
+$auth = require_user();
+$pdo = db();
+$input = json_input();
+$action = (string) ($input['action'] ?? '');
+
+$businessId = $auth['business_id'];
+
+function staff_payload_from_input(array $input): array
+{
+    $staff = is_array($input['staff'] ?? null) ? $input['staff'] : [];
+
+    $name = trim((string) ($staff['name'] ?? ''));
+    if ($name === '') {
+        respond(['ok' => false, 'message' => 'Staff name is required.'], 422);
+    }
+
+    $salaryType = enum_from_title((string) ($staff['salaryType'] ?? 'Monthly'));
+    if (!in_array($salaryType, ['monthly', 'daily'], true)) {
+        $salaryType = 'monthly';
+    }
+
+    $calculationBasis = enum_from_title((string) ($staff['calculationBasis'] ?? 'Attendance Based'));
+    if (!in_array($calculationBasis, ['attendance_based', 'fixed_salary'], true)) {
+        $calculationBasis = 'attendance_based';
+    }
+
+    $status = enum_from_title((string) ($staff['status'] ?? 'Active'));
+    if (!in_array($status, ['active', 'inactive'], true)) {
+        $status = 'active';
+    }
+
+    $joiningDate = (string) ($staff['joiningDate'] ?? '');
+    if (!valid_date($joiningDate)) {
+        respond(['ok' => false, 'message' => 'Valid joining date is required.'], 422);
+    }
+
+    $deactivationDate = str_or_null($staff['deactivationDate'] ?? null);
+    if ($deactivationDate !== null && !valid_date($deactivationDate)) {
+        respond(['ok' => false, 'message' => 'Invalid deactivation date.'], 422);
+    }
+    if ($status === 'inactive' && $deactivationDate === null) {
+        $deactivationDate = date('Y-m-d');
+    }
+    if ($status === 'active') {
+        $deactivationDate = null;
+    }
+
+    return [
+        'name' => $name,
+        'father_name' => str_or_null($staff['fatherName'] ?? null),
+        'mobile' => str_or_null($staff['mobile'] ?? null),
+        'mobile2' => str_or_null($staff['mobile2'] ?? null),
+        'address' => str_or_null($staff['address'] ?? null),
+        'avatar_initials' => substr((string) ($staff['avatar'] ?? initials_for_name($name)), 0, 4),
+        'profile_image_url' => str_or_null($staff['profileImage'] ?? null),
+        'monthly_salary_paise' => paise_from_rupees((float) ($staff['monthlySalary'] ?? 0)),
+        'per_day_salary_paise' => paise_from_rupees((float) ($staff['perDaySalary'] ?? 0)),
+        'salary_type' => $salaryType,
+        'calculation_basis' => $calculationBasis,
+        'joining_date' => $joiningDate,
+        'status' => $status,
+        'deactivation_date' => $deactivationDate,
+        'released_salary_hold' => !empty($staff['releasedSalaryHold']) ? 1 : 0,
+    ];
+}
+
+if ($action === 'create') {
+    $staffInput = is_array($input['staff'] ?? null) ? $input['staff'] : [];
+    $id = id_from_input($staffInput);
+    $payload = staff_payload_from_input($input);
+
+    $stmt = $pdo->prepare(
+        'INSERT INTO staff (
+            id, business_id, name, father_name, mobile, mobile2, address,
+            avatar_initials, profile_image_url, monthly_salary_paise, per_day_salary_paise,
+            salary_type, calculation_basis, joining_date, status, deactivation_date,
+            released_salary_hold, owner_user_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    $stmt->execute([
+        $id,
+        $businessId,
+        $payload['name'],
+        $payload['father_name'],
+        $payload['mobile'],
+        $payload['mobile2'],
+        $payload['address'],
+        $payload['avatar_initials'],
+        $payload['profile_image_url'],
+        $payload['monthly_salary_paise'],
+        $payload['per_day_salary_paise'],
+        $payload['salary_type'],
+        $payload['calculation_basis'],
+        $payload['joining_date'],
+        $payload['status'],
+        $payload['deactivation_date'],
+        $payload['released_salary_hold'],
+        $auth['user_id'],
+    ]);
+
+    respond(['ok' => true, 'id' => $id]);
+}
+
+if ($action === 'update') {
+    $staffInput = is_array($input['staff'] ?? null) ? $input['staff'] : [];
+    $id = trim((string) ($staffInput['id'] ?? ''));
+    if ($id === '') {
+        respond(['ok' => false, 'message' => 'Staff id is required.'], 422);
+    }
+    $payload = staff_payload_from_input($input);
+
+    $stmt = $pdo->prepare(
+        'UPDATE staff SET
+            name = ?, father_name = ?, mobile = ?, mobile2 = ?, address = ?,
+            avatar_initials = ?, profile_image_url = ?, monthly_salary_paise = ?,
+            per_day_salary_paise = ?, salary_type = ?, calculation_basis = ?,
+            joining_date = ?, status = ?, deactivation_date = ?, released_salary_hold = ?
+         WHERE id = ? AND business_id = ?'
+    );
+    $stmt->execute([
+        $payload['name'],
+        $payload['father_name'],
+        $payload['mobile'],
+        $payload['mobile2'],
+        $payload['address'],
+        $payload['avatar_initials'],
+        $payload['profile_image_url'],
+        $payload['monthly_salary_paise'],
+        $payload['per_day_salary_paise'],
+        $payload['salary_type'],
+        $payload['calculation_basis'],
+        $payload['joining_date'],
+        $payload['status'],
+        $payload['deactivation_date'],
+        $payload['released_salary_hold'],
+        $id,
+        $businessId,
+    ]);
+
+    respond(['ok' => true, 'id' => $id]);
+}
+
+if ($action === 'delete') {
+    $id = trim((string) ($input['id'] ?? ''));
+    if ($id === '') {
+        respond(['ok' => false, 'message' => 'Staff id is required.'], 422);
+    }
+
+    $stmt = $pdo->prepare('DELETE FROM staff WHERE id = ? AND business_id = ?');
+    $stmt->execute([$id, $businessId]);
+
+    respond(['ok' => true]);
+}
+
+respond(['ok' => false, 'message' => 'Unknown action.'], 422);

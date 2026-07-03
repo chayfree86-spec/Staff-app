@@ -41,7 +41,7 @@ export const BusinessScreen: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Logo upload (Mock display) */}
+          {/* Logo upload display */}
           <div className="flex flex-col items-center gap-2 py-2">
             <div className="w-20 h-20 rounded-full bg-primary/10 border-2 border-dashed border-primary/30 flex flex-col items-center justify-center text-primary cursor-pointer hover:bg-primary/15 transition-all">
               <span className="material-symbols-rounded select-none" style={{ fontSize: '30px' }}>storefront</span>
@@ -56,7 +56,7 @@ export const BusinessScreen: React.FC = () => {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Flavors Cafe"
+              placeholder="Enter business name"
               className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-app-card text-sm text-app-text-primary focus:outline-none focus:border-primary font-medium"
             />
           </div>

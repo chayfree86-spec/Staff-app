@@ -129,16 +129,8 @@ export const DashboardScreen: React.FC = () => {
   const daysInMonthCount = new Date(new Date(currentDate).getFullYear(), new Date(currentDate).getMonth() + 1, 0).getDate();
   const salaryCycleLabel = `1 to ${daysInMonthCount} ${format(parseISO(currentDate), 'MMMM')}`;
 
-  // Design Mock Helper for roles
-  const getStaffRole = (name: string) => {
-    if (name.includes('Arjun')) return 'Manager';
-    if (name.includes('Sunita')) return 'Server';
-    if (name.includes('Ramesh') || name.includes('Kumar')) return 'Head Cook';
-    if (name.includes('Imran')) return 'Barista';
-    if (name.includes('Priya')) return 'Cashier';
-    if (name.includes('Deepak')) return 'Delivery Boy';
-    return 'Staff Member';
-  };
+  const getStaffRole = (staff: { salaryType: string; calculationBasis: string }) =>
+    `${staff.salaryType} • ${staff.calculationBasis}`;
 
   const getProfileGradient = (name: string) => {
     const gradients = [
@@ -356,7 +348,7 @@ export const DashboardScreen: React.FC = () => {
                       </div>
                       <div>
                         <h4 className="font-bold text-app-text-primary text-xs leading-none group-hover:text-primary transition-colors">{staff.name}</h4>
-                        <p className="text-[9px] font-semibold text-app-text-secondary mt-1.5 leading-none">{getStaffRole(staff.name)}</p>
+                        <p className="text-[9px] font-semibold text-app-text-secondary mt-1.5 leading-none">{getStaffRole(staff)}</p>
                       </div>
                     </div>
                     

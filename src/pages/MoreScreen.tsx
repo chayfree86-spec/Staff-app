@@ -53,7 +53,7 @@ export const MoreScreen: React.FC = () => {
     .map(word => word[0])
     .join('')
     .slice(0, 2)
-    .toUpperCase() || 'FB';
+    .toUpperCase() || 'SA';
 
   return (
     <div className="flex flex-col gap-6 pb-24 animate-in fade-in duration-200">

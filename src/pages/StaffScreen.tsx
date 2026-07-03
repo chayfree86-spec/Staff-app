@@ -209,18 +209,8 @@ export const StaffScreen: React.FC = () => {
     }
   };
 
-  // Helper for staff roles in mock presentation
-  const getStaffRole = (name: string) => {
-    if (name.includes('Arjun')) return 'Manager';
-    if (name.includes('Sunita')) return 'Server';
-    if (name.includes('Ramesh') || name.includes('Kumar')) return 'Head cook';
-    if (name.includes('Imran')) return 'Barista';
-    if (name.includes('Priya')) return 'Cashier';
-    if (name.includes('Vijay')) return 'Cleaner';
-    if (name.includes('Anjali')) return 'Server';
-    if (name.includes('Mohammed') || name.includes('Ali')) return 'Helper';
-    return 'Staff Member';
-  };
+  const getStaffRole = (staff: { salaryType: string; calculationBasis: string }) =>
+    `${staff.salaryType} • ${staff.calculationBasis}`;
 
   const getProfileGradient = (name: string) => {
     const gradients = [
@@ -321,7 +311,7 @@ export const StaffScreen: React.FC = () => {
                         )}
                       </h4>
                       <p className="text-[9px] font-semibold text-app-text-secondary mt-1.5 leading-none">
-                        {getStaffRole(staff.name)}
+                        {getStaffRole(staff)}
                       </p>
                     </div>
                   </div>
@@ -460,7 +450,7 @@ export const StaffScreen: React.FC = () => {
               <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Father's Name</label>
               <input
                 type="text"
-                placeholder="e.g. Ramesh Sharma"
+                placeholder="Enter staff full name"
                 value={fatherName}
                 onChange={(e) => setFatherName(e.target.value)}
                 className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary font-bold placeholder:text-app-text-secondary focus:outline-none focus:border-primary transition-all"
@@ -628,7 +618,7 @@ export const StaffScreen: React.FC = () => {
               <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Father's Name</label>
               <input
                 type="text"
-                placeholder="e.g. Ramesh Sharma"
+                placeholder="Enter staff full name"
                 value={editFatherName}
                 onChange={(e) => setEditFatherName(e.target.value)}
                 className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary font-bold focus:outline-none focus:border-primary transition-all"
