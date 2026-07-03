@@ -70,20 +70,17 @@ function staff_payload_from_input(array $input): array
 }
 
 if ($action === 'create') {
-    $staffInput = is_array($input['staff'] ?? null) ? $input['staff'] : [];
-    $id = id_from_input($staffInput);
     $payload = staff_payload_from_input($input);
 
     $stmt = $pdo->prepare(
         'INSERT INTO staff (
-            id, business_id, name, father_name, mobile, mobile2, address,
+            business_id, name, father_name, mobile, mobile2, address,
             avatar_initials, profile_image_url, monthly_salary_paise, per_day_salary_paise,
             salary_type, calculation_basis, joining_date, status, deactivation_date,
             released_salary_hold, owner_user_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
     $stmt->execute([
-        $id,
         $businessId,
         $payload['name'],
         $payload['father_name'],
@@ -103,15 +100,12 @@ if ($action === 'create') {
         $auth['user_id'],
     ]);
 
-    respond(['ok' => true, 'id' => $id]);
+    respond(['ok' => true, 'id' => (int) $pdo->lastInsertId()]);
 }
 
 if ($action === 'update') {
     $staffInput = is_array($input['staff'] ?? null) ? $input['staff'] : [];
-    $id = trim((string) ($staffInput['id'] ?? ''));
-    if ($id === '') {
-        respond(['ok' => false, 'message' => 'Staff id is required.'], 422);
-    }
+    $id = require_int_id($staffInput);
     $payload = staff_payload_from_input($input);
 
     $stmt = $pdo->prepare(
@@ -146,10 +140,7 @@ if ($action === 'update') {
 }
 
 if ($action === 'delete') {
-    $id = trim((string) ($input['id'] ?? ''));
-    if ($id === '') {
-        respond(['ok' => false, 'message' => 'Staff id is required.'], 422);
-    }
+    $id = require_int_id($input);
 
     $stmt = $pdo->prepare('DELETE FROM staff WHERE id = ? AND business_id = ?');
     $stmt->execute([$id, $businessId]);

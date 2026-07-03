@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { CustomDialog } from '../components/ui/CustomDialog';
 import { CustomSelect } from '../components/ui/CustomSelect';
@@ -37,6 +37,25 @@ export const StaffProfileScreen: React.FC = () => {
   const [isDeductionOpen, setIsDeductionOpen] = useState(false);
   const [isEditTxOpen, setIsEditTxOpen] = useState(false);
   const [isAdvHistoryOpen, setIsAdvHistoryOpen] = useState(false);
+
+  // Month navigation state for profile view
+  const [profileDate, setProfileDate] = useState(currentDate);
+
+  useEffect(() => {
+    setProfileDate(currentDate);
+  }, [currentDate]);
+
+  const handlePrevMonth = () => {
+    const dateObj = parseISO(profileDate);
+    const prevMonthDate = new Date(dateObj.getFullYear(), dateObj.getMonth() - 1, 1);
+    setProfileDate(format(prevMonthDate, 'yyyy-MM-dd'));
+  };
+
+  const handleNextMonth = () => {
+    const dateObj = parseISO(profileDate);
+    const nextMonthDate = new Date(dateObj.getFullYear(), dateObj.getMonth() + 1, 1);
+    setProfileDate(format(nextMonthDate, 'yyyy-MM-dd'));
+  };
 
   // Salary Slip Modal states
   const [isSlipOpen, setIsSlipOpen] = useState(false);
@@ -99,20 +118,20 @@ export const StaffProfileScreen: React.FC = () => {
 
   const getYearMonthFromLabel = (label: string) => {
     try {
-      const curDateObj = parseISO(currentDate);
+      const curDateObj = parseISO(profileDate);
       const currentMonthLabelStr = format(curDateObj, 'MMMM yyyy');
       if (label === currentMonthLabelStr) {
-        return currentDate.slice(0, 7);
+        return profileDate.slice(0, 7);
       }
       const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
       return format(prevDateObj, 'yyyy-MM');
     } catch (e) {
-      return currentDate.slice(0, 7);
+      return profileDate.slice(0, 7);
     }
   };
 
   const getPayoutMonths = (staffId: string) => {
-    const curDateObj = parseISO(currentDate);
+    const curDateObj = parseISO(profileDate);
     const currentMonthLabelStr = format(curDateObj, 'MMMM yyyy');
     const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
     const prevMonthLabelStr = format(prevDateObj, 'MMMM yyyy');
@@ -360,7 +379,7 @@ export const StaffProfileScreen: React.FC = () => {
   }
 
   // Calculate stats for current month
-  const selectedDate = parseISO(currentDate);
+  const selectedDate = parseISO(profileDate);
   const year = selectedDate.getFullYear();
   const month = selectedDate.getMonth(); // 0-indexed
   
@@ -388,8 +407,8 @@ export const StaffProfileScreen: React.FC = () => {
   const earnedSalary = Math.round(totalDaysCredited * staff.perDaySalary);
 
   // Advances & Deductions history
-  const currentYearMonth = currentDate.slice(0, 7); // YYYY-MM
-  const currentMonthLabel = format(parseISO(currentDate), 'MMMM yyyy');
+  const currentYearMonth = profileDate.slice(0, 7); // YYYY-MM
+  const currentMonthLabel = format(parseISO(profileDate), 'MMMM yyyy');
 
   const staffAdvances = advanceList.filter((a) => a.staffId === staff.id && a.date.startsWith(currentYearMonth));
   const staffDeductions = deductionList.filter((d) => d.staffId === staff.id && d.date.startsWith(currentYearMonth));
@@ -442,6 +461,37 @@ export const StaffProfileScreen: React.FC = () => {
   const outstandingHold = getStaffOutstandingHold(staff.id);
 
   // Calendar helpers
+  const isFutureMonth = (dateStr: string) => {
+    const dateObj = parseISO(dateStr);
+    const todayObj = new Date();
+    return (
+      dateObj.getFullYear() > todayObj.getFullYear() ||
+      (dateObj.getFullYear() === todayObj.getFullYear() && dateObj.getMonth() >= todayObj.getMonth())
+    );
+  };
+
+  const isFutureDay = (dayNum: number) => {
+    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    return dStr > todayStr;
+  };
+
+  const isJoiningMonthOrBefore = (dateStr: string) => {
+    if (!staff?.joiningDate) return false;
+    const dateObj = parseISO(dateStr);
+    const joinObj = parseISO(staff.joiningDate);
+    return (
+      dateObj.getFullYear() < joinObj.getFullYear() ||
+      (dateObj.getFullYear() === joinObj.getFullYear() && dateObj.getMonth() <= joinObj.getMonth())
+    );
+  };
+
+  const isJoiningDate = (dayNum: number) => {
+    if (!staff?.joiningDate) return false;
+    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+    return dStr === staff.joiningDate;
+  };
+
   const daysInMonthCount = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 = Sunday, 1 = Monday
   const firstDayIndex = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // Align to M, T, W, T, F, S, S
@@ -464,6 +514,7 @@ export const StaffProfileScreen: React.FC = () => {
   };
 
   const handleDayClick = (dayNum: number) => {
+    if (isFutureDay(dayNum)) return;
     const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
     const currentStatus = attendance[dStr]?.[staff.id]?.status || 'Unmarked';
     
@@ -607,12 +658,11 @@ export const StaffProfileScreen: React.FC = () => {
 
   const getAvatarBg = (name: string) => {
     const colors = [
-      'bg-indigo-600/10 text-indigo-600 border-indigo-200',
-      'bg-emerald-600/10 text-emerald-600 border-emerald-200',
-      'bg-rose-600/10 text-rose-600 border-rose-200',
-      'bg-blue-600/10 text-blue-600 border-blue-200',
-      'bg-amber-600/10 text-amber-600 border-amber-200',
+      'bg-primary/10 text-primary border-primary/20',
       'bg-violet-600/10 text-violet-600 border-violet-200',
+      'bg-indigo-600/10 text-indigo-600 border-indigo-200',
+      'bg-purple-600/10 text-purple-600 border-purple-200',
+      'bg-fuchsia-600/10 text-fuchsia-600 border-fuchsia-200',
     ];
     let sum = 0;
     for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
@@ -621,12 +671,12 @@ export const StaffProfileScreen: React.FC = () => {
 
   const getProfileGradient = (name: string) => {
     const gradients = [
-      'from-indigo-600 to-purple-600',
-      'from-emerald-600 to-teal-600',
-      'from-rose-600 to-orange-500',
-      'from-blue-600 to-indigo-600',
-      'from-amber-500 to-rose-600',
+      'from-primary to-purple-500',
       'from-violet-600 to-fuchsia-600',
+      'from-indigo-600 to-purple-600',
+      'from-primary to-indigo-600',
+      'from-violet-500 via-primary to-purple-500',
+      'from-purple-600 to-fuchsia-500',
     ];
     let sum = 0;
     for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
@@ -829,13 +879,37 @@ export const StaffProfileScreen: React.FC = () => {
           {/* Attendance Calendar Card - Double Bezel Architecture */}
           <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-sm">
             <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                  <span className="material-symbols-rounded select-none" style={{ fontSize: '16px' }}>calendar_month</span>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center animate-[pulse_3s_infinite]">
+                    <span className="material-symbols-rounded select-none" style={{ fontSize: '16px' }}>calendar_month</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-app-text-primary uppercase tracking-wider">Attendance calendar</h3>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xs font-bold text-app-text-primary uppercase tracking-wider">Attendance calendar</h3>
-                  <p className="text-[9px] text-app-text-secondary font-bold uppercase tracking-wider mt-0.5">{currentMonthName} working month</p>
+                
+                {/* Month navigation switcher */}
+                <div className="flex items-center bg-app-bg border border-app-border rounded-xl p-0.5 shadow-sm select-none">
+                  <button
+                    type="button"
+                    onClick={handlePrevMonth}
+                    disabled={isJoiningMonthOrBefore(profileDate)}
+                    className="w-7 h-7 flex items-center justify-center text-app-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer active:scale-95 disabled:opacity-30 disabled:pointer-events-none shrink-0"
+                  >
+                    <span className="material-symbols-rounded select-none text-[16px]">chevron_left</span>
+                  </button>
+                  <span className="px-3 text-xs font-black text-app-text-primary tracking-tight min-w-[90px] text-center">
+                    {currentMonthName}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleNextMonth}
+                    disabled={isFutureMonth(profileDate)}
+                    className="w-7 h-7 flex items-center justify-center text-app-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer active:scale-95 disabled:opacity-30 disabled:pointer-events-none shrink-0"
+                  >
+                    <span className="material-symbols-rounded select-none text-[16px]">chevron_right</span>
+                  </button>
                 </div>
               </div>
 
@@ -865,20 +939,31 @@ export const StaffProfileScreen: React.FC = () => {
                     }
 
                     const status = getDayDetails(dayNum);
+                    const isFuture = isFutureDay(dayNum);
+                    const isJoinDay = isJoiningDate(dayNum);
                     
                     return (
                       <div
                         key={`day-${dayNum}`}
-                        onClick={() => handleDayClick(dayNum)}
-                        className={`aspect-square rounded-xl flex flex-col items-center justify-center font-black text-sm sm:text-base border transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-110 cursor-pointer ${
-                          status === 'Present' ? 'bg-present border-present text-white shadow-sm' :
-                          status === 'Absent' ? 'bg-absent border-absent text-white shadow-sm' :
-                          status === 'Half Day' ? 'bg-halfday border-halfday text-white shadow-sm' :
-                          status === 'Holiday' ? 'bg-info border-info text-white shadow-sm' :
-                          'border-app-border bg-app-bg text-app-text-secondary hover:border-primary/20'
+                        onClick={() => !isFuture && handleDayClick(dayNum)}
+                        className={`aspect-square rounded-xl flex flex-col items-center justify-center font-black text-sm sm:text-base border transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                          isFuture ? 'border-app-border/40 bg-app-bg/50 text-app-text-secondary/30 pointer-events-none opacity-40' :
+                          status === 'Present' ? 'bg-present border-present text-white shadow-sm hover:scale-110 cursor-pointer' :
+                          status === 'Absent' ? 'bg-absent border-absent text-white shadow-sm hover:scale-110 cursor-pointer' :
+                          status === 'Half Day' ? 'bg-halfday border-halfday text-white shadow-sm hover:scale-110 cursor-pointer' :
+                          status === 'Holiday' ? 'bg-info border-info text-white shadow-sm hover:scale-110 cursor-pointer' :
+                          isJoinDay ? 'border-primary border-2 bg-app-bg text-app-text-primary hover:scale-110 cursor-pointer shadow-md shadow-primary/5' :
+                          'border-app-border bg-app-bg text-app-text-secondary hover:border-primary/20 hover:scale-110 cursor-pointer'
                         }`}
                       >
-                        {dayNum}
+                        <span className={isJoinDay ? 'mt-0.5' : ''}>{dayNum}</span>
+                        {isJoinDay && (
+                          <span className={`text-[7px] font-black uppercase tracking-tighter mt-0.5 leading-none ${
+                            status ? 'text-white/90' : 'text-primary'
+                          }`}>
+                            Join
+                          </span>
+                        )}
                       </div>
                     );
                   })}

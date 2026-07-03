@@ -36,9 +36,10 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
     $stmt = $pdo->prepare('SELECT * FROM staff WHERE business_id = ? ORDER BY created_at ASC, name ASC');
     $stmt->execute([$businessId]);
     $staffRows = $stmt->fetchAll();
+    // ids are ints in the DB; the frontend works with string ids everywhere.
     $staffList = array_map(static function (array $row): array {
         return [
-            'id' => $row['id'],
+            'id' => (string) $row['id'],
             'name' => $row['name'],
             'mobile' => $row['mobile'] ?? '',
             'avatar' => $row['avatar_initials'] ?: initials_for_name($row['name']),
@@ -65,7 +66,7 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
         if (!isset($attendance[$date])) {
             $attendance[$date] = [];
         }
-        $attendance[$date][$row['staff_id']] = [
+        $attendance[$date][(string) $row['staff_id']] = [
             'status' => title_from_enum($row['status']),
             'timestamp' => $row['marked_at'],
         ];
@@ -79,8 +80,8 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
         $amount = rupees_from_paise((int) $row['amount_paise']);
         if ($row['kind'] === 'advance_given' || $row['kind'] === 'advance_returned') {
             $advanceList[] = [
-                'id' => $row['id'],
-                'staffId' => $row['staff_id'],
+                'id' => (string) $row['id'],
+                'staffId' => (string) $row['staff_id'],
                 'amount' => $row['kind'] === 'advance_returned' ? -$amount : $amount,
                 'date' => $row['transaction_date'],
                 'remarks' => $row['remarks'] ?? '',
@@ -89,8 +90,8 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
         }
 
         $deductionList[] = [
-            'id' => $row['id'],
-            'staffId' => $row['staff_id'],
+            'id' => (string) $row['id'],
+            'staffId' => (string) $row['staff_id'],
             'amount' => $amount,
             'date' => $row['transaction_date'],
             'remarks' => $row['remarks'] ?? '',
@@ -101,8 +102,8 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
     $stmt->execute([$businessId]);
     $payoutList = array_map(static function (array $row): array {
         return [
-            'id' => $row['id'],
-            'staffId' => $row['staff_id'],
+            'id' => (string) $row['id'],
+            'staffId' => (string) $row['staff_id'],
             'amount' => rupees_from_paise((int) $row['amount_paise']),
             'date' => $row['payout_date'],
             'month' => date('F Y', strtotime($row['salary_month'])),

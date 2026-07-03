@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, eachDayOfInterval } from 'date-fns';
 import {
   changePasswordRequest,
   createPayoutRequest,
@@ -17,6 +17,7 @@ import {
   updateStaffRequest,
   updateTransactionRequest,
   type ApiBootstrapData,
+  type ApiUser,
 } from '../api/client';
 
 export interface Staff {
@@ -90,7 +91,7 @@ export interface Settings {
 }
 
 interface AppState {
-  currentScreen: 'attendance' | 'dashboard' | 'staff' | 'salary' | 'more' | 'staff-profile' | 'advance' | 'deduction' | 'reports' | 'business' | 'settings';
+  currentScreen: 'attendance' | 'dashboard' | 'staff' | 'salary' | 'more' | 'staff-profile' | 'advance' | 'deduction' | 'reports' | 'business' | 'settings' | 'create-business' | 'businesses';
   activeStaffProfileId: string | null;
   currentDate: string; // YYYY-MM-DD
   searchQuery: string;
@@ -103,6 +104,7 @@ interface AppState {
   settings: Settings;
 
   isLoggedIn: boolean;
+  currentUser: ApiUser | null;
   login: (identifier: string, secret: string, method: 'password' | 'pin') => Promise<boolean>;
   restoreSession: () => Promise<void>;
   logout: () => Promise<void>;
@@ -130,22 +132,24 @@ interface AppState {
   triggerAutoAttendance: () => void;
 }
 
-// Plain UUID (36 chars) so ids fit the CHAR(36) columns in MySQL.
-const createId = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-};
+// The DB assigns simple numeric ids (1, 2, 3, ...). New records get a
+// temporary local id for the optimistic update, replaced by the real id
+// as soon as the server responds.
+const createTempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+// Images saved while the DB column was VARCHAR(500) were truncated and can
+// never render; drop them so the initials avatar shows instead.
+const isBrokenImage = (img?: string) =>
+  !!img && img.startsWith('data:') && img.length <= 500;
 
 const applyBootstrapData = (data: ApiBootstrapData) => ({
-  businessInfo: data.businessInfo,
+  businessInfo: isBrokenImage(data.businessInfo.logo)
+    ? { ...data.businessInfo, logo: '' }
+    : data.businessInfo,
   settings: data.settings,
-  staffList: data.staffList,
+  staffList: data.staffList.map((staff) =>
+    isBrokenImage(staff.profileImage) ? { ...staff, profileImage: undefined } : staff
+  ),
   attendance: data.attendance,
   advanceList: data.advanceList,
   deductionList: data.deductionList,
@@ -154,13 +158,24 @@ const applyBootstrapData = (data: ApiBootstrapData) => ({
 
 // Persist a mutation in the background; if it fails, reload server state so
 // the optimistic local update does not drift from the database.
+const resyncFromServer = (error: unknown) => {
+  console.error('Failed to sync change with server:', error);
+  meRequest()
+    .then(({ data }) => useStore.setState(applyBootstrapData(data)))
+    .catch(() => {});
+};
+
 const persist = (task: Promise<unknown>) => {
-  task.catch((error) => {
-    console.error('Failed to sync change with server:', error);
-    meRequest()
-      .then((data) => useStore.setState(applyBootstrapData(data)))
-      .catch(() => {});
-  });
+  task.catch(resyncFromServer);
+};
+
+// For creates: swap the temporary local id with the DB-assigned one.
+const persistCreate = (task: Promise<string | undefined>, applyRealId: (realId: string) => void) => {
+  task
+    .then((realId) => {
+      if (realId) applyRealId(realId);
+    })
+    .catch(resyncFromServer);
 };
 
 export const useStore = create<AppState>((set, get) => ({
@@ -193,29 +208,32 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   isLoggedIn: false,
+  currentUser: null,
 
   login: async (identifier, secret, method) => {
     try {
-      const data = await loginRequest(identifier, secret, method);
+      const { user, data } = await loginRequest(identifier, secret, method);
       set({
         isLoggedIn: true,
+        currentUser: user,
         ...applyBootstrapData(data),
       });
       return true;
     } catch {
-      set({ isLoggedIn: false });
+      set({ isLoggedIn: false, currentUser: null });
       return false;
     }
   },
   restoreSession: async () => {
     try {
-      const data = await meRequest();
+      const { user, data } = await meRequest();
       set({
         isLoggedIn: true,
+        currentUser: user,
         ...applyBootstrapData(data),
       });
     } catch {
-      set({ isLoggedIn: false });
+      set({ isLoggedIn: false, currentUser: null });
     }
   },
   logout: async () => {
@@ -224,6 +242,7 @@ export const useStore = create<AppState>((set, get) => ({
     } finally {
       set({
         isLoggedIn: false,
+        currentUser: null,
         staffList: [],
         attendance: {},
         advanceList: [],
@@ -249,14 +268,75 @@ export const useStore = create<AppState>((set, get) => ({
 
   addStaff: (staff) => {
     const initials = staff.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const tempId = createTempId();
     const newStaff: Staff = {
       ...staff,
-      id: createId(),
+      id: tempId,
       avatar: initials,
       perDaySalary: Math.round(staff.salaryType === 'Monthly' ? staff.monthlySalary / 30 : staff.monthlySalary),
     };
-    set((state) => ({ staffList: [...state.staffList, newStaff] }));
-    persist(createStaffRequest(newStaff));
+    
+    // Auto-mark attendance from joiningDate to currentDate (inclusive)
+    const start = parseISO(staff.joiningDate);
+    const end = parseISO(get().currentDate);
+    const weeklyHolidays = get().settings.weeklyHoliday || [];
+    
+    let datesList: Date[] = [];
+    if (start <= end) {
+      try {
+        datesList = eachDayOfInterval({ start, end });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    set((state) => {
+      const updatedAttendance = { ...state.attendance };
+      datesList.forEach((d) => {
+        const dateStr = format(d, 'yyyy-MM-dd');
+        const dayName = format(d, 'EEEE');
+        const isHoliday = weeklyHolidays.includes(dayName);
+        const status = isHoliday ? ('Holiday' as const) : ('Present' as const);
+        
+        if (!updatedAttendance[dateStr]) {
+          updatedAttendance[dateStr] = {};
+        }
+        updatedAttendance[dateStr][tempId] = {
+          status,
+          timestamp: new Date().toISOString(),
+        };
+      });
+      return { 
+        staffList: [...state.staffList, newStaff],
+        attendance: updatedAttendance
+      };
+    });
+    
+    persistCreate(createStaffRequest(newStaff), (realId) => {
+      set((state) => {
+        const updatedAttendance = { ...state.attendance };
+        Object.keys(updatedAttendance).forEach((dateStr) => {
+          if (updatedAttendance[dateStr][tempId]) {
+            updatedAttendance[dateStr][realId] = updatedAttendance[dateStr][tempId];
+            delete updatedAttendance[dateStr][tempId];
+          }
+        });
+        return {
+          staffList: state.staffList.map((s) => (s.id === tempId ? { ...s, id: realId } : s)),
+          activeStaffProfileId: state.activeStaffProfileId === tempId ? realId : state.activeStaffProfileId,
+          attendance: updatedAttendance,
+        };
+      });
+      
+      // Persist marked attendance to server
+      datesList.forEach((d) => {
+        const dateStr = format(d, 'yyyy-MM-dd');
+        const dayName = format(d, 'EEEE');
+        const isHoliday = weeklyHolidays.includes(dayName);
+        const status = isHoliday ? ('Holiday' as const) : ('Present' as const);
+        persist(markAttendanceRequest(dateStr, realId, status));
+      });
+    });
   },
 
   updateStaff: (id, updates) => {
@@ -336,9 +416,14 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   addAdvance: (staffId, amount, date, remarks) => {
-    const record: AdvanceRecord = { id: createId(), staffId, amount, date, remarks };
+    const tempId = createTempId();
+    const record: AdvanceRecord = { id: tempId, staffId, amount, date, remarks };
     set((state) => ({ advanceList: [...state.advanceList, record] }));
-    persist(createTransactionRequest('advance', record));
+    persistCreate(createTransactionRequest('advance', record), (realId) => {
+      set((state) => ({
+        advanceList: state.advanceList.map((a) => (a.id === tempId ? { ...a, id: realId } : a)),
+      }));
+    });
   },
 
   updateAdvance: (id, amount, date, remarks) => {
@@ -356,9 +441,14 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   addDeduction: (staffId, amount, date, remarks) => {
-    const record: DeductionRecord = { id: createId(), staffId, amount, date, remarks };
+    const tempId = createTempId();
+    const record: DeductionRecord = { id: tempId, staffId, amount, date, remarks };
     set((state) => ({ deductionList: [...state.deductionList, record] }));
-    persist(createTransactionRequest('deduction', record));
+    persistCreate(createTransactionRequest('deduction', record), (realId) => {
+      set((state) => ({
+        deductionList: state.deductionList.map((d) => (d.id === tempId ? { ...d, id: realId } : d)),
+      }));
+    });
   },
 
   updateDeduction: (id, amount, date, remarks) => {
@@ -376,8 +466,9 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   paySalary: (staffId, amount, month, date, paymentMode, remarks) => {
+    const tempId = createTempId();
     const record: PayoutRecord = {
-      id: createId(),
+      id: tempId,
       staffId,
       amount,
       date: date || new Date().toISOString().split('T')[0],
@@ -386,7 +477,12 @@ export const useStore = create<AppState>((set, get) => ({
       remarks,
     };
     set((state) => ({ payoutList: [...state.payoutList, record] }));
-    persist(createPayoutRequest(record));
+    const { id: _tempId, ...payload } = record;
+    persistCreate(createPayoutRequest(payload), (realId) => {
+      set((state) => ({
+        payoutList: state.payoutList.map((p) => (p.id === tempId ? { ...p, id: realId } : p)),
+      }));
+    });
   },
 
   updateBusinessInfo: (info) => {

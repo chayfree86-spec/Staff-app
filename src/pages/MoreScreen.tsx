@@ -11,7 +11,11 @@ export const MoreScreen: React.FC = () => {
     staffList,
     advanceList,
     deductionList,
+    currentUser,
   } = useStore();
+
+  // Business/user management is only for the primary admin (first user).
+  const isPrimaryAdmin = currentUser?.id === '1';
 
   const activeStaff = staffList.filter(s => s.status === 'Active');
 
@@ -83,9 +87,17 @@ export const MoreScreen: React.FC = () => {
       <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[24px] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
         <div className="bg-app-surface border border-app-border/40 rounded-[18px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-accent/30 to-emerald-500 text-app-text-primary font-black flex items-center justify-center text-sm shadow-md border-0 shrink-0 select-none">
-              {businessInitials}
-            </div>
+            {businessInfo.logo ? (
+              <img
+                src={businessInfo.logo}
+                alt="Business Logo"
+                className="w-12 h-12 rounded-full object-cover shadow-md border border-app-border shrink-0 select-none"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-accent/30 to-emerald-500 text-app-text-primary font-black flex items-center justify-center text-sm shadow-md border-0 shrink-0 select-none">
+                {businessInitials}
+              </div>
+            )}
             <div className="overflow-hidden">
               <div className="rounded-full px-2.5 py-0.5 text-[8px] uppercase tracking-[0.15em] font-black bg-accent/10 text-accent w-max select-none">
                 Business Details
@@ -257,6 +269,33 @@ export const MoreScreen: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Row 3: Businesses & Users (primary admin only) */}
+              {isPrimaryAdmin && (
+                <div
+                  onClick={() => setScreen('businesses')}
+                  className="p-5 flex items-center justify-between gap-4 hover:bg-primary/[0.01] transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>add_business</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-app-text-primary text-sm group-hover:text-primary transition-colors">
+                        Businesses & Users
+                      </h4>
+                      <p className="text-[11px] text-app-text-secondary mt-1 max-w-sm leading-relaxed">
+                        View all businesses and their admin users, create new businesses, and turn user logins on or off.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/25 dark:text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                      <span className="material-symbols-rounded select-none text-sm font-bold">chevron_right</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
             </div>
           </div>

@@ -56,26 +56,16 @@ function require_post(): void
     }
 }
 
-function valid_uuid(string $value): bool
+// IDs are INT AUTO_INCREMENT; the server assigns them. This validates ids the
+// frontend sends back for updates/deletes (rejects temp ids like "tmp-...").
+function require_int_id(array $input, string $key = 'id'): int
 {
-    return (bool) preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $value);
-}
-
-function uuid_v4(): string
-{
-    $bytes = random_bytes(16);
-    $bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
-    $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
-    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
-}
-
-function id_from_input(array $input, string $key = 'id'): string
-{
-    $id = trim((string) ($input[$key] ?? ''));
-    if ($id !== '' && !valid_uuid($id)) {
-        respond(['ok' => false, 'message' => 'Invalid id format.'], 422);
+    $raw = $input[$key] ?? null;
+    $id = (int) $raw;
+    if ($id <= 0 || (string) $id !== trim((string) $raw)) {
+        respond(['ok' => false, 'message' => 'Valid numeric id is required.'], 422);
     }
-    return $id !== '' ? $id : uuid_v4();
+    return $id;
 }
 
 function valid_date(?string $value): bool

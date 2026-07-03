@@ -7,11 +7,35 @@ export const BusinessScreen: React.FC = () => {
   const [name, setName] = useState(businessInfo.name);
   const [mobile, setMobile] = useState(businessInfo.mobile);
   const [address, setAddress] = useState(businessInfo.address);
+  const [logo, setLogo] = useState(businessInfo.logo || '');
   const [saveStatus, setSaveStatus] = useState(false);
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      window.alert("Image size should not exceed 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogo(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLogo('');
+    const input = document.getElementById('store-logo-input') as HTMLInputElement;
+    if (input) input.value = '';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateBusinessInfo({ name, mobile, address });
+    updateBusinessInfo({ name, mobile, address, logo });
     setSaveStatus(true);
     setTimeout(() => {
       setSaveStatus(false);
@@ -43,9 +67,37 @@ export const BusinessScreen: React.FC = () => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Logo upload display */}
           <div className="flex flex-col items-center gap-2 py-2">
-            <div className="w-20 h-20 rounded-full bg-primary/10 border-2 border-dashed border-primary/30 flex flex-col items-center justify-center text-primary cursor-pointer hover:bg-primary/15 transition-all">
-              <span className="material-symbols-rounded select-none" style={{ fontSize: '30px' }}>storefront</span>
-              <span className="text-[10px] font-bold mt-1">Upload</span>
+            <input
+              type="file"
+              id="store-logo-input"
+              accept="image/*"
+              className="hidden"
+              onChange={handleLogoChange}
+            />
+            <div className="relative group">
+              <div 
+                onClick={() => document.getElementById('store-logo-input')?.click()}
+                className="w-20 h-20 rounded-full bg-primary/10 border-2 border-dashed border-primary/30 flex flex-col items-center justify-center text-primary cursor-pointer hover:bg-primary/15 transition-all overflow-hidden"
+              >
+                {logo ? (
+                  <img src={logo} alt="Store Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <>
+                    <span className="material-symbols-rounded select-none" style={{ fontSize: '30px' }}>storefront</span>
+                    <span className="text-[10px] font-bold mt-1">Upload</span>
+                  </>
+                )}
+              </div>
+              
+              {logo && (
+                <button
+                  type="button"
+                  onClick={handleRemoveLogo}
+                  className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md border border-white hover:bg-rose-600 transition-colors cursor-pointer select-none"
+                >
+                  <span className="material-symbols-rounded select-none text-[14px]">close</span>
+                </button>
+              )}
             </div>
             <span className="text-[11px] text-app-text-secondary">Store Logo (Square image, max 2MB)</span>
           </div>

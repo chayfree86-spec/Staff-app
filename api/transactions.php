@@ -30,21 +30,19 @@ function transaction_kind_and_paise(string $type, float $amount): array
 }
 
 if ($action === 'create') {
-    $staffId = trim((string) ($input['staffId'] ?? ''));
+    $staffId = require_int_id($input, 'staffId');
     $date = (string) ($input['date'] ?? '');
-    if ($staffId === '' || !valid_date($date)) {
-        respond(['ok' => false, 'message' => 'Staff id and valid date are required.'], 422);
+    if (!valid_date($date)) {
+        respond(['ok' => false, 'message' => 'Valid date is required.'], 422);
     }
 
     [$kind, $paise] = transaction_kind_and_paise($type, (float) ($input['amount'] ?? 0));
-    $id = id_from_input($input);
 
     $stmt = $pdo->prepare(
-        'INSERT INTO staff_transactions (id, business_id, staff_id, kind, amount_paise, transaction_date, remarks, created_by)
-         SELECT ?, ?, id, ?, ?, ?, ?, ? FROM staff WHERE id = ? AND business_id = ?'
+        'INSERT INTO staff_transactions (business_id, staff_id, kind, amount_paise, transaction_date, remarks, created_by)
+         SELECT ?, id, ?, ?, ?, ?, ? FROM staff WHERE id = ? AND business_id = ?'
     );
     $stmt->execute([
-        $id,
         $businessId,
         $kind,
         $paise,
@@ -59,14 +57,14 @@ if ($action === 'create') {
         respond(['ok' => false, 'message' => 'Staff member not found.'], 404);
     }
 
-    respond(['ok' => true, 'id' => $id]);
+    respond(['ok' => true, 'id' => (int) $pdo->lastInsertId()]);
 }
 
 if ($action === 'update') {
-    $id = trim((string) ($input['id'] ?? ''));
+    $id = require_int_id($input);
     $date = (string) ($input['date'] ?? '');
-    if ($id === '' || !valid_date($date)) {
-        respond(['ok' => false, 'message' => 'Transaction id and valid date are required.'], 422);
+    if (!valid_date($date)) {
+        respond(['ok' => false, 'message' => 'Valid date is required.'], 422);
     }
 
     [$kind, $paise] = transaction_kind_and_paise($type, (float) ($input['amount'] ?? 0));
@@ -89,10 +87,7 @@ if ($action === 'update') {
 }
 
 if ($action === 'delete') {
-    $id = trim((string) ($input['id'] ?? ''));
-    if ($id === '') {
-        respond(['ok' => false, 'message' => 'Transaction id is required.'], 422);
-    }
+    $id = require_int_id($input);
 
     $stmt = $pdo->prepare('DELETE FROM staff_transactions WHERE id = ? AND business_id = ?');
     $stmt->execute([$id, $businessId]);
