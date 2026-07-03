@@ -1,0 +1,96 @@
+import React, { useState } from 'react';
+import { useStore } from '../store/useStore';
+
+export const BusinessScreen: React.FC = () => {
+  const { businessInfo, updateBusinessInfo, setScreen } = useStore();
+
+  const [name, setName] = useState(businessInfo.name);
+  const [mobile, setMobile] = useState(businessInfo.mobile);
+  const [address, setAddress] = useState(businessInfo.address);
+  const [saveStatus, setSaveStatus] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateBusinessInfo({ name, mobile, address });
+    setSaveStatus(true);
+    setTimeout(() => {
+      setSaveStatus(false);
+    }, 1500);
+  };
+
+  return (
+    <div className="flex flex-col gap-4 pb-24 animate-in fade-in duration-200">
+      {/* Header bar */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setScreen('more')}
+          className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0"
+        >
+          <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>arrow_back</span>
+        </button>
+        <h2 className="text-base font-bold text-app-text-primary">Business Profile</h2>
+      </div>
+
+      {/* Profile Form */}
+      <div className="bg-app-surface p-5 rounded-app-card border border-app-border shadow-sm flex flex-col gap-4">
+        {saveStatus && (
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-500 rounded-app-card text-xs font-semibold border border-emerald-200 flex items-center gap-2">
+            <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>check_circle</span>
+            Business profile updated successfully
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Logo upload (Mock display) */}
+          <div className="flex flex-col items-center gap-2 py-2">
+            <div className="w-20 h-20 rounded-full bg-primary/10 border-2 border-dashed border-primary/30 flex flex-col items-center justify-center text-primary cursor-pointer hover:bg-primary/15 transition-all">
+              <span className="material-symbols-rounded select-none" style={{ fontSize: '30px' }}>storefront</span>
+              <span className="text-[10px] font-bold mt-1">Upload</span>
+            </div>
+            <span className="text-[11px] text-app-text-secondary">Store Logo (Square image, max 2MB)</span>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-app-text-secondary uppercase">Business Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Flavors Cafe"
+              className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-app-card text-sm text-app-text-primary focus:outline-none focus:border-primary font-medium"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-app-text-secondary uppercase">Contact Number</label>
+            <input
+              type="tel"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              placeholder="10-digit mobile number"
+              className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-app-card text-sm text-app-text-primary focus:outline-none focus:border-primary font-medium"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-app-text-secondary uppercase">Store Address</label>
+            <textarea
+              rows={3}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Complete physical address..."
+              className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-app-card text-sm text-app-text-primary focus:outline-none focus:border-primary font-medium resize-none leading-relaxed"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-3 bg-primary text-white text-xs font-bold rounded-app-card hover:bg-opacity-95 shadow-md shadow-primary/10 mt-2"
+          >
+            Save Changes
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};

@@ -1,0 +1,199 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+@import "tailwindcss";
+@import "@fontsource/dm-sans/index.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'DM Sans', sans-serif;
+  
+  --color-primary: #4F46E5;
+  --color-accent: #10B981;
+  --color-app-bg: var(--bg-app);
+  --color-app-surface: var(--bg-surface);
+  --color-app-border: var(--border-app);
+  --color-app-text-primary: var(--text-primary);
+  --color-app-text-secondary: var(--text-secondary);
+  
+  --color-present: #22C55E;
+  --color-absent: #EF4444;
+  --color-halfday: #F59E0B;
+  --color-info: #3B82F6;
+  
+  --radius-app-card: 20px;
+  --shadow-app-soft: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.025);
+}
+
+:root {
+  --bg-app: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --border-app: #E2E8F0;
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  
+  --rdp-cell-size: 38px;
+  --rdp-accent-color: #4F46E5;
+  --rdp-background-color: rgba(79, 70, 229, 0.1);
+  
+  --summary-earned: #1E3A8A; /* dark blue */
+  --summary-paid: #064E3B; /* dark emerald */
+  --summary-due: #78350F; /* dark amber */
+  --color-net-pay: #1D4ED8; /* solid blue (blue-700) */
+}
+
+.dark {
+  --bg-app: #0B0F19;
+  --bg-surface: #151D30;
+  --border-app: #1E293B;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  
+  --rdp-accent-color: #6366F1;
+  
+  --summary-earned: #93C5FD; /* light blue */
+  --summary-paid: #6EE7B7; /* light emerald */
+  --summary-due: #FCD34D; /* light amber */
+  --color-net-pay: #60A5FA; /* light solid blue */
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  overflow-x: hidden;
+  user-select: none; /* Make it feel like a native app */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Material Symbols sizing helper */
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+}
+
+/* Remove arrows/spinners from amount number input */
+input[type="number"].no-spinners::-webkit-outer-spin-button,
+input[type="number"].no-spinners::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"].no-spinners {
+  -moz-appearance: textfield;
+}
+
+/* Smooth active state clicks */
+button:active {
+  transform: scale(0.98);
+  transition: transform 0.05s ease;
+}
+
+/* DayPicker custom UI styling */
+.rdp {
+  --rdp-cell-size: 38px;
+  --rdp-accent-color: #4F46E5;
+  --rdp-background-color: rgba(79, 70, 229, 0.1);
+  margin: 0;
+}
+.rdp-day_selected, .rdp-day_selected:focus-visible, .rdp-day_selected:hover {
+  background-color: var(--rdp-accent-color) !important;
+  color: white !important;
+  border-radius: 50%;
+}
+.rdp-day {
+  border-radius: 50%;
+}
+.rdp-day:hover {
+  background-color: rgba(79, 70, 229, 0.1);
+}
+.rdp-head_cell {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.rdp-nav_button {
+  color: var(--text-primary);
+  border-radius: 50%;
+}
+.rdp-nav_button:hover {
+  background-color: rgba(79, 70, 229, 0.1);
+}
+
+/* Custom subtle dot grid pattern for background */
+.bg-grid-dots {
+  background-image: radial-gradient(var(--border-app) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+/* Custom scrollbar styling for webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* slate-300 */
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155; /* slate-700 */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* slate-400 */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569; /* slate-600 */
+}
+
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.dark * {
+  scrollbar-color: #334155 transparent;
+}
+
+/* Print styles for Salary Slip PDF */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  #print-payslip, #print-payslip * {
+    visibility: visible !important;
+  }
+  #print-payslip {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
