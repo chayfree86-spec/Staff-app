@@ -254,22 +254,6 @@ export const StaffScreen: React.FC = () => {
         </button>
       </div>
 
-      {/* Search Bar - Double Bezel Look */}
-      <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-2xl p-1 shadow-sm">
-        <div className="relative bg-app-surface border border-app-border/40 rounded-[calc(1rem-0.125rem)]">
-          <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
-            search
-          </span>
-          <input
-            type="text"
-            placeholder="Search staff members..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-transparent text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none font-semibold"
-          />
-        </div>
-      </div>
-
       {/* Staff list cards grid (Halved radius: 2.5rem -> 1.25rem, inner core: calc(2.5rem-0.25rem) i.e. 36px -> 18px) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {filteredStaff.map((staff) => {
@@ -364,6 +348,22 @@ export const StaffScreen: React.FC = () => {
             <p className="mt-2 text-sm font-semibold">No staff members found.</p>
           </div>
         )}
+      </div>
+
+      {/* Search Bar - Double Bezel Look */}
+      <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-2xl p-1 shadow-sm">
+        <div className="relative bg-app-surface border border-app-border/40 rounded-[calc(1rem-0.125rem)]">
+          <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
+            search
+          </span>
+          <input
+            type="text"
+            placeholder="Search staff members..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 bg-transparent text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none font-semibold"
+          />
+        </div>
       </div>
 
       {/* Add Staff Dialog */}
