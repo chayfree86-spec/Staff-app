@@ -249,20 +249,20 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
               <h3 className="text-[8px] font-bold text-app-text-secondary uppercase tracking-widest leading-none">Attendance Summary</h3>
               <div className="grid grid-cols-5 bg-app-surface border border-app-border/50 rounded-xl py-1.5 text-center text-[9px] font-bold">
                 <div className="border-r border-app-border/30">
-                  <div className="text-app-text-secondary text-[7px] uppercase">Present</div>
-                  <div className="text-app-text-primary font-black mt-0.5">{presentDays}</div>
+                  <div className="text-emerald-600 dark:text-emerald-500 text-[7px] uppercase">Present</div>
+                  <div className="text-emerald-600 dark:text-emerald-500 font-black mt-0.5">{presentDays}</div>
                 </div>
                 <div className="border-r border-app-border/30">
-                  <div className="text-app-text-secondary text-[7px] uppercase">Half Day</div>
-                  <div className="text-app-text-primary font-black mt-0.5">{halfDays}</div>
+                  <div className="text-amber-500 dark:text-amber-400 text-[7px] uppercase">Half Day</div>
+                  <div className="text-amber-500 dark:text-amber-400 font-black mt-0.5">{halfDays}</div>
                 </div>
                 <div className="border-r border-app-border/30">
-                  <div className="text-app-text-secondary text-[7px] uppercase">Holiday</div>
-                  <div className="text-app-text-primary font-black mt-0.5">{holidayDays}</div>
+                  <div className="text-blue-500 dark:text-blue-400 text-[7px] uppercase">Holiday</div>
+                  <div className="text-blue-500 dark:text-blue-400 font-black mt-0.5">{holidayDays}</div>
                 </div>
                 <div className="border-r border-app-border/30">
-                  <div className="text-app-text-secondary text-[7px] uppercase">Absent</div>
-                  <div className="text-app-text-primary font-black mt-0.5">{absentDays}</div>
+                  <div className="text-rose-500 dark:text-rose-400 text-[7px] uppercase">Absent</div>
+                  <div className="text-rose-500 dark:text-rose-400 font-black mt-0.5">{absentDays}</div>
                 </div>
                 <div>
                   <div className="text-primary text-[7px] uppercase">Paid Days</div>
