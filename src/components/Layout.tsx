@@ -357,7 +357,7 @@ export const Layout: React.FC = () => {
                 <button
                   key={item.id}
                   onClick={() => setScreen(item.id as any)}
-                  className="flex flex-col items-center gap-1 -mt-7 shrink-0 cursor-pointer active:scale-95 transition-transform duration-300"
+                  className="flex flex-col items-center gap-2.5 -mt-7 shrink-0 cursor-pointer active:scale-95 transition-transform duration-300"
                 >
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#A855F7] to-[#7C3AED] text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 border-[3px] border-app-surface">
                     <span className="material-symbols-rounded select-none text-2xl leading-none">
