@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { CustomDialog } from '../components/ui/CustomDialog';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { format, parseISO } from 'date-fns';
+import { listBusinessesRequest } from '../api/client';
 
 export const DashboardScreen: React.FC = () => {
   const {
@@ -16,6 +17,7 @@ export const DashboardScreen: React.FC = () => {
     currentDate,
     currentUser,
     setIsAddStaffModalOpen,
+    businessInfo,
   } = useStore();
 
   // 1. Today's attendance counts
@@ -128,6 +130,15 @@ export const DashboardScreen: React.FC = () => {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 4);
 
+  const [businessesList, setBusinessesList] = useState<any[]>([]);
+  useEffect(() => {
+    listBusinessesRequest()
+      .then(({ businesses }) => {
+        setBusinessesList(businesses || []);
+      })
+      .catch(() => {});
+  }, []);
+
   // 3. Recent attendance (today's marked entries, most recent first)
   const recentAttendance = Object.entries(dayRecords)
     .map(([staffId, record]) => ({ staff: staffList.find((s) => s.id === staffId), record }))
@@ -186,7 +197,7 @@ export const DashboardScreen: React.FC = () => {
 
 
   return (
-    <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200 w-full max-w-2xl lg:max-w-7xl mx-auto px-4 md:px-8">
+    <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200 w-full max-w-2xl lg:max-w-none mx-auto lg:px-6 px-4">
       {/* Greeting */}
       <div>
         <h2 className="text-xl font-black text-app-text-primary tracking-tight flex items-center gap-1.5">
@@ -514,6 +525,76 @@ export const DashboardScreen: React.FC = () => {
                       <span className="text-xs font-black text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full shrink-0">
                         ₹{payout.amount.toLocaleString('en-IN')}
                       </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* My Businesses Panel */}
+          <div className="bg-app-surface border border-app-border rounded-[1.5rem] p-5 shadow-sm flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>corporate_fare</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-app-text-primary tracking-tight">My Businesses</h3>
+                  <span className="text-[9px] font-bold text-app-text-secondary uppercase tracking-widest">{businessesList.length} registered</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setScreen('businesses')}
+                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-0.5 cursor-pointer"
+              >
+                Manage
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '12px' }}>chevron_right</span>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {businessesList.length === 0 ? (
+                <div className="py-4 text-center text-xs font-semibold text-app-text-secondary">
+                  Loading businesses...
+                </div>
+              ) : (
+                businessesList.map((biz) => {
+                  const isCurrent = biz.name === businessInfo.name;
+                  const initials = biz.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+                  return (
+                    <div
+                      key={biz.id}
+                      onClick={() => setScreen('businesses')}
+                      className={`flex items-center justify-between gap-3 p-3 bg-app-bg border rounded-2xl transition-all cursor-pointer group ${
+                        isCurrent 
+                          ? 'border-indigo-500/30 ring-1 ring-indigo-500/10' 
+                          : 'border-app-border/40 hover:border-indigo-500/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        {biz.logoUrl ? (
+                          <img
+                            src={biz.logoUrl}
+                            alt={biz.name}
+                            className="w-8 h-8 rounded-full object-cover shrink-0"
+                          />
+                        ) : (
+                          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getProfileGradient(biz.name)} text-white font-black text-[10px] flex items-center justify-center shrink-0`}>
+                            {initials}
+                          </div>
+                        )}
+                        <div className="overflow-hidden">
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="font-bold text-app-text-primary text-xs truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{biz.name}</h4>
+                            {isCurrent && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/25 shrink-0" title="Current Active Business" />
+                            )}
+                          </div>
+                          <p className="text-[9px] text-app-text-secondary font-semibold mt-0.5">{biz.mobile || 'No mobile'} • {biz.address || 'No address'}</p>
+                        </div>
+                      </div>
+                      <span className="material-symbols-rounded text-app-text-secondary/40 group-hover:text-indigo-500/70 transition-colors select-none shrink-0" style={{ fontSize: '16px' }}>chevron_right</span>
                     </div>
                   );
                 })
