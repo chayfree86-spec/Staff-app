@@ -156,7 +156,7 @@ export const DashboardScreen: React.FC = () => {
 
 
   return (
-    <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200 max-w-2xl mx-auto w-full">
+    <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200 max-w-2xl lg:max-w-5xl mx-auto w-full">
       {/* Greeting */}
       <div>
         <h2 className="text-xl font-black text-app-text-primary tracking-tight flex items-center gap-1.5">
@@ -165,181 +165,190 @@ export const DashboardScreen: React.FC = () => {
         <p className="text-xs font-semibold text-app-text-secondary mt-1">Here's what's happening today</p>
       </div>
 
-      {/* Today's Summary - purple hero card */}
-      <div className="bg-gradient-to-tr from-indigo-600 via-purple-600 to-fuchsia-600 rounded-[1.5rem] p-5 text-white shadow-lg shadow-indigo-500/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-              <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>calendar_today</span>
-            </div>
-            <h3 className="text-sm font-black tracking-tight">Today's Summary</h3>
-          </div>
-          <div className="flex items-center gap-1 bg-white/15 rounded-full px-3 py-1.5 text-[11px] font-bold">
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>event</span>
-            <span>{formattedDate}</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-4 gap-2 mt-5">
-          <div>
-            <div className="text-[9px] uppercase font-bold text-white/70 tracking-wider">Total Staff</div>
-            <div className="text-xl font-black mt-1 flex items-center gap-1">
-              {totalStaffCount}
-              <span className="material-symbols-rounded select-none text-white/60" style={{ fontSize: '14px' }}>group</span>
-            </div>
-          </div>
-          <div>
-            <div className="text-[9px] uppercase font-bold text-white/70 tracking-wider">Present</div>
-            <div className="text-xl font-black mt-1">{presentCount}</div>
-            <div className="text-[9px] font-bold text-emerald-300 mt-0.5">{pct(presentCount)}%</div>
-          </div>
-          <div>
-            <div className="text-[9px] uppercase font-bold text-white/70 tracking-wider">Absent</div>
-            <div className="text-xl font-black mt-1">{absentCount}</div>
-            <div className="text-[9px] font-bold text-rose-300 mt-0.5">{pct(absentCount)}%</div>
-          </div>
-          <div>
-            <div className="text-[9px] uppercase font-bold text-white/70 tracking-wider">Half Day</div>
-            <div className="text-xl font-black mt-1">{halfDayCount}</div>
-            <div className="text-[9px] font-bold text-amber-300 mt-0.5">{pct(halfDayCount)}%</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-5 gap-2">
-        {quickActions.map((action) => (
-          <button
-            key={action.label}
-            onClick={action.onClick}
-            className="flex flex-col items-center gap-2 p-3 bg-app-surface border border-app-border rounded-2xl hover:-translate-y-0.5 hover:border-primary/20 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer shadow-sm"
-          >
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${actionColorClasses[action.color]}`}>
-              <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>{action.icon}</span>
-            </div>
-            <span className="text-[8.5px] font-bold text-app-text-secondary text-center leading-tight">{action.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Stats Grid 2x2 */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-app-surface border border-app-border rounded-2xl p-4 shadow-sm">
-          <div className="w-9 h-9 rounded-xl bg-present/10 text-present flex items-center justify-center mb-2">
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>check_circle</span>
-          </div>
-          <div className="text-xl font-black text-app-text-primary">{presentCount}</div>
-          <div className="text-[10px] font-bold text-app-text-secondary mt-0.5">Present <span className="text-present">{pct(presentCount)}%</span></div>
-        </div>
-        <div className="bg-app-surface border border-app-border rounded-2xl p-4 shadow-sm">
-          <div className="w-9 h-9 rounded-xl bg-absent/10 text-absent flex items-center justify-center mb-2">
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>cancel</span>
-          </div>
-          <div className="text-xl font-black text-app-text-primary">{absentCount}</div>
-          <div className="text-[10px] font-bold text-app-text-secondary mt-0.5">Absent <span className="text-absent">{pct(absentCount)}%</span></div>
-        </div>
-        <div className="bg-app-surface border border-app-border rounded-2xl p-4 shadow-sm">
-          <div className="w-9 h-9 rounded-xl bg-halfday/10 text-halfday flex items-center justify-center mb-2">
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>schedule</span>
-          </div>
-          <div className="text-xl font-black text-app-text-primary">{halfDayCount}</div>
-          <div className="text-[10px] font-bold text-app-text-secondary mt-0.5">Half Day <span className="text-halfday">{pct(halfDayCount)}%</span></div>
-        </div>
-        <div className="bg-app-surface border border-app-border rounded-2xl p-4 shadow-sm">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2">
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>group</span>
-          </div>
-          <div className="text-xl font-black text-app-text-primary">{totalStaffCount}</div>
-          <div className="text-[10px] font-bold text-app-text-secondary mt-0.5">Total Staff</div>
-        </div>
-      </div>
-
-      {/* Month Salary Card */}
-      <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-[1.5rem] p-5 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden">
-        <span className="material-symbols-rounded select-none absolute -right-3 -bottom-3 text-white/10" style={{ fontSize: '110px' }}>currency_rupee</span>
-        
-        <div className="relative z-10 flex flex-col gap-4">
-          {/* Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-white/15">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
-                <span className="material-symbols-rounded text-base select-none">calendar_today</span>
-              </div>
-              <span className="text-xs font-black uppercase tracking-wider">{currentMonthLabel} Salary Details</span>
-            </div>
-          </div>
-
-          {/* Grid details */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[8px] uppercase font-black text-white/70 tracking-wider">Total Base Salary</span>
-              <span className="text-lg font-black leading-tight">₹{totalBaseSalary.toLocaleString('en-IN')}</span>
-              <span className="text-[7.5px] text-white/50 font-bold">(Full Month Potential)</span>
-            </div>
-            
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[8px] uppercase font-black text-emerald-300 tracking-wider">Earned So Far</span>
-              <span className="text-lg font-black leading-tight text-emerald-250">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
-              <span className="text-[7.5px] text-emerald-300/60 font-bold">(Attendance Based)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Attendance */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-sm font-black text-app-text-primary tracking-tight">Recent Attendance</h3>
-          <button
-            onClick={() => setScreen('attendance')}
-            className="text-xs font-bold text-primary hover:text-indigo-700 transition-colors flex items-center gap-0.5 cursor-pointer"
-          >
-            View All
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>chevron_right</span>
-          </button>
-        </div>
-
-        <div className="bg-app-surface border border-app-border rounded-2xl divide-y divide-app-border/60 shadow-sm overflow-hidden">
-          {recentAttendance.length === 0 && (
-            <div className="p-6 text-center text-xs font-semibold text-app-text-secondary">
-              No attendance marked for today yet.
-            </div>
-          )}
-          {recentAttendance.map(({ staff, record }) => {
-            const initials = staff.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
-            const statusClasses =
-              record.status === 'Present' ? 'bg-present/10 text-present' :
-              record.status === 'Absent' ? 'bg-absent/10 text-absent' :
-              record.status === 'Half Day' ? 'bg-halfday/10 text-halfday' :
-              record.status === 'Holiday' ? 'bg-info/10 text-info' :
-              'bg-slate-100 dark:bg-slate-800 text-app-text-secondary';
-            return (
-              <div
-                key={staff.id}
-                onClick={() => {
-                  setActiveStaffProfileId(staff.id);
-                  setScreen('staff-profile');
-                }}
-                className="flex items-center justify-between gap-3 p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-xs flex items-center justify-center shrink-0`}>
-                    {initials}
-                  </div>
-                  <div className="overflow-hidden">
-                    <h4 className="font-bold text-app-text-primary text-xs truncate">{staff.name}</h4>
-                    <p className="text-[10px] text-app-text-secondary font-semibold mt-0.5">
-                      {format(parseISO(record.timestamp), 'hh:mm a')}
-                    </p>
-                  </div>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start w-full">
+        {/* Left Column (3/5 width on desktop) */}
+        <div className="flex flex-col gap-5 lg:col-span-3 w-full">
+          {/* Today's Summary - purple hero card */}
+          <div className="bg-gradient-to-tr from-indigo-600 via-purple-600 to-fuchsia-600 rounded-[1.5rem] p-5 text-white shadow-lg shadow-indigo-500/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>calendar_today</span>
                 </div>
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 ${statusClasses}`}>
-                  {record.status}
-                </span>
+                <h3 className="text-sm font-black tracking-tight">Today's Summary</h3>
               </div>
-            );
-          })}
+              <div className="flex items-center gap-1 bg-white/15 rounded-full px-3 py-1.5 text-[11px] font-bold">
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>event</span>
+                <span>{formattedDate}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2 mt-5">
+              <div>
+                <div className="text-[9px] uppercase font-bold text-white/70 tracking-wider">Total Staff</div>
+                <div className="text-xl font-black mt-1 flex items-center gap-1">
+                  {totalStaffCount}
+                  <span className="material-symbols-rounded select-none text-white/60" style={{ fontSize: '14px' }}>group</span>
+                </div>
+              </div>
+              <div>
+                <div className="text-[9px] uppercase font-bold text-white/70 tracking-wider">Present</div>
+                <div className="text-xl font-black mt-1">{presentCount}</div>
+                <div className="text-[9px] font-bold text-emerald-300 mt-0.5">{pct(presentCount)}%</div>
+              </div>
+              <div>
+                <div className="text-[9px] uppercase font-bold text-white/70 tracking-wider">Absent</div>
+                <div className="text-xl font-black mt-1">{absentCount}</div>
+                <div className="text-[9px] font-bold text-rose-300 mt-0.5">{pct(absentCount)}%</div>
+              </div>
+              <div>
+                <div className="text-[9px] uppercase font-bold text-white/70 tracking-wider">Half Day</div>
+                <div className="text-xl font-black mt-1">{halfDayCount}</div>
+                <div className="text-[9px] font-bold text-amber-300 mt-0.5">{pct(halfDayCount)}%</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-5 gap-2">
+            {quickActions.map((action) => (
+              <button
+                key={action.label}
+                onClick={action.onClick}
+                className="flex flex-col items-center gap-2 p-3 bg-app-surface border border-app-border rounded-2xl hover:-translate-y-0.5 hover:border-primary/20 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer shadow-sm"
+              >
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${actionColorClasses[action.color]}`}>
+                  <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>{action.icon}</span>
+                </div>
+                <span className="text-[8.5px] font-bold text-app-text-secondary text-center leading-tight">{action.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Month Salary Card */}
+          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-[1.5rem] p-5 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden">
+            <span className="material-symbols-rounded select-none absolute -right-3 -bottom-3 text-white/10" style={{ fontSize: '110px' }}>currency_rupee</span>
+            
+            <div className="relative z-10 flex flex-col gap-4">
+              {/* Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-white/15">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
+                    <span className="material-symbols-rounded text-base select-none">calendar_today</span>
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-wider">{currentMonthLabel} Salary Details</span>
+                </div>
+              </div>
+
+              {/* Grid details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[8px] uppercase font-black text-white/70 tracking-wider">Total Base Salary</span>
+                  <span className="text-lg font-black leading-tight">₹{totalBaseSalary.toLocaleString('en-IN')}</span>
+                  <span className="text-[7.5px] text-white/50 font-bold">(Full Month Potential)</span>
+                </div>
+                
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[8px] uppercase font-black text-emerald-300 tracking-wider">Earned So Far</span>
+                  <span className="text-lg font-black leading-tight text-emerald-250">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
+                  <span className="text-[7.5px] text-emerald-300/60 font-bold">(Attendance Based)</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>    </div>
+
+        {/* Right Column (2/5 width on desktop) */}
+        <div className="flex flex-col gap-5 lg:col-span-2 w-full">
+          {/* Stats Grid 2x2 */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-app-surface border border-app-border rounded-2xl p-4 shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-present/10 text-present flex items-center justify-center mb-2">
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>check_circle</span>
+              </div>
+              <div className="text-xl font-black text-app-text-primary">{presentCount}</div>
+              <div className="text-[10px] font-bold text-app-text-secondary mt-0.5">Present <span className="text-present">{pct(presentCount)}%</span></div>
+            </div>
+            <div className="bg-app-surface border border-app-border rounded-2xl p-4 shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-absent/10 text-absent flex items-center justify-center mb-2">
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>cancel</span>
+              </div>
+              <div className="text-xl font-black text-app-text-primary">{absentCount}</div>
+              <div className="text-[10px] font-bold text-app-text-secondary mt-0.5">Absent <span className="text-absent">{pct(absentCount)}%</span></div>
+            </div>
+            <div className="bg-app-surface border border-app-border rounded-2xl p-4 shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-halfday/10 text-halfday flex items-center justify-center mb-2">
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>schedule</span>
+              </div>
+              <div className="text-xl font-black text-app-text-primary">{halfDayCount}</div>
+              <div className="text-[10px] font-bold text-app-text-secondary mt-0.5">Half Day <span className="text-halfday">{pct(halfDayCount)}%</span></div>
+            </div>
+            <div className="bg-app-surface border border-app-border rounded-2xl p-4 shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2">
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>group</span>
+              </div>
+              <div className="text-xl font-black text-app-text-primary">{totalStaffCount}</div>
+              <div className="text-[10px] font-bold text-app-text-secondary mt-0.5">Total Staff</div>
+            </div>
+          </div>
+
+          {/* Recent Attendance */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-sm font-black text-app-text-primary tracking-tight">Recent Attendance</h3>
+              <button
+                onClick={() => setScreen('attendance')}
+                className="text-xs font-bold text-primary hover:text-indigo-700 transition-colors flex items-center gap-0.5 cursor-pointer"
+              >
+                View All
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>chevron_right</span>
+              </button>
+            </div>
+
+            <div className="bg-app-surface border border-app-border rounded-2xl divide-y divide-app-border/60 shadow-sm overflow-hidden">
+              {recentAttendance.length === 0 && (
+                <div className="p-6 text-center text-xs font-semibold text-app-text-secondary">
+                  No attendance marked for today yet.
+                </div>
+              )}
+              {recentAttendance.map(({ staff, record }) => {
+                const initials = staff.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+                const statusClasses =
+                  record.status === 'Present' ? 'bg-present/10 text-present' :
+                  record.status === 'Absent' ? 'bg-absent/10 text-absent' :
+                  record.status === 'Half Day' ? 'bg-halfday/10 text-halfday' :
+                  record.status === 'Holiday' ? 'bg-info/10 text-info' :
+                  'bg-slate-100 dark:bg-slate-800 text-app-text-secondary';
+                return (
+                  <div
+                    key={staff.id}
+                    onClick={() => {
+                      setActiveStaffProfileId(staff.id);
+                      setScreen('staff-profile');
+                    }}
+                    className="flex items-center justify-between gap-3 p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-xs flex items-center justify-center shrink-0`}>
+                        {initials}
+                      </div>
+                      <div className="overflow-hidden">
+                        <h4 className="font-bold text-app-text-primary text-xs truncate">{staff.name}</h4>
+                        <p className="text-[10px] text-app-text-secondary font-semibold mt-0.5">
+                          {format(parseISO(record.timestamp), 'hh:mm a')}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 ${statusClasses}`}>
+                      {record.status}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
