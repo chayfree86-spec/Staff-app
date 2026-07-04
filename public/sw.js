@@ -9,6 +9,23 @@ const INITIAL_CACHES = [
   '/material-symbols-rounded.ttf',
 ];
 
+// Helper to fetch resource with a timeout (in milliseconds)
+const fetchWithTimeout = (request, timeoutMs = 1000) => {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error('Fetch timeout')), timeoutMs);
+    fetch(request).then(
+      (response) => {
+        clearTimeout(timeoutId);
+        resolve(response);
+      },
+      (err) => {
+        clearTimeout(timeoutId);
+        reject(err);
+      }
+    );
+  });
+};
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -42,14 +59,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache First Strategy for font and assets that do not change often:
-  if (event.request.url.includes('/material-symbols-rounded.ttf') || event.request.url.includes('/pwa-icon.png')) {
+  // Network-First with Cache-Fallback and Timeout for local static graphics, fonts, and assets:
+  // This allows updated files on the server to load immediately on refresh,
+  // while falling back to cached versions within 1 second if offline or on a slow connection.
+  const isStaticAsset = 
+    event.request.url.includes('/material-symbols-rounded.ttf') || 
+    event.request.url.includes('/pwa-icon.png') ||
+    event.request.url.includes('/favicon.svg') ||
+    event.request.url.includes('/logo-transparent.png') ||
+    event.request.url.includes('/splashbg.png');
+
+  if (isStaticAsset) {
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        return fetch(event.request).then((response) => {
+      fetchWithTimeout(event.request, 1000)
+        .then((response) => {
           if (response && response.status === 200) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -57,8 +80,11 @@ self.addEventListener('fetch', (event) => {
             });
           }
           return response;
-        });
-      })
+        })
+        .catch(() => {
+          // If timeout or network failure, load from cache instantly
+          return caches.match(event.request);
+        })
     );
     return;
   }
