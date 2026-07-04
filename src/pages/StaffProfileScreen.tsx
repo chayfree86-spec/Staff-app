@@ -702,66 +702,57 @@ export const StaffProfileScreen: React.FC = () => {
     <div className="flex flex-col gap-6 pb-24 animate-in fade-in duration-200">
       
       {/* Back button and actions row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full select-none">
+      <div className="flex items-center justify-between gap-4 w-full select-none">
         <button
           onClick={() => setScreen('staff')}
-          className="text-xs font-bold text-app-text-secondary hover:text-primary flex items-center gap-1 cursor-pointer"
+          className="w-10 h-10 rounded-xl bg-app-surface border border-app-border flex items-center justify-center text-app-text-secondary active:scale-95 transition-all cursor-pointer shadow-sm hover:text-primary"
         >
-          <span className="material-symbols-rounded text-sm select-none">arrow_back</span>
-          <span>Back to staff</span>
+          <span className="material-symbols-rounded select-none text-xl">arrow_back</span>
         </button>
 
         {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Active/Deactive Toggle */}
-          <div className="flex items-center gap-2 bg-app-surface border border-app-border rounded-xl px-3 py-1.5 shadow-sm">
-            <span className="text-[10px] font-black text-app-text-secondary uppercase tracking-wider">Status:</span>
-            <span className={`text-xs font-bold ${staff.status === 'Active' ? 'text-emerald-600' : 'text-rose-500'}`}>
-              {staff.status === 'Active' ? 'Active' : 'Inactive'}
-            </span>
-            <button
-              type="button"
-              onClick={async () => {
-                const isDeactivating = staff.status === 'Active';
-                const message = isDeactivating
-                  ? `Are you sure you want to deactivate ${staff.name}? Deactivating will automatically mark them as Absent for today.`
-                  : `Are you sure you want to activate ${staff.name}?`;
-                
-                const confirmed = await confirm(message, {
-                  title: isDeactivating ? 'Deactivate Staff' : 'Activate Staff',
-                  type: isDeactivating ? 'danger' : 'success',
-                  confirmText: isDeactivating ? 'Deactivate' : 'Activate',
-                });
+          <button
+            onClick={async () => {
+              const isDeactivating = staff.status === 'Active';
+              const message = isDeactivating
+                ? `Are you sure you want to deactivate ${staff.name}? Deactivating will automatically mark them as Absent for today.`
+                : `Are you sure you want to activate ${staff.name}?`;
+              
+              const confirmed = await confirm(message, {
+                title: isDeactivating ? 'Deactivate Staff' : 'Activate Staff',
+                type: isDeactivating ? 'danger' : 'success',
+                confirmText: isDeactivating ? 'Deactivate' : 'Activate',
+              });
 
-                if (confirmed) {
-                  updateStaff(staff.id, {
-                    status: isDeactivating ? 'Inactive' : 'Active',
-                    deactivationDate: isDeactivating ? currentDate : undefined,
-                  });
-                  if (isDeactivating) {
-                    markAttendance(currentDate, staff.id, 'Absent');
-                  }
+              if (confirmed) {
+                updateStaff(staff.id, {
+                  status: isDeactivating ? 'Inactive' : 'Active',
+                  deactivationDate: isDeactivating ? currentDate : undefined,
+                });
+                if (isDeactivating) {
+                  markAttendance(currentDate, staff.id, 'Absent');
                 }
-              }}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                staff.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                  staff.status === 'Active' ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
+              }
+            }}
+            className={`px-3 py-2 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95 ${
+              staff.status === 'Active' 
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
+                : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${staff.status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'} shrink-0`} />
+            <span>{staff.status === 'Active' ? 'Active' : 'Inactive'}</span>
+          </button>
 
           {/* Update button */}
           <button
             onClick={handleEditOpen}
-            className="px-3.5 py-1.5 bg-app-surface border border-app-border text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            className="w-10 h-10 rounded-xl bg-app-surface border border-app-border flex items-center justify-center text-indigo-600 dark:text-indigo-400 active:scale-95 transition-all cursor-pointer shadow-sm"
+            title="Update Details"
           >
-            <span className="material-symbols-rounded select-none text-primary" style={{ fontSize: '15px' }}>edit</span>
-            <span>Update</span>
+            <span className="material-symbols-rounded select-none text-lg">edit</span>
           </button>
 
           {/* Delete button */}
@@ -778,10 +769,10 @@ export const StaffProfileScreen: React.FC = () => {
                 setScreen('staff');
               }
             }}
-            className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 active:scale-95 transition-all cursor-pointer shadow-sm"
+            title="Delete Employee"
           >
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '15px' }}>delete</span>
-            <span>Delete</span>
+            <span className="material-symbols-rounded select-none text-lg">delete</span>
           </button>
         </div>
       </div>
@@ -959,14 +950,14 @@ export const StaffProfileScreen: React.FC = () => {
                       <div
                         key={`day-${dayNum}`}
                         onClick={() => !isFuture && handleDayClick(dayNum)}
-                        className={`aspect-square rounded-xl flex flex-col items-center justify-center font-black text-sm sm:text-base border transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                        className={`aspect-square rounded-xl flex flex-col items-center justify-center font-black text-sm sm:text-base border transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                           isFuture ? 'border-app-border/40 bg-app-bg/50 text-app-text-secondary/30 pointer-events-none opacity-40' :
-                          status === 'Present' ? 'bg-present border-present text-white shadow-sm hover:scale-110 cursor-pointer' :
-                          status === 'Absent' ? 'bg-absent border-absent text-white shadow-sm hover:scale-110 cursor-pointer' :
-                          status === 'Half Day' ? 'bg-halfday border-halfday text-white shadow-sm hover:scale-110 cursor-pointer' :
-                          status === 'Holiday' ? 'bg-info border-info text-white shadow-sm hover:scale-110 cursor-pointer' :
-                          isJoinDay ? 'border-primary border-2 bg-app-bg text-app-text-primary hover:scale-110 cursor-pointer shadow-md shadow-primary/5' :
-                          'border-app-border bg-app-bg text-app-text-secondary hover:border-primary/20 hover:scale-110 cursor-pointer'
+                          status === 'Present' ? 'bg-present border-present text-white shadow-sm active:scale-95 cursor-pointer' :
+                          status === 'Absent' ? 'bg-absent border-absent text-white shadow-sm active:scale-95 cursor-pointer' :
+                          status === 'Half Day' ? 'bg-halfday border-halfday text-white shadow-sm active:scale-95 cursor-pointer' :
+                          status === 'Holiday' ? 'bg-info border-info text-white shadow-sm active:scale-95 cursor-pointer' :
+                          isJoinDay ? 'border-primary border-2 bg-app-bg text-app-text-primary active:scale-95 cursor-pointer shadow-md shadow-primary/5' :
+                          'border-app-border bg-app-bg text-app-text-secondary active:scale-95 cursor-pointer'
                         }`}
                       >
                         <span className={isJoinDay ? 'mt-0.5' : ''}>{dayNum}</span>
