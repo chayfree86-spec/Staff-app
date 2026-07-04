@@ -85,9 +85,20 @@ export const DashboardScreen: React.FC = () => {
       acc.totalEarned += details.earned;
       acc.totalPaid += details.paid;
       acc.totalDue += details.due;
+      
+      const totalAdv = advanceList
+        .filter((a) => a.staffId === staff.id && a.date.startsWith(currentYearMonth))
+        .reduce((sum, item) => sum + item.amount, 0);
+
+      const totalDed = deductionList
+        .filter((d) => d.staffId === staff.id && d.date.startsWith(currentYearMonth))
+        .reduce((sum, item) => sum + item.amount, 0);
+
+      acc.totalAdvance += totalAdv;
+      acc.totalDeduction += totalDed;
       return acc;
     },
-    { totalEarned: 0, totalPaid: 0, totalDue: 0 }
+    { totalEarned: 0, totalPaid: 0, totalDue: 0, totalAdvance: 0, totalDeduction: 0 }
   );
 
   const totalBaseSalary = activeStaff.reduce((sum, s) => {
@@ -156,7 +167,7 @@ export const DashboardScreen: React.FC = () => {
 
 
   return (
-    <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200 max-w-2xl lg:max-w-5xl mx-auto w-full">
+    <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200 w-full max-w-2xl lg:max-w-7xl mx-auto px-4 md:px-8">
       {/* Greeting */}
       <div>
         <h2 className="text-xl font-black text-app-text-primary tracking-tight flex items-center gap-1.5">
@@ -241,18 +252,36 @@ export const DashboardScreen: React.FC = () => {
               </div>
 
               {/* Grid details */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[8px] uppercase font-black text-white/70 tracking-wider">Total Base Salary</span>
-                  <span className="text-lg font-black leading-tight">₹{totalBaseSalary.toLocaleString('en-IN')}</span>
+                  <span className="text-base font-black leading-tight">₹{totalBaseSalary.toLocaleString('en-IN')}</span>
                   <span className="text-[7.5px] text-white/50 font-bold">(Full Month Potential)</span>
                 </div>
                 
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[8px] uppercase font-black text-emerald-300 tracking-wider">Earned So Far</span>
-                  <span className="text-lg font-black leading-tight text-emerald-250">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
+                  <span className="text-base font-black leading-tight text-emerald-250">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
                   <span className="text-[7.5px] text-emerald-300/60 font-bold">(Attendance Based)</span>
                 </div>
+
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[8px] uppercase font-black text-amber-300 tracking-wider">Total Advance</span>
+                  <span className="text-base font-black leading-tight text-amber-250">₹{summaries.totalAdvance.toLocaleString('en-IN')}</span>
+                  <span className="text-[7.5px] text-amber-300/60 font-bold">(Advance Given)</span>
+                </div>
+
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[8px] uppercase font-black text-rose-300 tracking-wider">Total Deduction</span>
+                  <span className="text-base font-black leading-tight text-rose-250">₹{summaries.totalDeduction.toLocaleString('en-IN')}</span>
+                  <span className="text-[7.5px] text-rose-300/60 font-bold">(Deductions Logged)</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-0.5 border-t border-white/10 pt-3 mt-1">
+                <span className="text-[8px] uppercase font-black text-indigo-200 tracking-wider">Net Pending Due</span>
+                <span className="text-lg font-black leading-tight text-white">₹{summaries.totalDue.toLocaleString('en-IN')}</span>
+                <span className="text-[7.5px] text-indigo-200/60 font-bold">(Total Remaining to Pay)</span>
               </div>
             </div>
           </div>
