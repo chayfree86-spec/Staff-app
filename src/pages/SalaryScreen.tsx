@@ -71,6 +71,7 @@ export const SalaryScreen: React.FC = () => {
     let daysHoliday = 0;
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
+      if (dateStr > currentDate) return;
       if (dateStr.startsWith(joiningYearMonth) && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;
@@ -202,6 +203,7 @@ export const SalaryScreen: React.FC = () => {
     let daysHoliday = 0;
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
+      if (dateStr > currentDate) return;
       if (dateStr.startsWith(targetYearMonth) && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;

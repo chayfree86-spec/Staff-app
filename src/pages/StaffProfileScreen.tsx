@@ -160,6 +160,7 @@ export const StaffProfileScreen: React.FC = () => {
     let daysHoliday = 0;
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
+      if (dateStr > currentDate) return;
       if (dateStr.startsWith(targetYearMonth) && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;
@@ -396,6 +397,7 @@ export const StaffProfileScreen: React.FC = () => {
 
   daysInMonth.forEach((day) => {
     const dateStr = format(day, 'yyyy-MM-dd');
+    if (dateStr > currentDate) return;
     const record = attendance[dateStr]?.[staff.id];
     if (record) {
       if (record.status === 'Present') presentDays++;

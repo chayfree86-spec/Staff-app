@@ -49,7 +49,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
   staffId,
   monthLabel,
 }) => {
-  const { staffList, attendance, advanceList, deductionList, payoutList, businessInfo, settings } = useStore();
+  const { staffList, attendance, advanceList, deductionList, payoutList, businessInfo, settings, currentDate } = useStore();
 
   const staff = staffList.find((s) => s.id === staffId);
   if (!staff || !isOpen) return null;
@@ -76,6 +76,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
   let holidayDays = 0;
 
   Object.entries(attendance).forEach(([dateStr, record]) => {
+    if (dateStr > currentDate) return;
     if (dateStr.startsWith(targetYearMonth) && record[staffId]) {
       const status = record[staffId].status;
       if (status === 'Present') presentDays++;
