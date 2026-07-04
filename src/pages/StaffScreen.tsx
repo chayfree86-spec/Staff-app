@@ -241,7 +241,7 @@ export const StaffScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200">
+    <div className="flex flex-col gap-5 pb-44 animate-in fade-in duration-200">
       
       {/* Title bar: Heading and Add Button */}
       <div className="flex items-center justify-between">
@@ -350,19 +350,21 @@ export const StaffScreen: React.FC = () => {
         )}
       </div>
 
-      {/* Search Bar - Double Bezel Look */}
-      <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-2xl p-1 shadow-sm">
-        <div className="relative bg-app-surface border border-app-border/40 rounded-[calc(1rem-0.125rem)]">
-          <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
-            search
-          </span>
-          <input
-            type="text"
-            placeholder="Search staff members..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-transparent text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none font-semibold"
-          />
+      {/* Search Bar - Double Bezel Look (Fixed position above bottom menu bar) */}
+      <div className="fixed bottom-[calc(56px+env(safe-area-inset-bottom))] left-0 right-0 bg-app-surface/90 backdrop-blur-md border-t border-app-border p-4 z-30 shadow-[0_-8px_20px_rgba(0,0,0,0.04)] select-none">
+        <div className="max-w-md mx-auto bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-2xl p-1">
+          <div className="relative bg-app-surface border border-app-border/40 rounded-[calc(1rem-0.125rem)]">
+            <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
+              search
+            </span>
+            <input
+              type="text"
+              placeholder="Search staff members..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-transparent text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none font-semibold"
+            />
+          </div>
         </div>
       </div>
 
