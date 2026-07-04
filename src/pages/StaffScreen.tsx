@@ -340,6 +340,24 @@ export const StaffScreen: React.FC = () => {
           );
         })}
 
+        {/* "Add New Staff" Card - styled like a staff card */}
+        <div
+          onClick={() => setIsModalOpen(true)}
+          className="bg-black/[0.015] dark:bg-white/[0.015] border border-dashed border-app-border hover:border-primary/50 dark:hover:border-primary/70 rounded-[1.25rem] p-1 shadow-sm transition-all duration-300 active:scale-98 cursor-pointer group"
+        >
+          <div className="h-full min-h-[110px] bg-app-surface/50 border border-dashed border-app-border/60 rounded-[18px] flex flex-col items-center justify-center py-6 px-5 hover:bg-app-surface transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] text-app-text-secondary hover:text-primary">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#A855F7]/10 to-[#7C3AED]/10 text-primary flex items-center justify-center shadow-sm shrink-0 border border-primary/20 group-hover:scale-105 transition-transform duration-300">
+              <span className="material-symbols-rounded select-none text-xl">person_add</span>
+            </div>
+            <span className="text-[11px] font-black uppercase tracking-wider mt-3 select-none leading-none">
+              Add New Staff
+            </span>
+            <p className="text-[9px] text-app-text-secondary/70 font-semibold mt-1.5 select-none leading-none">
+              Register another employee
+            </p>
+          </div>
+        </div>
+
         {filteredStaff.length === 0 && (
           <div className="col-span-full bg-app-surface border border-app-border rounded-app-card p-12 text-center text-app-text-secondary">
             <span className="material-symbols-rounded text-4xl text-slate-300 dark:text-slate-700">
