@@ -278,19 +278,8 @@ export const DashboardScreen: React.FC = () => {
             
             <div className="flex flex-col gap-0.5">
               <span className="text-[8px] uppercase font-black text-emerald-300 tracking-wider">Earned So Far</span>
-              <span className="text-lg font-black leading-tight text-emerald-200">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
+              <span className="text-lg font-black leading-tight text-emerald-250">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
               <span className="text-[7.5px] text-emerald-300/60 font-bold">(Attendance Based)</span>
-            </div>
-
-            <div className="flex flex-col gap-0.5 border-t border-white/10 pt-3">
-              <span className="text-[8px] uppercase font-black text-white/70 tracking-wider">Paid</span>
-              <span className="text-sm font-black leading-tight">₹{summaries.totalPaid.toLocaleString('en-IN')}</span>
-            </div>
-
-            <div className="flex flex-col gap-0.5 border-t border-white/10 pt-3">
-              <span className="text-[8px] uppercase font-black text-amber-300 tracking-wider">Pending</span>
-              <span className="text-sm font-black leading-tight text-amber-200">₹{summaries.totalDue.toLocaleString('en-IN')}</span>
-              <span className="text-[7.5px] text-amber-300/50 font-bold">(Net Payable Due)</span>
             </div>
           </div>
         </div>
