@@ -303,7 +303,7 @@ export const StaffProfileScreen: React.FC = () => {
     }
 
     setPayoutError('');
-    paySalary(staff.id, amount, payoutMonth, currentDate, payoutMode, payoutRemarks);
+    paySalary(staff.id, amount, payoutMonth, payoutDate, payoutMode, payoutRemarks);
     setIsPayoutOpen(false);
     setPayoutAmount('');
     setPayoutDate('');
@@ -2121,11 +2121,13 @@ export const StaffProfileScreen: React.FC = () => {
                   </div>
 
                   {/* Payment Date */}
-                  <div className="flex flex-col gap-1 bg-app-bg px-3.5 py-2.5 rounded-xl border border-app-border">
-                    <label className="text-[9px] font-bold text-app-text-secondary uppercase tracking-widest leading-none">Payment Date (Today)</label>
-                    <span className="text-xs font-black text-app-text-primary mt-1.5 leading-none">
-                      {format(parseISO(currentDate), 'dd MMM yyyy')}
-                    </span>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Payment Date</label>
+                    <CustomDatePicker
+                      value={payoutDate}
+                      onChange={setPayoutDate}
+                      className="w-full"
+                    />
                   </div>
 
                   {/* Payment Mode */}
