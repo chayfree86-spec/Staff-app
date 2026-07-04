@@ -407,44 +407,44 @@ export const DeductionScreen: React.FC = () => {
     return (
       <div className="flex flex-col gap-6 animate-in fade-in duration-200">
         {/* Header bar */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setScreen('more')}
+              className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer shrink-0"
+            >
+              <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>arrow_back</span>
+            </button>
+            <h2 className="text-sm font-black text-app-text-primary tracking-tight select-none">Deduction Ledger</h2>
+          </div>
+          
           <button
-            onClick={() => setScreen('more')}
-            className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer shrink-0"
+            onClick={() => {
+              setStaffId('');
+              setAmount('');
+              setRemarks('');
+              setTxDate(currentDate);
+              setError('');
+              setIsModalOpen(true);
+            }}
+            className="group/btn px-4 py-2.5 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:opacity-95 shadow-sm transition-all duration-300 active:scale-95 cursor-pointer shrink-0"
           >
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>arrow_back</span>
+            <span>Add Deduction</span>
+            <div className="w-5.5 h-5.5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+              <span className="material-symbols-rounded text-xs font-bold select-none">add</span>
+            </div>
           </button>
-          <h2 className="text-sm font-black text-app-text-primary tracking-tight select-none">Deduction Ledger</h2>
         </div>
 
         {/* Summary card */}
         <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
-          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col sm:flex-row sm:items-center items-stretch justify-between gap-4">
-            <div>
-              <div className="rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.2em] font-black bg-rose-500/10 text-rose-600 w-max select-none">
-                Total Deductions / Fines
-              </div>
-              <h3 className="text-3xl font-black text-rose-500 mt-2.5">
-                ₹{totalDeductionsAll.toLocaleString('en-IN')}
-              </h3>
+          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+            <div className="rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.2em] font-black bg-rose-500/10 text-rose-600 w-max select-none">
+              Total Deductions / Fines
             </div>
-            
-            <button
-              onClick={() => {
-                setStaffId('');
-                setAmount('');
-                setRemarks('');
-                setTxDate(currentDate);
-                setError('');
-                setIsModalOpen(true);
-              }}
-              className="w-full sm:w-auto pl-5 pr-3 py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:opacity-95 shadow-sm transition-all duration-300 active:scale-95 cursor-pointer shrink-0"
-            >
-              <span>Add Deduction</span>
-              <div className="w-5.5 h-5.5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                <span className="material-symbols-rounded text-xs font-bold select-none">add</span>
-              </div>
-            </button>
+            <h3 className="text-3xl font-black text-rose-500 mt-2.5">
+              ₹{totalDeductionsAll.toLocaleString('en-IN')}
+            </h3>
           </div>
         </div>
 

@@ -425,40 +425,40 @@ export const AdvanceScreen: React.FC = () => {
     return (
       <div className="flex flex-col gap-6 animate-in fade-in duration-200">
         {/* Header bar */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setScreen('more')}
+              className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer shrink-0"
+            >
+              <span className="material-symbols-rounded select-none">arrow_back</span>
+            </button>
+            <h2 className="text-sm font-black text-app-text-primary tracking-tight select-none">Advance Ledger</h2>
+          </div>
+          
           <button
-            onClick={() => setScreen('more')}
-            className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer"
+            onClick={() => {
+              setGiveError('');
+              setIsGiveModalOpen(true);
+            }}
+            className="group/btn px-4 py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:opacity-95 shadow-sm transition-all duration-300 active:scale-95 cursor-pointer shrink-0"
           >
-            <span className="material-symbols-rounded select-none">arrow_back</span>
+            <span>Give Advance</span>
+            <div className="w-5.5 h-5.5 rounded-full bg-white/20 flex items-center justify-center group-hover/btn:scale-110 transition-transform">
+              <span className="material-symbols-rounded text-xs select-none">add</span>
+            </div>
           </button>
-          <h2 className="text-sm font-black text-app-text-primary tracking-tight select-none">Advance Ledger</h2>
         </div>
 
         {/* Outstanding Summary card */}
         <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
-          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col sm:flex-row sm:items-center items-stretch justify-between gap-4">
-            <div>
-              <div className="rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.2em] font-black bg-amber-500/10 text-amber-600 w-max select-none">
-                Total Outstanding Advance
-              </div>
-              <h3 className="text-3xl font-black text-amber-500 mt-2.5">
-                ₹{totalOutstanding.toLocaleString('en-IN')}
-              </h3>
+          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+            <div className="rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.2em] font-black bg-amber-500/10 text-amber-600 w-max select-none">
+              Total Outstanding Advance
             </div>
-            
-            <button
-              onClick={() => {
-                setGiveError('');
-                setIsGiveModalOpen(true);
-              }}
-              className="group/btn w-full sm:w-auto pl-5 pr-3 py-3 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:opacity-95 shadow-sm transition-all duration-300 active:scale-95 cursor-pointer shrink-0"
-            >
-              <span>Give Advance</span>
-              <div className="w-5.5 h-5.5 rounded-full bg-white/20 flex items-center justify-center group-hover/btn:scale-110 transition-transform">
-                <span className="material-symbols-rounded text-xs select-none">add</span>
-              </div>
-            </button>
+            <h3 className="text-3xl font-black text-amber-500 mt-2.5">
+              ₹{totalOutstanding.toLocaleString('en-IN')}
+            </h3>
           </div>
         </div>
 
