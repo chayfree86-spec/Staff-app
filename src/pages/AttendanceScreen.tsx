@@ -68,7 +68,10 @@ export const AttendanceScreen: React.FC = () => {
   };
 
   const handleStatusChange = (staffId: string, status: 'Present' | 'Absent' | 'Half Day' | 'Holiday') => {
-    markAttendance(selectedDateStr, staffId, status);
+    const currentStatus = dayRecords[staffId]?.status;
+    const nextStatus = currentStatus === status ? 'Unmarked' : status;
+
+    markAttendance(selectedDateStr, staffId, nextStatus);
     
     // Quick auto-save animation indicator
     setSaveStatus(staffId);
