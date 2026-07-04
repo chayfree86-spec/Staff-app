@@ -424,10 +424,15 @@ function App() {
                 className="w-16 h-16 rounded-2xl object-cover shadow-lg border border-app-border/40 hover:scale-105 transition-transform duration-300"
               />
               <div className="text-center">
-                <h1 className="text-lg font-black tracking-tight text-app-text-primary">
-                  {businessInfo.name || 'Staff App'}
+                <h1 className="text-2xl font-black tracking-tight select-none">
+                  <span className="text-app-text-primary">Easy</span>
+                  <span className="text-indigo-600 dark:text-indigo-400">Attendance</span>
                 </h1>
-                <p className="text-[10px] font-bold text-app-text-secondary uppercase tracking-[0.2em] mt-1">Business Manager</p>
+                <p className="text-[9px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mt-1.5 flex items-center justify-center gap-2.5 select-none">
+                  <span className="w-5 h-[1.5px] bg-indigo-500/20 dark:bg-indigo-400/30 rounded-full shrink-0"></span>
+                  <span>STAFF ATTENDANCE MADE EASY</span>
+                  <span className="w-5 h-[1.5px] bg-indigo-500/20 dark:bg-indigo-400/30 rounded-full shrink-0"></span>
+                </p>
               </div>
             </div>
 
