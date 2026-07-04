@@ -778,7 +778,7 @@ export const StaffProfileScreen: React.FC = () => {
       </div>
 
       {/* 1. TOP PROFILE BANNER CARD */}
-      <div className={`w-full bg-gradient-to-r ${getProfileGradient(staff.name)} rounded-app-card p-6 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-md`}>
+      <div className={`w-full bg-gradient-to-r ${getProfileGradient(staff.name)} rounded-app-card p-6 text-white flex flex-col md:flex-row justify-between items-center gap-6 shadow-md`}>
         
         {/* Left Side: Avatar with upload indicator, Text info */}
         <div className="flex items-center gap-4">
@@ -813,7 +813,7 @@ export const StaffProfileScreen: React.FC = () => {
               )}
               
               {/* Camera badge with clean white border to prevent dark outline bleed */}
-              <div className="absolute -bottom-0.5 -right-0.5 w-5.5 h-5.5 rounded-full bg-white text-primary border-2 border-white flex items-center justify-center shadow-sm select-none group-hover:scale-110 transition-transform">
+              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-white text-primary border-2 border-white flex items-center justify-center shadow-sm select-none active:scale-110 transition-transform">
                 <span className="material-symbols-rounded font-bold" style={{ fontSize: '11px' }}>photo_camera</span>
               </div>
             </label>
@@ -836,7 +836,7 @@ export const StaffProfileScreen: React.FC = () => {
         </div>
 
         {/* Right Side: Remaining Due Salary */}
-        <div className="bg-white/15 backdrop-blur-lg border border-white/25 rounded-2xl px-6 py-3.5 flex flex-col items-end justify-center gap-1 shadow-[0_8px_32px_rgba(0,0,0,0.12)] select-none shrink-0 self-end md:self-auto min-w-[140px]">
+        <div className="bg-white/15 backdrop-blur-lg border border-white/25 rounded-2xl px-6 py-3.5 flex flex-col items-center md:items-end justify-center gap-1 shadow-[0_8px_32px_rgba(0,0,0,0.12)] select-none shrink-0 min-w-[140px]">
           <div className="text-[9px] text-white/85 uppercase font-black tracking-widest leading-none">
             Remaining Due
           </div>
@@ -1812,7 +1812,7 @@ export const StaffProfileScreen: React.FC = () => {
                             setIsAdvHistoryOpen(false);
                             handleOpenEditTx(a, 'Advance');
                           }}
-                          className="w-5.5 h-5.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary flex items-center justify-center transition-colors cursor-pointer"
+                          className="w-6 h-6 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary flex items-center justify-center transition-colors cursor-pointer"
                           title="Edit"
                         >
                           <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>edit</span>
@@ -1829,7 +1829,7 @@ export const StaffProfileScreen: React.FC = () => {
                               deleteAdvance(a.id);
                             }
                           }}
-                          className="w-5.5 h-5.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                          className="w-6 h-6 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
                           title="Delete"
                         >
                           <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>delete</span>
@@ -1920,7 +1920,7 @@ export const StaffProfileScreen: React.FC = () => {
                           setIsDedHistoryOpen(false);
                           handleOpenEditTx(d, 'Deduction');
                         }}
-                        className="w-5.5 h-5.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary flex items-center justify-center transition-colors cursor-pointer"
+                        className="w-6 h-6 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary flex items-center justify-center transition-colors cursor-pointer"
                         title="Edit"
                       >
                         <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>edit</span>
@@ -1937,7 +1937,7 @@ export const StaffProfileScreen: React.FC = () => {
                             deleteDeduction(d.id);
                           }
                         }}
-                        className="w-5.5 h-5.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                        className="w-6 h-6 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
                         title="Delete"
                       >
                         <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>delete</span>
