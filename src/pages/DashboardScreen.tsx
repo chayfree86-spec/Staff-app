@@ -252,7 +252,7 @@ export const DashboardScreen: React.FC = () => {
               </div>
 
               {/* Grid details */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[8px] uppercase font-black text-white/70 tracking-wider">Total Base Salary</span>
                   <span className="text-base font-black leading-tight">₹{totalBaseSalary.toLocaleString('en-IN')}</span>
@@ -264,18 +264,6 @@ export const DashboardScreen: React.FC = () => {
                   <span className="text-base font-black leading-tight text-emerald-250">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
                   <span className="text-[7.5px] text-emerald-300/60 font-bold">(Attendance Based)</span>
                 </div>
-
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[8px] uppercase font-black text-amber-300 tracking-wider">Total Advance</span>
-                  <span className="text-base font-black leading-tight text-amber-250">₹{summaries.totalAdvance.toLocaleString('en-IN')}</span>
-                  <span className="text-[7.5px] text-amber-300/60 font-bold">(Advance Given)</span>
-                </div>
-
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[8px] uppercase font-black text-rose-300 tracking-wider">Total Deduction</span>
-                  <span className="text-base font-black leading-tight text-rose-250">₹{summaries.totalDeduction.toLocaleString('en-IN')}</span>
-                  <span className="text-[7.5px] text-rose-300/60 font-bold">(Deductions Logged)</span>
-                </div>
               </div>
 
               <div className="flex flex-col gap-0.5 border-t border-white/10 pt-3 mt-1">
@@ -284,6 +272,45 @@ export const DashboardScreen: React.FC = () => {
                 <span className="text-[7.5px] text-indigo-200/60 font-bold">(Total Remaining to Pay)</span>
               </div>
             </div>
+          </div>
+
+          {/* Interactive Financial Filter Cards */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Total Advance Card */}
+            <button
+              onClick={() => setScreen('advance-history')}
+              className="flex items-center justify-between p-4 bg-app-surface border border-app-border rounded-[1.5rem] shadow-sm hover:border-amber-500/30 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer text-left w-full group"
+            >
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>payments</span>
+                </div>
+                <div className="overflow-hidden">
+                  <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block">Total Advance</span>
+                  <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight">₹{summaries.totalAdvance.toLocaleString('en-IN')}</span>
+                  <span className="text-[8px] font-bold text-amber-500 mt-0.5 block">(Advance Given)</span>
+                </div>
+              </div>
+              <span className="material-symbols-rounded text-app-text-secondary/40 group-hover:text-amber-500/70 transition-colors select-none shrink-0" style={{ fontSize: '18px' }}>chevron_right</span>
+            </button>
+
+            {/* Total Deduction Card */}
+            <button
+              onClick={() => setScreen('deduction-history')}
+              className="flex items-center justify-between p-4 bg-app-surface border border-app-border rounded-[1.5rem] shadow-sm hover:border-rose-500/30 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer text-left w-full group"
+            >
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>content_cut</span>
+                </div>
+                <div className="overflow-hidden">
+                  <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block">Total Deduction</span>
+                  <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight">₹{summaries.totalDeduction.toLocaleString('en-IN')}</span>
+                  <span className="text-[8px] font-bold text-rose-500 mt-0.5 block">(Deductions Logged)</span>
+                </div>
+              </div>
+              <span className="material-symbols-rounded text-app-text-secondary/40 group-hover:text-rose-500/70 transition-colors select-none shrink-0" style={{ fontSize: '18px' }}>chevron_right</span>
+            </button>
           </div>
         </div>
 
