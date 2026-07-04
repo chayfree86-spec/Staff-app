@@ -16,7 +16,6 @@ export const AttendanceScreen: React.FC = () => {
     settings,
   } = useStore();
 
-  const [search, setSearch] = useState('');
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
   const selectedDateStr = currentDate;
@@ -26,10 +25,8 @@ export const AttendanceScreen: React.FC = () => {
   // any other date can only be Present/Half Day/Absent.
   const isHolidayDate = settings.weeklyHoliday.includes(format(parseISO(selectedDateStr), 'EEEE'));
 
-  // Filter staff by status (Active) and search query
-  const activeStaff = staffList.filter(
-    (s) => s.status === 'Active' && s.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filter staff by status (Active)
+  const activeStaff = staffList.filter((s) => s.status === 'Active');
 
   // Calculate monthly stats for each staff to display on card
   const getMonthlyStats = (staffId: string) => {
@@ -108,42 +105,25 @@ export const AttendanceScreen: React.FC = () => {
       {/* Sticky Header with Date & Search - Double Bezel Architecture (Halved radius: 2.5rem -> 1.25rem, inner core: 34px -> 17px) */}
       <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
         <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+          <div className="flex flex-col gap-4">
             <CustomDatePicker
               value={currentDate}
               onChange={(val) => setCurrentDate(val)}
-              className="w-full sm:w-auto shrink-0 font-bold"
+              className="w-full font-bold"
             />
             
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              {/* Search Input (Takes up remaining space) */}
-              <div className="relative flex-1 min-w-0">
-                <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
-                  search
-                </span>
-                <input
-                  type="text"
-                  placeholder="Search staff members..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none focus:border-primary transition-all font-semibold"
-                />
-              </div>
-
-              {/* Mark All Present Button - Button-in-Button Style (hidden on weekly holiday dates, since those can only be Holiday/Absent) */}
-              {!isHolidayDate && (
-                <button
-                  onClick={handleMarkAllPresent}
-                  className="group/btn pl-4.5 pr-3 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl text-sm font-extrabold flex items-center gap-2.5 hover:from-emerald-600 hover:to-green-700 shadow-md shadow-emerald-500/10 cursor-pointer shrink-0 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95"
-                >
-                  <span className="hidden xs:inline">Mark All Present</span>
-                  <span className="xs:hidden">Mark All</span>
-                  <div className="w-6.5 h-6.5 rounded-full bg-white/20 flex items-center justify-center group-hover/btn:scale-110 transition-transform animate-none">
-                    <span className="material-symbols-rounded select-none" style={{ fontSize: '12px' }}>done_all</span>
-                  </div>
-                </button>
-              )}
-            </div>
+            {/* Mark All Present Button - Full Width on a separate line */}
+            {!isHolidayDate && (
+              <button
+                onClick={handleMarkAllPresent}
+                className="group/btn w-full py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl text-sm font-extrabold flex items-center justify-center gap-2.5 hover:from-emerald-600 hover:to-green-700 shadow-md shadow-emerald-500/10 cursor-pointer transition-all duration-300 active:scale-98"
+              >
+                <span>Mark All Present</span>
+                <div className="w-6.5 h-6.5 rounded-full bg-white/20 flex items-center justify-center group-hover/btn:scale-110 transition-transform">
+                  <span className="material-symbols-rounded select-none" style={{ fontSize: '12px' }}>done_all</span>
+                </div>
+              </button>
+            )}
           </div>
 
           {/* Attendance Day Summary - Premium Double Bezel Style cards */}
