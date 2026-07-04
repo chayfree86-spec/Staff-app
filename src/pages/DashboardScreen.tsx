@@ -182,7 +182,7 @@ export const DashboardScreen: React.FC = () => {
       </div>
 
       {/* Today's Summary - purple hero card */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-600 rounded-[1.5rem] p-5 text-white shadow-lg shadow-indigo-500/20">
+      <div className="bg-gradient-to-tr from-indigo-600 via-purple-600 to-fuchsia-600 rounded-[1.5rem] p-5 text-white shadow-lg shadow-indigo-500/20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
