@@ -109,6 +109,25 @@ export const DashboardScreen: React.FC = () => {
     }
   }, 0);
 
+  const getStaffOutstandingAdvance = (staffId: string) => {
+    return advanceList
+      .filter((a) => a.staffId === staffId)
+      .reduce((sum, item) => sum + item.amount, 0);
+  };
+
+  const staffWithOutstandingAdvances = activeStaff
+    .map((s) => ({
+      ...s,
+      outstanding: getStaffOutstandingAdvance(s.id),
+    }))
+    .filter((s) => s.outstanding > 0)
+    .sort((a, b) => b.outstanding - a.outstanding)
+    .slice(0, 4);
+
+  const recentPayoutsList = [...payoutList]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 4);
+
   // 3. Recent attendance (today's marked entries, most recent first)
   const recentAttendance = Object.entries(dayRecords)
     .map(([staffId, record]) => ({ staff: staffList.find((s) => s.id === staffId), record }))
@@ -176,9 +195,9 @@ export const DashboardScreen: React.FC = () => {
         <p className="text-xs font-semibold text-app-text-secondary mt-1">Here's what's happening today</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start w-full">
-        {/* Left Column (3/5 width on desktop) */}
-        <div className="flex flex-col gap-5 lg:col-span-3 w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start w-full">
+        {/* Column 1: Today's Summary & Financial Details */}
+        <div className="flex flex-col gap-5 w-full">
           {/* Today's Summary - purple hero card */}
           <div className="bg-gradient-to-tr from-indigo-600 via-purple-600 to-fuchsia-600 rounded-[1.5rem] p-5 text-white shadow-lg shadow-indigo-500/20">
             <div className="flex items-center justify-between">
@@ -241,7 +260,6 @@ export const DashboardScreen: React.FC = () => {
             <span className="material-symbols-rounded select-none absolute -right-3 -bottom-3 text-white/10" style={{ fontSize: '110px' }}>currency_rupee</span>
             
             <div className="relative z-10 flex flex-col gap-4">
-              {/* Header */}
               <div className="flex items-center justify-between pb-3 border-b border-white/15">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
@@ -251,7 +269,6 @@ export const DashboardScreen: React.FC = () => {
                 </div>
               </div>
 
-              {/* Grid details */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[8px] uppercase font-black text-white/70 tracking-wider">Total Base Salary</span>
@@ -276,7 +293,6 @@ export const DashboardScreen: React.FC = () => {
 
           {/* Interactive Financial Filter Cards */}
           <div className="grid grid-cols-2 gap-3">
-            {/* Total Advance Card */}
             <button
               onClick={() => setScreen('advance-history')}
               className="flex items-center justify-between p-4 bg-app-surface border border-app-border rounded-[1.5rem] shadow-sm hover:border-amber-500/30 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer text-left w-full group"
@@ -294,7 +310,6 @@ export const DashboardScreen: React.FC = () => {
               <span className="material-symbols-rounded text-app-text-secondary/40 group-hover:text-amber-500/70 transition-colors select-none shrink-0" style={{ fontSize: '18px' }}>chevron_right</span>
             </button>
 
-            {/* Total Deduction Card */}
             <button
               onClick={() => setScreen('deduction-history')}
               className="flex items-center justify-between p-4 bg-app-surface border border-app-border rounded-[1.5rem] shadow-sm hover:border-rose-500/30 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer text-left w-full group"
@@ -314,9 +329,8 @@ export const DashboardScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column (2/5 width on desktop) */}
-        <div className="flex flex-col gap-5 lg:col-span-2 w-full">
-          {/* Stats Grid 2x2 */}
+        {/* Column 2: Stats & Today's Attendance */}
+        <div className="flex flex-col gap-5 w-full">
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-app-surface border border-app-border rounded-2xl p-4 shadow-sm">
               <div className="w-9 h-9 rounded-xl bg-present/10 text-present flex items-center justify-center mb-2">
@@ -401,6 +415,109 @@ export const DashboardScreen: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+
+        {/* Column 3: Outstanding Advances & Recent Activity */}
+        <div className="flex flex-col gap-5 w-full">
+          {/* Outstanding Advances Panel */}
+          <div className="bg-app-surface border border-app-border rounded-[1.5rem] p-5 shadow-sm flex flex-col gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>warning</span>
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-app-text-primary tracking-tight">Outstanding Advances</h3>
+                <span className="text-[9px] font-bold text-app-text-secondary uppercase tracking-widest">{staffWithOutstandingAdvances.length} staff pending</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {staffWithOutstandingAdvances.length === 0 ? (
+                <div className="py-4 text-center text-xs font-semibold text-app-text-secondary">
+                  No outstanding advances.
+                </div>
+              ) : (
+                staffWithOutstandingAdvances.map((staff) => {
+                  const initials = staff.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+                  return (
+                    <div
+                      key={staff.id}
+                      onClick={() => {
+                        setActiveStaffProfileId(staff.id);
+                        setScreen('staff-profile');
+                      }}
+                      className="flex items-center justify-between gap-3 p-3 bg-app-bg border border-app-border/40 rounded-2xl hover:border-amber-500/30 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-[10px] flex items-center justify-center shrink-0`}>
+                          {initials}
+                        </div>
+                        <div className="overflow-hidden">
+                          <h4 className="font-bold text-app-text-primary text-xs truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">{staff.name}</h4>
+                          <p className="text-[9px] text-app-text-secondary font-semibold mt-0.5">Click to view details</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-black text-rose-500 bg-rose-500/10 px-2.5 py-1 rounded-full shrink-0">
+                        ₹{staff.outstanding.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Recent Payouts Panel */}
+          <div className="bg-app-surface border border-app-border rounded-[1.5rem] p-5 shadow-sm flex flex-col gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '18px' }}>receipt_long</span>
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-app-text-primary tracking-tight">Recent Payouts</h3>
+                <span className="text-[9px] font-bold text-app-text-secondary uppercase tracking-widest">Last 4 transactions</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {recentPayoutsList.length === 0 ? (
+                <div className="py-4 text-center text-xs font-semibold text-app-text-secondary">
+                  No payouts recorded yet.
+                </div>
+              ) : (
+                recentPayoutsList.map((payout) => {
+                  const staffName = staffList.find(s => s.id === payout.staffId)?.name || 'Former Staff';
+                  const initials = staffName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+                  const payoutDateFormatted = format(parseISO(payout.date), 'dd MMM');
+                  return (
+                    <div
+                      key={payout.id}
+                      onClick={() => {
+                        if (payout.staffId) {
+                          setActiveStaffProfileId(payout.staffId);
+                          setScreen('staff-profile');
+                        }
+                      }}
+                      className="flex items-center justify-between gap-3 p-3 bg-app-bg border border-app-border/40 rounded-2xl hover:border-emerald-500/30 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getProfileGradient(staffName)} text-white font-black text-[10px] flex items-center justify-center shrink-0`}>
+                          {initials}
+                        </div>
+                        <div className="overflow-hidden">
+                          <h4 className="font-bold text-app-text-primary text-xs truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{staffName}</h4>
+                          <p className="text-[9px] text-app-text-secondary font-semibold mt-0.5">{payout.paymentMode || 'Cash'} • {payoutDateFormatted}</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-black text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full shrink-0">
+                        ₹{payout.amount.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
