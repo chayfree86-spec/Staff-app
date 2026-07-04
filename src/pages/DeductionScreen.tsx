@@ -419,7 +419,7 @@ export const DeductionScreen: React.FC = () => {
 
         {/* Summary card */}
         <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
-          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-between gap-4">
+          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col sm:flex-row sm:items-center items-stretch justify-between gap-4">
             <div>
               <div className="rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.2em] font-black bg-rose-500/10 text-rose-600 w-max select-none">
                 Total Deductions / Fines
@@ -438,10 +438,10 @@ export const DeductionScreen: React.FC = () => {
                 setError('');
                 setIsModalOpen(true);
               }}
-              className="pl-4 pr-2 py-2.5 bg-rose-505 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-2 hover:opacity-95 shadow-sm transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer"
+              className="w-full sm:w-auto pl-5 pr-3 py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:opacity-95 shadow-sm transition-all duration-300 active:scale-95 cursor-pointer shrink-0"
             >
               <span>Add Deduction</span>
-              <div className="w-5.5 h-5.5 rounded-full bg-white/20 flex items-center justify-center">
+              <div className="w-5.5 h-5.5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                 <span className="material-symbols-rounded text-xs font-bold select-none">add</span>
               </div>
             </button>

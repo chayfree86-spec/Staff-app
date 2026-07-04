@@ -437,7 +437,7 @@ export const AdvanceScreen: React.FC = () => {
 
         {/* Outstanding Summary card */}
         <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
-          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-between gap-4">
+          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col sm:flex-row sm:items-center items-stretch justify-between gap-4">
             <div>
               <div className="rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.2em] font-black bg-amber-500/10 text-amber-600 w-max select-none">
                 Total Outstanding Advance
@@ -452,7 +452,7 @@ export const AdvanceScreen: React.FC = () => {
                 setGiveError('');
                 setIsGiveModalOpen(true);
               }}
-              className="group/btn pl-4 pr-2 py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 hover:opacity-95 shadow-sm transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer"
+              className="group/btn w-full sm:w-auto pl-5 pr-3 py-3 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:opacity-95 shadow-sm transition-all duration-300 active:scale-95 cursor-pointer shrink-0"
             >
               <span>Give Advance</span>
               <div className="w-5.5 h-5.5 rounded-full bg-white/20 flex items-center justify-center group-hover/btn:scale-110 transition-transform">
