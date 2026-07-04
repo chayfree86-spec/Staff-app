@@ -355,168 +355,169 @@ export const AttendanceScreen: React.FC = () => {
       {/* Custom Marking Progress Modal */}
       {markingProgress.isOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
-          <div className="relative w-full max-w-sm bg-app-surface border border-app-border rounded-[2rem] p-1 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
-            
-            {/* Absolute Wave Background Layers (Top & Bottom, like login page) */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[2rem] z-0">
-              {/* Top Wave 1 (Rotated) */}
-              <svg 
-                className="absolute top-0 w-full h-[80px] rotate-180" 
-                viewBox="0 0 1440 320" 
-                preserveAspectRatio="none"
-                style={{
-                  fill: '#10B981',
-                  fillOpacity: 0.10,
-                  filter: 'blur(2px)',
-                  animation: 'wave-move-1 9s ease-in-out infinite',
-                  willChange: 'transform',
-                  transform: 'translateZ(0)',
-                }}
-              >
-                <path d="M0,160 C320,300 480,80 800,240 C1120,400 1280,120 1440,200 L1440,320 L0,320 Z" />
-              </svg>
-              {/* Top Wave 2 (Rotated) */}
-              <svg 
-                className="absolute top-0 w-full h-[90px] rotate-180" 
-                viewBox="0 0 1440 320" 
-                preserveAspectRatio="none"
-                style={{
-                  fill: '#059669',
-                  fillOpacity: 0.08,
-                  filter: 'blur(3px)',
-                  animation: 'wave-move-2 11s ease-in-out infinite',
-                  willChange: 'transform',
-                  transform: 'translateZ(0)',
-                }}
-              >
-                <path d="M0,224 C320,120 640,300 960,180 C1280,60 1440,240 1440,240 L1440,320 L0,320 Z" />
-              </svg>
-
-              {/* Bottom Wave 1 */}
-              <svg 
-                className="absolute bottom-0 w-full h-[90px]" 
-                viewBox="0 0 1440 320" 
-                preserveAspectRatio="none"
-                style={{
-                  fill: '#10B981',
-                  fillOpacity: 0.12,
-                  filter: 'blur(1px)',
-                  animation: 'wave-move-1 8s ease-in-out infinite',
-                  willChange: 'transform',
-                  transform: 'translateZ(0)',
-                }}
-              >
-                <path d="M0,160 C320,300 480,80 800,240 C1120,400 1280,120 1440,200 L1440,320 L0,320 Z" />
-              </svg>
-              {/* Bottom Wave 2 */}
-              <svg 
-                className="absolute bottom-0 w-full h-[100px]" 
-                viewBox="0 0 1440 320" 
-                preserveAspectRatio="none"
-                style={{
-                  fill: '#059669',
-                  fillOpacity: 0.10,
-                  filter: 'blur(2px)',
-                  animation: 'wave-move-2 10s ease-in-out infinite',
-                  willChange: 'transform',
-                  transform: 'translateZ(0)',
-                }}
-              >
-                <path d="M0,224 C320,120 640,300 960,180 C1280,60 1440,240 1440,240 L1440,320 L0,320 Z" />
-              </svg>
-              {/* Bottom Wave 3 */}
-              <svg 
-                className="absolute bottom-0 w-full h-[110px]" 
-                viewBox="0 0 1440 320" 
-                preserveAspectRatio="none"
-                style={{
-                  fill: '#34D399',
-                  fillOpacity: 0.07,
-                  filter: 'blur(3px)',
-                  animation: 'wave-move-3 12s ease-in-out infinite',
-                  willChange: 'transform',
-                  transform: 'translateZ(0)',
-                }}
-              >
-                <path d="M0,128 C480,240 960,40 1440,160 L1440,320 L0,320 Z" />
-              </svg>
-            </div>
-
-            {/* Modal Content */}
-            <div className="relative bg-app-surface/90 border border-app-border/40 rounded-[30px] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] flex flex-col items-center text-center gap-5 mt-2 z-10">
+          <div className="relative w-full max-w-sm bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[2rem] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+            <div className="relative bg-app-surface border border-app-border/40 rounded-[28px] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col items-center text-center gap-5 overflow-hidden z-10">
               
-              {/* Header Icon */}
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner relative">
-                {markingProgress.isComplete ? (
-                  <span className="material-symbols-rounded text-emerald-500 text-3xl animate-bounce">check_circle</span>
-                ) : (
-                  <span className="material-symbols-rounded text-emerald-500 text-3xl animate-spin">sync</span>
+              {/* Flowing Wave Background Layers (Inside the inner card, behind contents) */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                {/* Top Wave 1 (Rotated) */}
+                <svg 
+                  className="absolute top-0 w-full h-[80px] rotate-180" 
+                  viewBox="0 0 1440 320" 
+                  preserveAspectRatio="none"
+                  style={{
+                    fill: '#10B981',
+                    fillOpacity: 0.12,
+                    filter: 'blur(2px)',
+                    animation: 'wave-move-1 9s ease-in-out infinite',
+                    willChange: 'transform',
+                    transform: 'translateZ(0)',
+                  }}
+                >
+                  <path d="M0,160 C320,300 480,80 800,240 C1120,400 1280,120 1440,200 L1440,320 L0,320 Z" />
+                </svg>
+                {/* Top Wave 2 (Rotated) */}
+                <svg 
+                  className="absolute top-0 w-full h-[90px] rotate-180" 
+                  viewBox="0 0 1440 320" 
+                  preserveAspectRatio="none"
+                  style={{
+                    fill: '#059669',
+                    fillOpacity: 0.08,
+                    filter: 'blur(3px)',
+                    animation: 'wave-move-2 11s ease-in-out infinite',
+                    willChange: 'transform',
+                    transform: 'translateZ(0)',
+                  }}
+                >
+                  <path d="M0,224 C320,120 640,300 960,180 C1280,60 1440,240 1440,240 L1440,320 L0,320 Z" />
+                </svg>
+
+                {/* Bottom Wave 1 */}
+                <svg 
+                  className="absolute bottom-0 w-full h-[90px]" 
+                  viewBox="0 0 1440 320" 
+                  preserveAspectRatio="none"
+                  style={{
+                    fill: '#10B981',
+                    fillOpacity: 0.15,
+                    filter: 'blur(1px)',
+                    animation: 'wave-move-1 8s ease-in-out infinite',
+                    willChange: 'transform',
+                    transform: 'translateZ(0)',
+                  }}
+                >
+                  <path d="M0,160 C320,300 480,80 800,240 C1120,400 1280,120 1440,200 L1440,320 L0,320 Z" />
+                </svg>
+                {/* Bottom Wave 2 */}
+                <svg 
+                  className="absolute bottom-0 w-full h-[100px]" 
+                  viewBox="0 0 1440 320" 
+                  preserveAspectRatio="none"
+                  style={{
+                    fill: '#059669',
+                    fillOpacity: 0.10,
+                    filter: 'blur(2px)',
+                    animation: 'wave-move-2 10s ease-in-out infinite',
+                    willChange: 'transform',
+                    transform: 'translateZ(0)',
+                  }}
+                >
+                  <path d="M0,224 C320,120 640,300 960,180 C1280,60 1440,240 1440,240 L1440,320 L0,320 Z" />
+                </svg>
+                {/* Bottom Wave 3 */}
+                <svg 
+                  className="absolute bottom-0 w-full h-[110px]" 
+                  viewBox="0 0 1440 320" 
+                  preserveAspectRatio="none"
+                  style={{
+                    fill: '#34D399',
+                    fillOpacity: 0.07,
+                    filter: 'blur(3px)',
+                    animation: 'wave-move-3 12s ease-in-out infinite',
+                    willChange: 'transform',
+                    transform: 'translateZ(0)',
+                  }}
+                >
+                  <path d="M0,128 C480,240 960,40 1440,160 L1440,320 L0,320 Z" />
+                </svg>
+              </div>
+
+              {/* Main Content (Wrapped in relative z-10 to stay on top of the waves) */}
+              <div className="relative z-10 w-full flex flex-col items-center gap-5">
+                {/* Header Icon */}
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner relative">
+                  {markingProgress.isComplete ? (
+                    <span className="material-symbols-rounded text-emerald-500 text-3xl animate-bounce">check_circle</span>
+                  ) : (
+                    <span className="material-symbols-rounded text-emerald-500 text-3xl animate-spin">sync</span>
+                  )}
+                </div>
+
+                {/* Status Header */}
+                <div>
+                  <h3 className="text-base font-black text-app-text-primary tracking-tight">
+                    {markingProgress.isComplete ? 'Attendance Completed' : 'Marking Attendance'}
+                  </h3>
+                  <p className="text-[10px] font-bold text-app-text-secondary uppercase tracking-[0.15em] mt-1">
+                    {markingProgress.isComplete 
+                      ? 'All staff are present!' 
+                      : `Processing Staff (${markingProgress.currentIndex} of ${markingProgress.total})`}
+                  </p>
+                </div>
+
+                {/* Current Name Card */}
+                <div className="w-full bg-app-bg border border-app-border rounded-2xl p-4 flex flex-col items-center justify-center min-h-[72px]">
+                  <span className="text-xs font-bold text-app-text-secondary">
+                    {markingProgress.isComplete ? 'Status' : 'Current Staff'}
+                  </span>
+                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-1 animate-pulse">
+                    {markingProgress.currentStaffName}
+                  </span>
+                </div>
+
+                {/* Real-time Color Stats Row */}
+                <div className="grid grid-cols-3 gap-2.5 w-full mt-1.5 select-none">
+                  <div className="bg-emerald-500/10 rounded-xl py-2 px-1 text-center border border-emerald-500/20">
+                    <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">{summary.present}</div>
+                    <div className="text-[7.5px] uppercase font-black text-emerald-600 tracking-wider mt-0.5">Present</div>
+                  </div>
+                  <div className="bg-rose-500/10 rounded-xl py-2 px-1 text-center border border-rose-500/20">
+                    <div className="text-sm font-black text-rose-500">{summary.absent}</div>
+                    <div className="text-[7.5px] uppercase font-black text-rose-500 tracking-wider mt-0.5">Absent</div>
+                  </div>
+                  <div className="bg-amber-500/10 rounded-xl py-2 px-1 text-center border border-amber-500/20">
+                    <div className="text-sm font-black text-amber-500">{summary.halfDay}</div>
+                    <div className="text-[7.5px] uppercase font-black text-amber-500 tracking-wider mt-0.5">Half Day</div>
+                  </div>
+                </div>
+
+                {/* Progress Bar & Percentage */}
+                <div className="w-full flex flex-col gap-2">
+                  <div className="w-full h-3 bg-app-bg border border-app-border rounded-full overflow-hidden p-0.5 shadow-inner">
+                    <div 
+                      className="h-full bg-gradient-to-r from-emerald-500 to-green-600 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                      style={{ 
+                        width: `${markingProgress.total > 0 ? (markingProgress.currentIndex / markingProgress.total) * 100 : 0}%` 
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-black text-app-text-secondary uppercase tracking-wider px-1">
+                    <span>{markingProgress.currentIndex} / {markingProgress.total} Staff</span>
+                    <span>{Math.round(markingProgress.total > 0 ? (markingProgress.currentIndex / markingProgress.total) * 100 : 0)}%</span>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                {markingProgress.isComplete && (
+                  <button
+                    onClick={() => setMarkingProgress(prev => ({ ...prev, isOpen: false }))}
+                    className="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/10 cursor-pointer active:scale-98 transition-all"
+                  >
+                    Done
+                  </button>
                 )}
               </div>
-
-              {/* Status Header */}
-              <div>
-                <h3 className="text-base font-black text-app-text-primary tracking-tight">
-                  {markingProgress.isComplete ? 'Attendance Completed' : 'Marking Attendance'}
-                </h3>
-                <p className="text-[10px] font-bold text-app-text-secondary uppercase tracking-[0.15em] mt-1">
-                  {markingProgress.isComplete 
-                    ? 'All staff are present!' 
-                    : `Processing Staff (${markingProgress.currentIndex} of ${markingProgress.total})`}
-                </p>
-              </div>
-
-              {/* Current Name Card */}
-              <div className="w-full bg-app-bg border border-app-border rounded-2xl p-4 flex flex-col items-center justify-center min-h-[72px]">
-                <span className="text-xs font-bold text-app-text-secondary">
-                  {markingProgress.isComplete ? 'Status' : 'Current Staff'}
-                </span>
-                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-1 animate-pulse">
-                  {markingProgress.currentStaffName}
-                </span>
-              </div>
-
-              {/* Real-time Color Stats Row */}
-              <div className="grid grid-cols-3 gap-2.5 w-full mt-1.5 select-none">
-                <div className="bg-emerald-500/10 rounded-xl py-2 px-1 text-center border border-emerald-500/20">
-                  <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">{summary.present}</div>
-                  <div className="text-[7.5px] uppercase font-black text-emerald-600 tracking-wider mt-0.5">Present</div>
-                </div>
-                <div className="bg-rose-500/10 rounded-xl py-2 px-1 text-center border border-rose-500/20">
-                  <div className="text-sm font-black text-rose-500">{summary.absent}</div>
-                  <div className="text-[7.5px] uppercase font-black text-rose-500 tracking-wider mt-0.5">Absent</div>
-                </div>
-                <div className="bg-amber-500/10 rounded-xl py-2 px-1 text-center border border-amber-500/20">
-                  <div className="text-sm font-black text-amber-500">{summary.halfDay}</div>
-                  <div className="text-[7.5px] uppercase font-black text-amber-500 tracking-wider mt-0.5">Half Day</div>
-                </div>
-              </div>
-
-              {/* Progress Bar & Percentage */}
-              <div className="w-full flex flex-col gap-2">
-                <div className="w-full h-3 bg-app-bg border border-app-border rounded-full overflow-hidden p-0.5 shadow-inner">
-                  <div 
-                    className="h-full bg-gradient-to-r from-emerald-500 to-green-600 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-                    style={{ 
-                      width: `${markingProgress.total > 0 ? (markingProgress.currentIndex / markingProgress.total) * 100 : 0}%` 
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between items-center text-[10px] font-black text-app-text-secondary uppercase tracking-wider px-1">
-                  <span>{markingProgress.currentIndex} / {markingProgress.total} Staff</span>
-                  <span>{Math.round(markingProgress.total > 0 ? (markingProgress.currentIndex / markingProgress.total) * 100 : 0)}%</span>
-                </div>
-              </div>
-
-              {/* Action Button */}
-              {markingProgress.isComplete && (
-                <button
-                  onClick={() => setMarkingProgress(prev => ({ ...prev, isOpen: false }))}
-                  className="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/10 cursor-pointer active:scale-98 transition-all"
-                >
-                  Done
-                </button>
-              )}
             </div>
           </div>
         </div>
