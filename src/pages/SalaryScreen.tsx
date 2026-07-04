@@ -24,7 +24,6 @@ export const SalaryScreen: React.FC = () => {
     settings,
   } = useStore();
 
-  const [search, setSearch] = useState('');
   const [selectedCycle, setSelectedCycle] = useState('Current Month');
   
   // Payout Modal states
@@ -183,9 +182,6 @@ export const SalaryScreen: React.FC = () => {
 
   // Filter staff to include active staff and inactive staff deactivated in the selected cycle month
   const visibleStaff = staffList.filter(s => {
-    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
-    if (!matchesSearch) return false;
-    
     if (s.status === 'Active') return true;
     
     // Include inactive staff if they were deactivated in the selected month
@@ -363,32 +359,15 @@ export const SalaryScreen: React.FC = () => {
       {/* Header controls & Summaries - Double Bezel Architecture */}
       <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
         <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-            <div className="w-full sm:w-auto shrink-0">
-              <CustomSelect
-                value={selectedCycle}
-                onChange={setSelectedCycle}
-                options={[
-                  { value: 'Current Month', label: currentMonthLabel },
-                  { value: 'Last Month', label: 'Last Month' },
-                ]}
-                className="w-full sm:w-48"
-              />
-            </div>
-
-            <div className="relative flex-1">
-              <span className="material-symbols-rounded absolute left-3.5 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
-                search
-              </span>
-              <input
-                type="text"
-                placeholder="Search staff members..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none focus:border-primary transition-all font-semibold"
-              />
-            </div>
-          </div>
+          <CustomSelect
+            value={selectedCycle}
+            onChange={setSelectedCycle}
+            options={[
+              { value: 'Current Month', label: currentMonthLabel },
+              { value: 'Last Month', label: 'Last Month' },
+            ]}
+            className="w-full"
+          />
 
           {/* Financial Summary Dashboard */}
           <div className="grid grid-cols-3 gap-3 pt-3 border-t border-app-border/60">
