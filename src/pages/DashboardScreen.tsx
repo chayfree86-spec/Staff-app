@@ -89,6 +89,14 @@ export const DashboardScreen: React.FC = () => {
     { totalEarned: 0, totalPaid: 0, totalDue: 0 }
   );
 
+  const totalBaseSalary = activeStaff.reduce((sum, s) => {
+    if (s.salaryType === 'Monthly') {
+      return sum + s.monthlySalary;
+    } else {
+      return sum + (s.monthlySalary * 30);
+    }
+  }, 0);
+
   // 3. Recent attendance (today's marked entries, most recent first)
   const recentAttendance = Object.entries(dayRecords)
     .map(([staffId, record]) => ({ staff: staffList.find((s) => s.id === staffId), record }))
@@ -245,28 +253,44 @@ export const DashboardScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* This Month Salary - purple card */}
+      {/* Month Salary Card */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-[1.5rem] p-5 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden">
         <span className="material-symbols-rounded select-none absolute -right-3 -bottom-3 text-white/10" style={{ fontSize: '110px' }}>currency_rupee</span>
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-              <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>account_balance_wallet</span>
-            </div>
-            <div>
-              <div className="text-[10px] uppercase font-bold text-white/70 tracking-wider">This Month Salary</div>
-              <div className="text-xl font-black mt-0.5">₹{summaries.totalEarned.toLocaleString('en-IN')}</div>
-              <div className="text-[9px] text-white/60 font-semibold mt-0.5">Total Payroll</div>
+        
+        <div className="relative z-10 flex flex-col gap-4">
+          {/* Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-white/15">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
+                <span className="material-symbols-rounded text-base select-none">calendar_today</span>
+              </div>
+              <span className="text-xs font-black uppercase tracking-wider">{currentMonthLabel} Salary Details</span>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2 relative z-10">
-            <div className="text-right">
-              <div className="text-[9px] uppercase font-bold text-emerald-300 tracking-wider">Paid</div>
-              <div className="text-sm font-black">₹{summaries.totalPaid.toLocaleString('en-IN')}</div>
+
+          {/* Grid details */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[8px] uppercase font-black text-white/70 tracking-wider">Total Base Salary</span>
+              <span className="text-lg font-black leading-tight">₹{totalBaseSalary.toLocaleString('en-IN')}</span>
+              <span className="text-[7.5px] text-white/50 font-bold">(Full Month Potential)</span>
             </div>
-            <div className="text-right">
-              <div className="text-[9px] uppercase font-bold text-amber-300 tracking-wider">Pending</div>
-              <div className="text-sm font-black">₹{summaries.totalDue.toLocaleString('en-IN')}</div>
+            
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[8px] uppercase font-black text-emerald-300 tracking-wider">Earned So Far</span>
+              <span className="text-lg font-black leading-tight text-emerald-200">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
+              <span className="text-[7.5px] text-emerald-300/60 font-bold">(Attendance Based)</span>
+            </div>
+
+            <div className="flex flex-col gap-0.5 border-t border-white/10 pt-3">
+              <span className="text-[8px] uppercase font-black text-white/70 tracking-wider">Paid</span>
+              <span className="text-sm font-black leading-tight">₹{summaries.totalPaid.toLocaleString('en-IN')}</span>
+            </div>
+
+            <div className="flex flex-col gap-0.5 border-t border-white/10 pt-3">
+              <span className="text-[8px] uppercase font-black text-amber-300 tracking-wider">Pending</span>
+              <span className="text-sm font-black leading-tight text-amber-200">₹{summaries.totalDue.toLocaleString('en-IN')}</span>
+              <span className="text-[7.5px] text-amber-300/50 font-bold">(Net Payable Due)</span>
             </div>
           </div>
         </div>
