@@ -266,38 +266,35 @@ export const DashboardScreen: React.FC = () => {
             ))}
           </div>
 
-          {/* Month Salary Card */}
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-[1.5rem] p-5 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden">
-            <span className="material-symbols-rounded select-none absolute -right-3 -bottom-3 text-white/10" style={{ fontSize: '110px' }}>currency_rupee</span>
-            
-            <div className="relative z-10 flex flex-col gap-4">
-              <div className="flex items-center justify-between pb-3 border-b border-white/15">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
-                    <span className="material-symbols-rounded text-base select-none">calendar_today</span>
-                  </div>
-                  <span className="text-xs font-black uppercase tracking-wider">{currentMonthLabel} Salary Details</span>
-                </div>
-              </div>
+          {/* Section Header */}
+          <div className="flex items-center gap-2 px-1">
+            <span className="material-symbols-rounded text-sm text-app-text-secondary select-none">calendar_today</span>
+            <span className="text-[10px] font-black uppercase text-app-text-secondary tracking-widest">{currentMonthLabel} Salary Details</span>
+          </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[8px] uppercase font-black text-white/70 tracking-wider">Total Base Salary</span>
-                  <span className="text-base font-black leading-tight">₹{totalBaseSalary.toLocaleString('en-IN')}</span>
-                  <span className="text-[7.5px] text-white/50 font-bold">(Full Month Potential)</span>
-                </div>
-                
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[8px] uppercase font-black text-emerald-300 tracking-wider">Earned So Far</span>
-                  <span className="text-base font-black leading-tight text-emerald-250">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
-                  <span className="text-[7.5px] text-emerald-300/60 font-bold">(Attendance Based)</span>
-                </div>
+          {/* Base Salary & Earned So Far Cards */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Total Base Salary Card */}
+            <div className="flex items-center gap-3 p-4 bg-app-surface border border-app-border rounded-[1.5rem] shadow-sm relative overflow-hidden group">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>account_balance_wallet</span>
               </div>
+              <div className="overflow-hidden">
+                <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block">Total Base Salary</span>
+                <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight">₹{totalBaseSalary.toLocaleString('en-IN')}</span>
+                <span className="text-[8px] font-bold text-app-text-secondary/60 mt-0.5 block">(Full Month Potential)</span>
+              </div>
+            </div>
 
-              <div className="flex flex-col gap-0.5 border-t border-white/10 pt-3 mt-1">
-                <span className="text-[8px] uppercase font-black text-indigo-200 tracking-wider">Net Pending Due</span>
-                <span className="text-lg font-black leading-tight text-white">₹{summaries.totalDue.toLocaleString('en-IN')}</span>
-                <span className="text-[7.5px] text-indigo-200/60 font-bold">(Total Remaining to Pay)</span>
+            {/* Earned So Far Card */}
+            <div className="flex items-center gap-3 p-4 bg-app-surface border border-app-border rounded-[1.5rem] shadow-sm relative overflow-hidden group">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>trending_up</span>
+              </div>
+              <div className="overflow-hidden">
+                <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block">Earned So Far</span>
+                <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
+                <span className="text-[8px] font-bold text-emerald-500 mt-0.5 block">(Attendance Based)</span>
               </div>
             </div>
           </div>
