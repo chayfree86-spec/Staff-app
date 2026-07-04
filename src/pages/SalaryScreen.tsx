@@ -110,8 +110,7 @@ export const SalaryScreen: React.FC = () => {
     const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
     const prevMonthLabelStr = format(prevDateObj, 'MMMM yyyy');
 
-    const hasPrevPayout = payoutList.some(p => p.staffId === staffId && p.month === prevMonthLabelStr);
-    const defaultMonth = hasPrevPayout ? currentMonthLabelStr : prevMonthLabelStr;
+    const defaultMonth = currentMonthLabelStr;
 
     return {
       options: [
