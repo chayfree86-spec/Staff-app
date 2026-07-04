@@ -4,6 +4,7 @@ export function InteractiveGridBackground() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
+    if (window.innerWidth < 1024) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -38,8 +39,8 @@ export function InteractiveGridBackground() {
     document.addEventListener('mouseleave', handleMouseLeave);
 
     const spacing = 28; // Space between dots
-    const baseRadius = 1.2;
-    const maxRadius = 3.2;
+    const baseRadius = 1.0;
+    const maxRadius = 1.8;
     const influenceRadius = 130;
 
     const draw = () => {
@@ -100,13 +101,15 @@ export function InteractiveGridBackground() {
           if (activeFactor > 0) {
             // Glow and transition color
             const alpha = opacity;
-            ctx.fillStyle = isDark
-              ? `${dotColorActiveDark}${alpha})`
-              : `${dotColorActive}${alpha})`;
+            const r = Math.round(isDark ? (167 + (52 - 167) * activeFactor) : (124 + (16 - 124) * activeFactor));
+            const g = Math.round(isDark ? (139 + (211 - 139) * activeFactor) : (58 + (185 - 58) * activeFactor));
+            const b = Math.round(isDark ? (250 + (153 - 250) * activeFactor) : (237 + (129 - 237) * activeFactor));
+            
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
             
             // Add extra glow shadow for active dots
             ctx.shadowBlur = activeFactor * 6;
-            ctx.shadowColor = isDark ? 'rgba(167, 139, 250, 0.35)' : 'rgba(124, 58, 237, 0.35)';
+            ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.35)`;
           } else {
             ctx.fillStyle = isDark ? dotColorBaseDark : dotColorBase;
             ctx.shadowBlur = 0;

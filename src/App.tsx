@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from './components/Layout';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import { useStore } from './store/useStore';
+import { InteractiveGridBackground } from './components/InteractiveGridBackground';
 
 // Remembers the last identifier/secret/method used to sign in, so the login
 // form is pre-filled (including PIN) the next time the app is opened.
@@ -286,7 +287,8 @@ function App() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-app-bg text-app-text-primary flex items-center justify-center p-6 bg-grid-dots select-none relative overflow-hidden">
+      <div className="min-h-screen bg-app-bg text-app-text-primary flex items-center justify-center p-6 bg-grid-dots lg:bg-none select-none relative overflow-hidden">
+        <InteractiveGridBackground />
         {/* Style block for animations */}
         <style>{`
           @keyframes wave-move-1 {
