@@ -41,7 +41,7 @@ VALUES (
   'paid',
   1,
   30,
-  15,
+  10,
   'actual_calendar_month',
   'attendance_based',
   'light',

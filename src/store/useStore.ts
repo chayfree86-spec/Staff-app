@@ -104,6 +104,7 @@ interface AppState {
   settings: Settings;
 
   isLoggedIn: boolean;
+  isSessionRestoring: boolean;
   currentUser: ApiUser | null;
   login: (identifier: string, secret: string, method: 'password' | 'pin') => Promise<boolean>;
   restoreSession: () => Promise<void>;
@@ -199,7 +200,7 @@ export const useStore = create<AppState>((set, get) => ({
     weeklyHolidayPaid: 'Paid',
     salaryCycleStart: 1,
     salaryCycleEnd: 30,
-    newStaffSalaryHoldDays: 15,
+    newStaffSalaryHoldDays: 10,
     monthCalculation: 'Actual Calendar Month',
     salaryCalculationBasis: 'Attendance Based',
     theme: 'light',
@@ -208,6 +209,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   isLoggedIn: false,
+  isSessionRestoring: true,
   currentUser: null,
 
   login: async (identifier, secret, method) => {
@@ -231,9 +233,10 @@ export const useStore = create<AppState>((set, get) => ({
         isLoggedIn: true,
         currentUser: user,
         ...applyBootstrapData(data),
+        isSessionRestoring: false,
       });
     } catch {
-      set({ isLoggedIn: false, currentUser: null });
+      set({ isLoggedIn: false, currentUser: null, isSessionRestoring: false });
     }
   },
   logout: async () => {

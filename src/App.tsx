@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from './components/Layout';
+import { InteractiveGridBackground } from './components/InteractiveGridBackground';
 import { useStore } from './store/useStore';
 
 function App() {
-  const { isLoggedIn, login, restoreSession, triggerAutoAttendance, currentDate, settings, businessInfo } = useStore();
+  const { isLoggedIn, isSessionRestoring, login, restoreSession, triggerAutoAttendance, currentDate, settings, businessInfo } = useStore();
   const [identifierInput, setIdentifierInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
 
@@ -127,10 +128,25 @@ function App() {
     }
   };
 
+  if (isSessionRestoring) {
+    return (
+      <div className="min-h-screen bg-app-bg text-app-text-primary flex items-center justify-center p-6 relative overflow-hidden select-none">
+        <InteractiveGridBackground />
+        <div className="flex flex-col items-center gap-4.5 z-10">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-500 animate-spin flex items-center justify-center shadow-lg shadow-indigo-500/10 border border-white/10">
+            <span className="material-symbols-rounded text-white select-none animate-pulse-slow" style={{ fontSize: '22px' }}>sync</span>
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-[0.25em] text-app-text-secondary select-none animate-pulse">Loading Session...</span>
+        </div>
+      </div>
+    );
+  }
+
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-app-bg text-app-text-primary flex items-center justify-center p-6 bg-grid-dots select-none">
-        <div className="w-full max-w-md bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[2rem] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
+      <div className="min-h-screen bg-app-bg text-app-text-primary flex items-center justify-center p-6 relative overflow-hidden select-none">
+        <InteractiveGridBackground />
+        <div className="w-full max-w-md bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[2rem] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-10 relative">
           <div className="bg-app-surface border border-app-border/40 rounded-[26px] p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-6">
             
             {/* Logo area */}

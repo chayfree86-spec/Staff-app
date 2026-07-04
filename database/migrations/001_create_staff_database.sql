@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS business_settings (
   weekly_holiday_paid ENUM('paid', 'unpaid') NOT NULL DEFAULT 'paid',
   salary_cycle_start TINYINT UNSIGNED NOT NULL DEFAULT 1,
   salary_cycle_end TINYINT UNSIGNED NOT NULL DEFAULT 30,
-  new_staff_salary_hold_days TINYINT UNSIGNED NOT NULL DEFAULT 15,
+  new_staff_salary_hold_days TINYINT UNSIGNED NOT NULL DEFAULT 10,
   month_calculation ENUM('actual_calendar_month', 'fixed_30_days') NOT NULL DEFAULT 'actual_calendar_month',
   default_salary_calculation_basis ENUM('attendance_based', 'fixed_salary') NOT NULL DEFAULT 'attendance_based',
   theme ENUM('light', 'dark', 'system') NOT NULL DEFAULT 'light',

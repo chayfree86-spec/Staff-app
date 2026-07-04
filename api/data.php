@@ -124,7 +124,7 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
             'weeklyHolidayPaid' => title_from_enum($settingsRow['weekly_holiday_paid'] ?? 'paid'),
             'salaryCycleStart' => (int) ($settingsRow['salary_cycle_start'] ?? 1),
             'salaryCycleEnd' => (int) ($settingsRow['salary_cycle_end'] ?? 30),
-            'newStaffSalaryHoldDays' => (int) ($settingsRow['new_staff_salary_hold_days'] ?? 15),
+            'newStaffSalaryHoldDays' => (int) ($settingsRow['new_staff_salary_hold_days'] ?? 10),
             'monthCalculation' => title_from_enum($settingsRow['month_calculation'] ?? 'actual_calendar_month'),
             'salaryCalculationBasis' => title_from_enum($settingsRow['default_salary_calculation_basis'] ?? 'attendance_based'),
             'theme' => $settingsRow['theme'] ?? 'light',
