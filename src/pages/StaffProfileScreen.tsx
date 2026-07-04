@@ -778,7 +778,7 @@ export const StaffProfileScreen: React.FC = () => {
       </div>
 
       {/* 1. TOP PROFILE BANNER CARD */}
-      <div className={`w-full bg-gradient-to-r ${getProfileGradient(staff.name)} rounded-app-card p-6 text-white flex flex-col md:flex-row justify-between items-center gap-6 shadow-md`}>
+      <div className={`w-full bg-gradient-to-r ${getProfileGradient(staff.name)} rounded-app-card p-6 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-md`}>
         
         {/* Left Side: Avatar with upload indicator, Text info */}
         <div className="flex items-center gap-4">
@@ -836,7 +836,7 @@ export const StaffProfileScreen: React.FC = () => {
         </div>
 
         {/* Right Side: Remaining Due Salary */}
-        <div className="bg-white/15 backdrop-blur-lg border border-white/25 rounded-2xl px-6 py-3.5 flex flex-col items-center md:items-end justify-center gap-1 shadow-[0_8px_32px_rgba(0,0,0,0.12)] select-none shrink-0 min-w-[140px]">
+        <div className="bg-white/15 backdrop-blur-lg border border-white/25 rounded-2xl px-6 py-3.5 flex flex-col items-start md:items-end justify-center gap-1 shadow-[0_8px_32px_rgba(0,0,0,0.12)] select-none shrink-0 min-w-[140px]">
           <div className="text-[9px] text-white/85 uppercase font-black tracking-widest leading-none">
             Remaining Due
           </div>
