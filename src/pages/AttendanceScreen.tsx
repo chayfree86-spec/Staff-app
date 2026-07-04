@@ -356,32 +356,89 @@ export const AttendanceScreen: React.FC = () => {
       {markingProgress.isOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
           <div className="relative w-full max-w-sm bg-app-surface border border-app-border rounded-[2rem] p-1 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
-            {/* Animated Wave Background at the top of the modal */}
-            <div className="absolute top-0 inset-x-0 h-28 overflow-hidden pointer-events-none rounded-t-[2rem] z-0">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-green-500/10 to-transparent" />
+            
+            {/* Absolute Wave Background Layers (Top & Bottom, like login page) */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[2rem] z-0">
+              {/* Top Wave 1 (Rotated) */}
               <svg 
-                className="absolute bottom-0 w-full h-12" 
+                className="absolute top-0 w-full h-[80px] rotate-180" 
                 viewBox="0 0 1440 320" 
                 preserveAspectRatio="none"
                 style={{
-                  fill: 'var(--color-present)',
-                  fillOpacity: 0.1,
-                  animation: 'wave-move-1 6s ease-in-out infinite',
+                  fill: '#10B981',
+                  fillOpacity: 0.10,
+                  filter: 'blur(2px)',
+                  animation: 'wave-move-1 9s ease-in-out infinite',
+                  willChange: 'transform',
+                  transform: 'translateZ(0)',
                 }}
               >
                 <path d="M0,160 C320,300 480,80 800,240 C1120,400 1280,120 1440,200 L1440,320 L0,320 Z" />
               </svg>
+              {/* Top Wave 2 (Rotated) */}
               <svg 
-                className="absolute bottom-0 w-full h-10" 
+                className="absolute top-0 w-full h-[90px] rotate-180" 
                 viewBox="0 0 1440 320" 
                 preserveAspectRatio="none"
                 style={{
-                  fill: 'var(--color-present)',
+                  fill: '#059669',
                   fillOpacity: 0.08,
-                  animation: 'wave-move-2 8s ease-in-out infinite',
+                  filter: 'blur(3px)',
+                  animation: 'wave-move-2 11s ease-in-out infinite',
+                  willChange: 'transform',
+                  transform: 'translateZ(0)',
                 }}
               >
                 <path d="M0,224 C320,120 640,300 960,180 C1280,60 1440,240 1440,240 L1440,320 L0,320 Z" />
+              </svg>
+
+              {/* Bottom Wave 1 */}
+              <svg 
+                className="absolute bottom-0 w-full h-[90px]" 
+                viewBox="0 0 1440 320" 
+                preserveAspectRatio="none"
+                style={{
+                  fill: '#10B981',
+                  fillOpacity: 0.12,
+                  filter: 'blur(1px)',
+                  animation: 'wave-move-1 8s ease-in-out infinite',
+                  willChange: 'transform',
+                  transform: 'translateZ(0)',
+                }}
+              >
+                <path d="M0,160 C320,300 480,80 800,240 C1120,400 1280,120 1440,200 L1440,320 L0,320 Z" />
+              </svg>
+              {/* Bottom Wave 2 */}
+              <svg 
+                className="absolute bottom-0 w-full h-[100px]" 
+                viewBox="0 0 1440 320" 
+                preserveAspectRatio="none"
+                style={{
+                  fill: '#059669',
+                  fillOpacity: 0.10,
+                  filter: 'blur(2px)',
+                  animation: 'wave-move-2 10s ease-in-out infinite',
+                  willChange: 'transform',
+                  transform: 'translateZ(0)',
+                }}
+              >
+                <path d="M0,224 C320,120 640,300 960,180 C1280,60 1440,240 1440,240 L1440,320 L0,320 Z" />
+              </svg>
+              {/* Bottom Wave 3 */}
+              <svg 
+                className="absolute bottom-0 w-full h-[110px]" 
+                viewBox="0 0 1440 320" 
+                preserveAspectRatio="none"
+                style={{
+                  fill: '#34D399',
+                  fillOpacity: 0.07,
+                  filter: 'blur(3px)',
+                  animation: 'wave-move-3 12s ease-in-out infinite',
+                  willChange: 'transform',
+                  transform: 'translateZ(0)',
+                }}
+              >
+                <path d="M0,128 C480,240 960,40 1440,160 L1440,320 L0,320 Z" />
               </svg>
             </div>
 
@@ -417,6 +474,22 @@ export const AttendanceScreen: React.FC = () => {
                 <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-1 animate-pulse">
                   {markingProgress.currentStaffName}
                 </span>
+              </div>
+
+              {/* Real-time Color Stats Row */}
+              <div className="grid grid-cols-3 gap-2.5 w-full mt-1.5 select-none">
+                <div className="bg-emerald-500/10 rounded-xl py-2 px-1 text-center border border-emerald-500/20">
+                  <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">{summary.present}</div>
+                  <div className="text-[7.5px] uppercase font-black text-emerald-600 tracking-wider mt-0.5">Present</div>
+                </div>
+                <div className="bg-rose-500/10 rounded-xl py-2 px-1 text-center border border-rose-500/20">
+                  <div className="text-sm font-black text-rose-500">{summary.absent}</div>
+                  <div className="text-[7.5px] uppercase font-black text-rose-500 tracking-wider mt-0.5">Absent</div>
+                </div>
+                <div className="bg-amber-500/10 rounded-xl py-2 px-1 text-center border border-amber-500/20">
+                  <div className="text-sm font-black text-amber-500">{summary.halfDay}</div>
+                  <div className="text-[7.5px] uppercase font-black text-amber-500 tracking-wider mt-0.5">Half Day</div>
+                </div>
               </div>
 
               {/* Progress Bar & Percentage */}
@@ -467,6 +540,11 @@ export const AttendanceScreen: React.FC = () => {
           0% { transform: translate3d(20px, 0, 0); }
           50% { transform: translate3d(-20px, -6px, 0); }
           100% { transform: translate3d(20px, 0, 0); }
+        }
+        @keyframes wave-move-3 {
+          0% { transform: translate3d(0, -5px, 0); }
+          50% { transform: translate3d(15px, 4px, 0); }
+          100% { transform: translate3d(0, -5px, 0); }
         }
       `}</style>
     </div>
