@@ -63,10 +63,12 @@ export const AdvanceScreen: React.FC = () => {
     0
   );
 
-  // Filter staff list based on search
-  const filteredStaff = activeStaff.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filter staff list based on search and positive outstanding advance (> 0)
+  const filteredStaff = activeStaff.filter(s => {
+    const outstanding = getOutstandingAdvance(s.id);
+    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
+    return outstanding > 0 && matchesSearch;
+  });
 
   const handleGiveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
