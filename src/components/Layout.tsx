@@ -217,7 +217,7 @@ export const Layout: React.FC = () => {
     { id: 'staff', label: 'Staff', icon: 'group' },
     { id: 'attendance', label: 'Attendance', icon: 'done_all' },
     { id: 'salary', label: 'Salary', icon: 'payments' },
-    { id: 'more', label: 'More', icon: 'menu' },
+    { id: 'more', label: 'More', icon: 'grid_view' },
   ];
 
   const isTabActive = (tabId: string) => {
@@ -318,38 +318,45 @@ export const Layout: React.FC = () => {
         {renderScreen()}
       </main>
 
-      {/* PWA Fixed Bottom Menu Navigation */}
+      {/* PWA Fixed Bottom Menu Navigation - Attendance is always the raised center FAB */}
       <nav className="fixed bottom-0 left-0 right-0 bg-app-surface/95 backdrop-blur-md border-t border-app-border pb-safe pt-2.5 px-6 z-40 shadow-[0_-5px_20px_rgba(0,0,0,0.03)] select-none">
-        <div className="w-full flex items-center justify-between gap-1 max-w-4xl mx-auto">
+        <div className="w-full flex items-end justify-between gap-1 max-w-4xl mx-auto">
           {navItems.map((item) => {
             const active = isTabActive(item.id);
-            if (active) {
+
+            if (item.id === 'attendance') {
               return (
                 <button
                   key={item.id}
                   onClick={() => setScreen(item.id as any)}
-                  className="bg-primary/10 text-primary px-4 py-2 rounded-full flex items-center gap-2 justify-center transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96] cursor-pointer border border-primary/10"
+                  className="flex flex-col items-center gap-1 -mt-7 shrink-0 cursor-pointer active:scale-95 transition-transform duration-300"
                 >
-                  <span className="material-symbols-rounded select-none text-xl font-fill leading-none">
-                    {item.icon}
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 border-[3px] border-app-surface">
+                    <span className="material-symbols-rounded select-none text-2xl leading-none">
+                      {item.icon}
+                    </span>
+                  </div>
+                  <span className={`text-[9px] font-black uppercase tracking-wider leading-none ${active ? 'text-primary' : 'text-app-text-secondary'}`}>
+                    {item.label}
                   </span>
-                  <span className="text-[11px] font-black tracking-tight leading-none">{item.label}</span>
-                </button>
-              );
-            } else {
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setScreen(item.id as any)}
-                  className="flex flex-col items-center gap-1 py-1 text-app-text-secondary hover:text-primary transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96] flex-1 cursor-pointer"
-                >
-                  <span className="material-symbols-rounded select-none text-xl leading-none">
-                    {item.icon}
-                  </span>
-                  <span className="text-[9px] font-black uppercase tracking-wider leading-none">{item.label}</span>
                 </button>
               );
             }
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => setScreen(item.id as any)}
+                className={`flex flex-col items-center gap-1 py-1 flex-1 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96] cursor-pointer ${
+                  active ? 'text-primary' : 'text-app-text-secondary hover:text-primary'
+                }`}
+              >
+                <span className="material-symbols-rounded select-none text-xl leading-none">
+                  {item.icon}
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-wider leading-none">{item.label}</span>
+              </button>
+            );
           })}
         </div>
       </nav>

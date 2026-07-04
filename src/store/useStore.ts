@@ -17,6 +17,7 @@ import {
   updateStaffRequest,
   updateTransactionRequest,
   type ApiBootstrapData,
+  type ApiUser,
 } from '../api/client';
 
 export interface Staff {
@@ -90,7 +91,7 @@ export interface Settings {
 }
 
 interface AppState {
-  currentScreen: 'attendance' | 'dashboard' | 'staff' | 'salary' | 'more' | 'staff-profile' | 'advance' | 'deduction' | 'reports' | 'business' | 'settings';
+  currentScreen: 'attendance' | 'dashboard' | 'staff' | 'salary' | 'more' | 'staff-profile' | 'advance' | 'deduction' | 'reports' | 'business' | 'settings' | 'create-business' | 'businesses';
   activeStaffProfileId: string | null;
   currentDate: string; // YYYY-MM-DD
   searchQuery: string;
@@ -103,6 +104,8 @@ interface AppState {
   settings: Settings;
 
   isLoggedIn: boolean;
+  isSessionRestoring: boolean;
+  currentUser: ApiUser | null;
   login: (identifier: string, secret: string, method: 'password' | 'pin') => Promise<boolean>;
   restoreSession: () => Promise<void>;
   logout: () => Promise<void>;
@@ -130,17 +133,9 @@ interface AppState {
   triggerAutoAttendance: () => void;
 }
 
-// Plain UUID (36 chars) so ids fit the CHAR(36) columns in MySQL.
-const createId = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-};
+// The DB assigns simple numeric ids; new records get a temporary local id for
+// the optimistic update, replaced by the real id once the server responds.
+const createTempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const applyBootstrapData = (data: ApiBootstrapData) => ({
   businessInfo: data.businessInfo,
@@ -154,13 +149,24 @@ const applyBootstrapData = (data: ApiBootstrapData) => ({
 
 // Persist a mutation in the background; if it fails, reload server state so
 // the optimistic local update does not drift from the database.
+const resyncFromServer = (error: unknown) => {
+  console.error('Failed to sync change with server:', error);
+  meRequest()
+    .then(({ data }) => useStore.setState(applyBootstrapData(data)))
+    .catch(() => {});
+};
+
 const persist = (task: Promise<unknown>) => {
-  task.catch((error) => {
-    console.error('Failed to sync change with server:', error);
-    meRequest()
-      .then((data) => useStore.setState(applyBootstrapData(data)))
-      .catch(() => {});
-  });
+  task.catch(resyncFromServer);
+};
+
+// For creates: swap the temporary local id with the DB-assigned one.
+const persistCreate = (task: Promise<string | undefined>, applyRealId: (realId: string) => void) => {
+  task
+    .then((realId) => {
+      if (realId) applyRealId(realId);
+    })
+    .catch(resyncFromServer);
 };
 
 export const useStore = create<AppState>((set, get) => ({
@@ -184,7 +190,7 @@ export const useStore = create<AppState>((set, get) => ({
     weeklyHolidayPaid: 'Paid',
     salaryCycleStart: 1,
     salaryCycleEnd: 30,
-    newStaffSalaryHoldDays: 15,
+    newStaffSalaryHoldDays: 10,
     monthCalculation: 'Actual Calendar Month',
     salaryCalculationBasis: 'Attendance Based',
     theme: 'light',
@@ -193,29 +199,34 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   isLoggedIn: false,
+  isSessionRestoring: true,
+  currentUser: null,
 
   login: async (identifier, secret, method) => {
     try {
-      const data = await loginRequest(identifier, secret, method);
+      const { user, data } = await loginRequest(identifier, secret, method);
       set({
         isLoggedIn: true,
+        currentUser: user,
         ...applyBootstrapData(data),
       });
       return true;
     } catch {
-      set({ isLoggedIn: false });
+      set({ isLoggedIn: false, currentUser: null });
       return false;
     }
   },
   restoreSession: async () => {
     try {
-      const data = await meRequest();
+      const { user, data } = await meRequest();
       set({
         isLoggedIn: true,
+        currentUser: user,
         ...applyBootstrapData(data),
+        isSessionRestoring: false,
       });
     } catch {
-      set({ isLoggedIn: false });
+      set({ isLoggedIn: false, currentUser: null, isSessionRestoring: false });
     }
   },
   logout: async () => {
@@ -224,6 +235,7 @@ export const useStore = create<AppState>((set, get) => ({
     } finally {
       set({
         isLoggedIn: false,
+        currentUser: null,
         staffList: [],
         attendance: {},
         advanceList: [],
@@ -249,14 +261,20 @@ export const useStore = create<AppState>((set, get) => ({
 
   addStaff: (staff) => {
     const initials = staff.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const tempId = createTempId();
     const newStaff: Staff = {
       ...staff,
-      id: createId(),
+      id: tempId,
       avatar: initials,
       perDaySalary: Math.round(staff.salaryType === 'Monthly' ? staff.monthlySalary / 30 : staff.monthlySalary),
     };
     set((state) => ({ staffList: [...state.staffList, newStaff] }));
-    persist(createStaffRequest(newStaff));
+    persistCreate(createStaffRequest(newStaff), (realId) => {
+      set((state) => ({
+        staffList: state.staffList.map((s) => (s.id === tempId ? { ...s, id: realId } : s)),
+        activeStaffProfileId: state.activeStaffProfileId === tempId ? realId : state.activeStaffProfileId,
+      }));
+    });
   },
 
   updateStaff: (id, updates) => {
@@ -336,9 +354,14 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   addAdvance: (staffId, amount, date, remarks) => {
-    const record: AdvanceRecord = { id: createId(), staffId, amount, date, remarks };
+    const tempId = createTempId();
+    const record: AdvanceRecord = { id: tempId, staffId, amount, date, remarks };
     set((state) => ({ advanceList: [...state.advanceList, record] }));
-    persist(createTransactionRequest('advance', record));
+    persistCreate(createTransactionRequest('advance', record), (realId) => {
+      set((state) => ({
+        advanceList: state.advanceList.map((a) => (a.id === tempId ? { ...a, id: realId } : a)),
+      }));
+    });
   },
 
   updateAdvance: (id, amount, date, remarks) => {
@@ -356,9 +379,14 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   addDeduction: (staffId, amount, date, remarks) => {
-    const record: DeductionRecord = { id: createId(), staffId, amount, date, remarks };
+    const tempId = createTempId();
+    const record: DeductionRecord = { id: tempId, staffId, amount, date, remarks };
     set((state) => ({ deductionList: [...state.deductionList, record] }));
-    persist(createTransactionRequest('deduction', record));
+    persistCreate(createTransactionRequest('deduction', record), (realId) => {
+      set((state) => ({
+        deductionList: state.deductionList.map((d) => (d.id === tempId ? { ...d, id: realId } : d)),
+      }));
+    });
   },
 
   updateDeduction: (id, amount, date, remarks) => {
@@ -376,8 +404,9 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   paySalary: (staffId, amount, month, date, paymentMode, remarks) => {
+    const tempId = createTempId();
     const record: PayoutRecord = {
-      id: createId(),
+      id: tempId,
       staffId,
       amount,
       date: date || new Date().toISOString().split('T')[0],
@@ -386,7 +415,12 @@ export const useStore = create<AppState>((set, get) => ({
       remarks,
     };
     set((state) => ({ payoutList: [...state.payoutList, record] }));
-    persist(createPayoutRequest(record));
+    const { id: _tempId, ...payload } = record;
+    persistCreate(createPayoutRequest(payload), (realId) => {
+      set((state) => ({
+        payoutList: state.payoutList.map((p) => (p.id === tempId ? { ...p, id: realId } : p)),
+      }));
+    });
   },
 
   updateBusinessInfo: (info) => {

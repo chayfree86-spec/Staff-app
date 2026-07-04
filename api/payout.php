@@ -14,33 +14,30 @@ if ($action !== 'create') {
     respond(['ok' => false, 'message' => 'Unknown action.'], 422);
 }
 
-$staffId = trim((string) ($input['staffId'] ?? ''));
+$staffId = require_int_id($input, 'staffId');
 $date = (string) ($input['date'] ?? '');
 $salaryMonth = salary_month_from_label((string) ($input['month'] ?? ''));
 
-if ($staffId === '' || !valid_date($date)) {
-    respond(['ok' => false, 'message' => 'Staff id and valid payout date are required.'], 422);
+if (!valid_date($date)) {
+    respond(['ok' => false, 'message' => 'Valid payout date is required.'], 422);
 }
 if ($salaryMonth === null) {
     respond(['ok' => false, 'message' => 'Valid salary month is required (e.g. "July 2026").'], 422);
 }
 
-$paise = paise_from_rupees((float) ($input['amount'] ?? 0));
-if ($paise <= 0) {
+$amount = whole_rupees((float) ($input['amount'] ?? 0));
+if ($amount <= 0) {
     respond(['ok' => false, 'message' => 'Amount must be greater than zero.'], 422);
 }
 
-$id = id_from_input($input);
-
 $stmt = $pdo->prepare(
-    'INSERT INTO salary_payouts (id, business_id, staff_id, salary_month, amount_paise, payout_date, payment_mode, remarks, status, created_by)
-     SELECT ?, ?, id, ?, ?, ?, ?, ?, \'paid\', ? FROM staff WHERE id = ? AND business_id = ?'
+    'INSERT INTO salary_payouts (business_id, staff_id, salary_month, amount, payout_date, payment_mode, remarks, status, created_by)
+     SELECT ?, id, ?, ?, ?, ?, ?, \'paid\', ? FROM staff WHERE id = ? AND business_id = ?'
 );
 $stmt->execute([
-    $id,
     $businessId,
     $salaryMonth,
-    $paise,
+    $amount,
     $date,
     str_or_null($input['paymentMode'] ?? null),
     str_or_null($input['remarks'] ?? null),
@@ -53,4 +50,4 @@ if ($stmt->rowCount() === 0) {
     respond(['ok' => false, 'message' => 'Staff member not found.'], 404);
 }
 
-respond(['ok' => true, 'id' => $id]);
+respond(['ok' => true, 'id' => (int) $pdo->lastInsertId()]);

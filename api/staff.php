@@ -58,8 +58,8 @@ function staff_payload_from_input(array $input): array
         'address' => str_or_null($staff['address'] ?? null),
         'avatar_initials' => substr((string) ($staff['avatar'] ?? initials_for_name($name)), 0, 4),
         'profile_image_url' => str_or_null($staff['profileImage'] ?? null),
-        'monthly_salary_paise' => paise_from_rupees((float) ($staff['monthlySalary'] ?? 0)),
-        'per_day_salary_paise' => paise_from_rupees((float) ($staff['perDaySalary'] ?? 0)),
+        'monthly_salary' => whole_rupees((float) ($staff['monthlySalary'] ?? 0)),
+        'per_day_salary' => whole_rupees((float) ($staff['perDaySalary'] ?? 0)),
         'salary_type' => $salaryType,
         'calculation_basis' => $calculationBasis,
         'joining_date' => $joiningDate,
@@ -70,20 +70,17 @@ function staff_payload_from_input(array $input): array
 }
 
 if ($action === 'create') {
-    $staffInput = is_array($input['staff'] ?? null) ? $input['staff'] : [];
-    $id = id_from_input($staffInput);
     $payload = staff_payload_from_input($input);
 
     $stmt = $pdo->prepare(
         'INSERT INTO staff (
-            id, business_id, name, father_name, mobile, mobile2, address,
-            avatar_initials, profile_image_url, monthly_salary_paise, per_day_salary_paise,
+            business_id, name, father_name, mobile, mobile2, address,
+            avatar_initials, profile_image_url, monthly_salary, per_day_salary,
             salary_type, calculation_basis, joining_date, status, deactivation_date,
             released_salary_hold, owner_user_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
     $stmt->execute([
-        $id,
         $businessId,
         $payload['name'],
         $payload['father_name'],
@@ -92,8 +89,8 @@ if ($action === 'create') {
         $payload['address'],
         $payload['avatar_initials'],
         $payload['profile_image_url'],
-        $payload['monthly_salary_paise'],
-        $payload['per_day_salary_paise'],
+        $payload['monthly_salary'],
+        $payload['per_day_salary'],
         $payload['salary_type'],
         $payload['calculation_basis'],
         $payload['joining_date'],
@@ -103,22 +100,19 @@ if ($action === 'create') {
         $auth['user_id'],
     ]);
 
-    respond(['ok' => true, 'id' => $id]);
+    respond(['ok' => true, 'id' => (int) $pdo->lastInsertId()]);
 }
 
 if ($action === 'update') {
     $staffInput = is_array($input['staff'] ?? null) ? $input['staff'] : [];
-    $id = trim((string) ($staffInput['id'] ?? ''));
-    if ($id === '') {
-        respond(['ok' => false, 'message' => 'Staff id is required.'], 422);
-    }
+    $id = require_int_id($staffInput);
     $payload = staff_payload_from_input($input);
 
     $stmt = $pdo->prepare(
         'UPDATE staff SET
             name = ?, father_name = ?, mobile = ?, mobile2 = ?, address = ?,
-            avatar_initials = ?, profile_image_url = ?, monthly_salary_paise = ?,
-            per_day_salary_paise = ?, salary_type = ?, calculation_basis = ?,
+            avatar_initials = ?, profile_image_url = ?, monthly_salary = ?,
+            per_day_salary = ?, salary_type = ?, calculation_basis = ?,
             joining_date = ?, status = ?, deactivation_date = ?, released_salary_hold = ?
          WHERE id = ? AND business_id = ?'
     );
@@ -130,8 +124,8 @@ if ($action === 'update') {
         $payload['address'],
         $payload['avatar_initials'],
         $payload['profile_image_url'],
-        $payload['monthly_salary_paise'],
-        $payload['per_day_salary_paise'],
+        $payload['monthly_salary'],
+        $payload['per_day_salary'],
         $payload['salary_type'],
         $payload['calculation_basis'],
         $payload['joining_date'],
@@ -146,10 +140,7 @@ if ($action === 'update') {
 }
 
 if ($action === 'delete') {
-    $id = trim((string) ($input['id'] ?? ''));
-    if ($id === '') {
-        respond(['ok' => false, 'message' => 'Staff id is required.'], 422);
-    }
+    $id = require_int_id($input);
 
     $stmt = $pdo->prepare('DELETE FROM staff WHERE id = ? AND business_id = ?');
     $stmt->execute([$id, $businessId]);
