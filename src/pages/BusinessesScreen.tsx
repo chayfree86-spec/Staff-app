@@ -18,7 +18,7 @@ const inputClass =
 const labelClass = 'text-[10px] font-bold text-app-text-secondary uppercase tracking-wider';
 
 export const BusinessesScreen: React.FC = () => {
-  const { setScreen, currentUser } = useStore();
+  const { setScreen, currentUser, switchBusiness, businessInfo } = useStore();
   const { confirm, alert } = useAlertConfirm();
 
   const [businesses, setBusinesses] = useState<BusinessAccount[]>([]);
@@ -204,19 +204,22 @@ export const BusinessesScreen: React.FC = () => {
     name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'B';
 
   return (
-    <div className="flex flex-col gap-4 pb-24 animate-in fade-in duration-200">
+    <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200 w-full">
       {/* Header bar */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <button
           onClick={() => setScreen('more')}
-          className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0"
+          className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0 mt-0.5"
         >
           <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>arrow_back</span>
         </button>
-        <h2 className="text-base font-bold text-app-text-primary flex-1">Businesses & Users</h2>
+        <div className="flex flex-col gap-1 flex-1 select-none text-left">
+          <h2 className="text-xl font-extrabold text-app-text-primary tracking-tight">Businesses & Users</h2>
+          <p className="text-xs text-app-text-secondary font-medium">Manage business profiles, admin logins, and access permissions.</p>
+        </div>
         <button
           onClick={() => setScreen('create-business')}
-          className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-primary/10 hover:bg-opacity-95 active:scale-95 transition-all cursor-pointer"
+          className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-primary/10 hover:bg-opacity-95 active:scale-95 transition-all cursor-pointer shrink-0 mt-1"
         >
           <span className="material-symbols-rounded select-none" style={{ fontSize: '15px' }}>add_business</span>
           <span>New Business</span>
@@ -235,17 +238,17 @@ export const BusinessesScreen: React.FC = () => {
           Loading businesses...
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6 w-full">
           {businesses.map((business) => {
-            const isOwnBusiness = currentUser?.businessId === business.id;
+            const isOwnBusiness = businessInfo.id === business.id;
             return (
               <div
                 key={business.id}
-                className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[24px] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]"
+                className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[24px] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)] w-full"
               >
                 <div className="bg-app-surface border border-app-border/40 rounded-[18px] overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
                   {/* Business header */}
-                  <div className="p-5 flex items-center justify-between gap-4 border-b border-app-border/40">
+                  <div className="p-5 flex items-center justify-between gap-4 border-b border-app-border/40 bg-app-bg/20">
                     <div className="flex items-center gap-3 overflow-hidden">
                       <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-accent/30 to-emerald-500 text-app-text-primary font-black flex items-center justify-center text-sm shadow-md shrink-0 select-none">
                         {getBusinessInitials(business.name)}
@@ -264,6 +267,33 @@ export const BusinessesScreen: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
+                      {isOwnBusiness ? (
+                        <span className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black rounded-lg uppercase select-none tracking-wider">
+                          Active
+                        </span>
+                      ) : (
+                        <button
+                          onClick={async () => {
+                            const confirmed = await confirm(`Are you sure you want to switch and access ${business.name}?`, {
+                              title: 'Switch Business',
+                              type: 'success',
+                              confirmText: 'Switch'
+                            });
+                            if (confirmed) {
+                              try {
+                                await switchBusiness(business.id);
+                              } catch (err) {
+                                alert(err instanceof Error ? err.message : 'Failed to switch business.');
+                              }
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-primary hover:bg-opacity-95 text-white text-[10px] font-black rounded-lg uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-sm shadow-primary/10"
+                        >
+                          <span className="material-symbols-rounded select-none" style={{ fontSize: '13px' }}>login</span>
+                          <span>Access</span>
+                        </button>
+                      )}
+
                       <button
                         onClick={() => openEditBusiness(business)}
                         title="Edit business"
@@ -284,8 +314,8 @@ export const BusinessesScreen: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Users list */}
-                  <div className="divide-y divide-app-border/40">
+                  {/* Users list - Mobile View */}
+                  <div className="divide-y divide-app-border/40 sm:hidden">
                     {business.users.length === 0 && (
                       <div className="p-4 text-[11px] text-app-text-secondary font-semibold">
                         No login users in this business.
@@ -324,11 +354,10 @@ export const BusinessesScreen: React.FC = () => {
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
-                            {/* Edit / Delete user */}
                             <button
                               onClick={() => openEditUser(business.id, user)}
                               title="Edit user"
-                              className="w-7 h-7 rounded-full bg-app-bg border border-app-border text-app-text-secondary hover:text-primary hover:border-primary/30 flex items-center justify-center transition-all cursor-pointer"
+                              className="w-7 h-7 rounded-full bg-app-bg border border-app-border text-app-text-secondary hover:text-primary hover:border-primary/30 flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
                             >
                               <span className="material-symbols-rounded select-none" style={{ fontSize: '13px' }}>edit</span>
                             </button>
@@ -337,13 +366,12 @@ export const BusinessesScreen: React.FC = () => {
                               disabled={isSelf}
                               title={isSelf ? 'You cannot delete your own login' : 'Delete user'}
                               className={`w-7 h-7 rounded-full bg-app-bg border border-app-border text-app-text-secondary flex items-center justify-center transition-all ${
-                                isSelf ? 'opacity-40 cursor-not-allowed' : 'hover:text-rose-500 hover:border-rose-300 cursor-pointer'
+                                isSelf ? 'opacity-40 cursor-not-allowed' : 'hover:text-rose-500 hover:border-rose-300 cursor-pointer hover:scale-105 active:scale-95'
                               }`}
                             >
                               <span className="material-symbols-rounded select-none" style={{ fontSize: '13px' }}>delete</span>
                             </button>
 
-                            {/* Login on/off toggle */}
                             <button
                               type="button"
                               disabled={isSelf}
@@ -363,6 +391,110 @@ export const BusinessesScreen: React.FC = () => {
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* Users list - Desktop Table View */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    {business.users.length === 0 ? (
+                      <div className="p-6 text-center text-xs text-app-text-secondary font-semibold">
+                        No login users in this business.
+                      </div>
+                    ) : (
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-app-bg border-b border-app-border/60 text-app-text-secondary font-black uppercase text-[9px] tracking-wider select-none">
+                            <th className="px-5 py-3.5">User</th>
+                            <th className="px-5 py-3.5">Mobile Number</th>
+                            <th className="px-5 py-3.5">Email Address</th>
+                            <th className="px-5 py-3.5 text-center">Status</th>
+                            <th className="px-5 py-3.5 text-center">Login Access</th>
+                            <th className="px-5 py-3.5 text-center">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-app-border/40 font-semibold text-app-text-primary">
+                          {business.users.map((user) => {
+                            const isSelf = currentUser?.id === user.id;
+                            const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                            return (
+                              <tr key={user.id} className="hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
+                                <td className="px-5 py-3.5 flex items-center gap-3">
+                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px] ${
+                                    user.isActive
+                                      ? 'bg-primary/10 text-primary'
+                                      : 'bg-slate-100 dark:bg-slate-800 text-app-text-secondary'
+                                  }`}>
+                                    {initials || <span className="material-symbols-rounded text-sm">person</span>}
+                                  </div>
+                                  <div>
+                                    <div className="font-bold text-app-text-primary text-xs flex items-center gap-1.5">
+                                      {user.name}
+                                      {isSelf && (
+                                        <span className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase font-black">
+                                          You
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-5 py-3.5 text-app-text-primary">
+                                  {user.mobile || '—'}
+                                </td>
+                                <td className="px-5 py-3.5 text-app-text-secondary">
+                                  {user.email || '—'}
+                                </td>
+                                <td className="px-5 py-3.5 text-center">
+                                  <span className={`inline-block text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                                    user.isActive
+                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-450 border border-emerald-500/20'
+                                      : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                                  }`}>
+                                    {user.isActive ? 'Active' : 'Inactive'}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-3.5 text-center">
+                                  <button
+                                    type="button"
+                                    disabled={isSelf}
+                                    title={isSelf ? 'You cannot disable your own login' : 'Toggle login access'}
+                                    onClick={() => handleToggleUser(business.id, user.id, !user.isActive)}
+                                    className={`relative inline-flex h-5 w-10 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mx-auto ${
+                                      user.isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                                    } ${isSelf ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                                  >
+                                    <span
+                                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                        user.isActive ? 'translate-x-5' : 'translate-x-0'
+                                      }`}
+                                    />
+                                  </button>
+                                </td>
+                                <td className="px-5 py-3.5 text-center">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <button
+                                      onClick={() => openEditUser(business.id, user)}
+                                      title="Edit user"
+                                      className="w-7 h-7 rounded-full bg-app-bg border border-app-border text-app-text-secondary hover:text-primary hover:border-primary/30 flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                                    >
+                                      <span className="material-symbols-rounded select-none" style={{ fontSize: '13px' }}>edit</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteUser(business.id, user)}
+                                      disabled={isSelf}
+                                      title={isSelf ? 'You cannot delete your own login' : 'Delete user'}
+                                      className={`w-7 h-7 rounded-full bg-app-bg border border-app-border text-app-text-secondary flex items-center justify-center transition-all ${
+                                        isSelf ? 'opacity-40 cursor-not-allowed' : 'hover:text-rose-500 hover:border-rose-300 cursor-pointer active:scale-95'
+                                      }`}
+                                    >
+                                      <span className="material-symbols-rounded select-none" style={{ fontSize: '13px' }}>delete</span>
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
                   </div>
                 </div>
               </div>

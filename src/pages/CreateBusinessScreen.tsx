@@ -106,7 +106,7 @@ export const CreateBusinessScreen: React.FC = () => {
         <h2 className="text-base font-bold text-app-text-primary">Create New Business</h2>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-xl mx-auto w-full">
         {success && (
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-500 rounded-app-card text-xs font-semibold border border-emerald-200 flex items-center gap-2">
             <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>check_circle</span>

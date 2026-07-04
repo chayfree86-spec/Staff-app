@@ -114,6 +114,7 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
 
     return [
         'businessInfo' => [
+            'id' => (string) ($business['id'] ?? $businessId),
             'name' => $business['name'] ?? '',
             'logo' => $business['logo_url'] ?? '',
             'mobile' => $business['mobile'] ?? '',

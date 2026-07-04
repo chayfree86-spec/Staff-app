@@ -17,6 +17,7 @@ import { AdvanceHistoryScreen } from '../pages/AdvanceHistoryScreen';
 import { DeductionHistoryScreen } from '../pages/DeductionHistoryScreen';
 import { CustomDialog } from './ui/CustomDialog';
 import { format, parseISO } from 'date-fns';
+import { InteractiveGridBackground } from './InteractiveGridBackground';
 
 export const Layout: React.FC = () => {
   const {
@@ -250,7 +251,8 @@ export const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-app-bg text-app-text-primary flex flex-col w-full bg-grid-dots">
+    <div className="min-h-[100dvh] bg-app-bg text-app-text-primary flex flex-col w-full bg-grid-dots relative overflow-hidden">
+      <InteractiveGridBackground />
       
       {/* Top Header Sticky bar */}
       <header className="sticky top-0 bg-app-surface/80 backdrop-blur-md border-b border-app-border z-40 w-full shadow-sm">
@@ -342,7 +344,7 @@ export const Layout: React.FC = () => {
       </header>
 
       {/* Scrollable Page Body */}
-      <main className="flex-1 w-full p-6 overflow-y-auto">
+      <main className="flex-1 w-full p-6 overflow-y-auto relative z-10">
         {renderScreen()}
       </main>
 

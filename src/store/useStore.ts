@@ -16,6 +16,7 @@ import {
   updateSettingsRequest,
   updateStaffRequest,
   updateTransactionRequest,
+  switchBusinessRequest,
   type ApiBootstrapData,
   type ApiUser,
 } from '../api/client';
@@ -71,6 +72,7 @@ export interface PayoutRecord {
 }
 
 export interface BusinessInfo {
+  id: string;
   name: string;
   logo: string;
   mobile: string;
@@ -92,6 +94,7 @@ export interface Settings {
 
 interface AppState {
   currentScreen: 'attendance' | 'dashboard' | 'staff' | 'salary' | 'more' | 'staff-profile' | 'advance' | 'deduction' | 'reports' | 'business' | 'settings' | 'create-business' | 'businesses' | 'advance-history' | 'deduction-history';
+  previousScreen: AppState['currentScreen'] | null;
   activeStaffProfileId: string | null;
   currentDate: string; // YYYY-MM-DD
   searchQuery: string;
@@ -133,6 +136,7 @@ interface AppState {
   updateBusinessInfo: (info: Partial<BusinessInfo>) => void;
   updateSettings: (settings: Partial<Settings>) => void;
   triggerAutoAttendance: () => void;
+  switchBusiness: (businessId: string) => Promise<void>;
 }
 
 // The DB assigns simple numeric ids (1, 2, 3, ...). New records get a
@@ -193,6 +197,7 @@ export const useStore = create<AppState>((set, get) => ({
   deductionList: [],
   payoutList: [],
   businessInfo: {
+    id: '',
     name: '',
     logo: '',
     mobile: '',
@@ -267,7 +272,7 @@ export const useStore = create<AppState>((set, get) => ({
     await changePasswordRequest(oldPass, newPass);
   },
 
-  setScreen: (screen) => set({ currentScreen: screen }),
+  setScreen: (screen) => set((state) => ({ previousScreen: state.currentScreen, currentScreen: screen })),
   setActiveStaffProfileId: (id) => set({ activeStaffProfileId: id }),
   setCurrentDate: (date) => set({ currentDate: date }),
   setSearchQuery: (query) => set({ searchQuery: query }),
@@ -545,5 +550,13 @@ export const useStore = create<AppState>((set, get) => ({
 
     set({ attendance: updatedAttendance });
     persist(markAttendanceBulkRequest(dateStr, entries));
+  },
+
+  switchBusiness: async (businessId) => {
+    const data = await switchBusinessRequest(businessId);
+    set({
+      ...applyBootstrapData(data),
+      currentScreen: 'dashboard',
+    });
   },
 }));

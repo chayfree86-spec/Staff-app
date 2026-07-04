@@ -245,11 +245,14 @@ export const StaffScreen: React.FC = () => {
     <div className="flex flex-col gap-5 pb-44 animate-in fade-in duration-200">
       
       {/* Title bar: Heading and Add Button */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black text-app-text-primary tracking-tight">Staff</h2>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1 select-none text-left">
+          <h2 className="text-xl font-extrabold text-app-text-primary tracking-tight">Staff Directory</h2>
+          <p className="text-xs text-app-text-secondary font-medium">Add new staff members, manage profiles, and salary parameters.</p>
+        </div>
         <button
           onClick={() => setIsAddStaffModalOpen(true)}
-          className="w-10 h-10 rounded-full bg-app-surface border border-app-border flex items-center justify-center text-app-text-primary shadow-sm hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer"
+          className="w-10 h-10 rounded-full bg-app-surface border border-app-border flex items-center justify-center text-app-text-primary shadow-sm hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer shrink-0 mt-0.5"
         >
           <span className="material-symbols-rounded select-none text-[20px]">add</span>
         </button>

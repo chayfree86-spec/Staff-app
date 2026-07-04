@@ -187,81 +187,97 @@ export const ReportsScreen: React.FC = () => {
     setSlipMonthLabel(selectedMonthLabel);
     setIsSlipOpen(true);
   };
-
   return (
-    <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200 text-left">
+    <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200 text-left w-full">
       {/* Header bar */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <button
           onClick={() => setScreen('more')}
-          className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer shrink-0"
+          className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer shrink-0 mt-0.5"
         >
           <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>arrow_back</span>
         </button>
-        <h2 className="text-sm font-black text-app-text-primary tracking-tight select-none">Reports Generator</h2>
+        <div className="flex flex-col gap-1 select-none text-left">
+          <h2 className="text-xl font-extrabold text-app-text-primary tracking-tight">Reports Generator</h2>
+          <p className="text-xs text-app-text-secondary font-medium">Generate payroll reports, PDF summaries, and share salary details.</p>
+        </div>
       </div>
+      {/* Header controls & Summaries - Two columns on desktop/tablet, stacked on mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+        {/* Left Section: Controls (Month Selector & Search) */}
+        <div className="lg:col-span-1 bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
+          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4 h-full justify-center">
+            {/* Month Selector */}
+            <div className="flex flex-col gap-1.5 w-full">
+              <label className="text-[9px] font-black text-app-text-secondary uppercase tracking-wider">Select Month</label>
+              <CustomSelect
+                value={selectedYearMonth}
+                onChange={setSelectedYearMonth}
+                options={monthsList}
+                className="w-full"
+              />
+            </div>
 
-      {/* Control Panel: Month Selector & Search */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[20px] p-4">
-        {/* Month Selector */}
-        <div className="flex flex-col gap-1.5 min-w-[200px]">
-          <label className="text-[9px] font-black text-app-text-secondary uppercase tracking-wider">Select Month</label>
-          <CustomSelect
-            value={selectedYearMonth}
-            onChange={setSelectedYearMonth}
-            options={monthsList}
-            className="w-full"
-          />
+            {/* Search Input */}
+            <div className="flex flex-col gap-1.5 w-full">
+              <label className="text-[9px] font-black text-app-text-secondary uppercase tracking-wider">Search Employee</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-app-text-secondary font-bold select-none material-symbols-rounded">search</span>
+                <input
+                  type="text"
+                  placeholder="Search by name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 bg-app-bg border border-app-border rounded-xl text-xs text-app-text-primary font-semibold focus:outline-none focus:border-primary transition-all"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Search Input */}
-        <div className="flex flex-col gap-1.5 flex-grow max-w-md">
-          <label className="text-[9px] font-black text-app-text-secondary uppercase tracking-wider">Search Employee</label>
-          <div className="relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-app-text-secondary font-bold select-none material-symbols-rounded">search</span>
-            <input
-              type="text"
-              placeholder="Search by name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 bg-app-surface border border-app-border rounded-xl text-xs text-app-text-primary font-semibold focus:outline-none focus:border-primary transition-all"
-            />
+        {/* Right Section: Financial Summary Dashboard */}
+        <div className="lg:col-span-2 bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
+          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4 h-full justify-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
+              {/* Payouts Card */}
+              <div className="bg-blue-500/10 dark:bg-blue-500/15 rounded-2xl p-4 border border-blue-500/20 dark:border-blue-500/30 flex flex-col gap-1.5 shadow-sm">
+                <span className="material-symbols-rounded text-blue-600 dark:text-blue-400 select-none text-lg">payments</span>
+                <span className="text-[8px] uppercase font-black text-blue-600 dark:text-blue-400 tracking-wider">Total Payouts</span>
+                <span className="text-base font-black text-app-text-primary mt-1">₹{totalStats.totalPaid.toLocaleString('en-IN')}</span>
+              </div>
+
+              {/* Net Due Card */}
+              <div className="bg-emerald-500/10 dark:bg-emerald-500/15 rounded-2xl p-4 border border-emerald-500/20 dark:border-emerald-500/30 flex flex-col gap-1.5 shadow-sm">
+                <span className="material-symbols-rounded text-emerald-600 dark:text-emerald-400 select-none text-lg">check_circle</span>
+                <span className="text-[8px] uppercase font-black text-emerald-600 dark:text-emerald-400 tracking-wider">Total Earned</span>
+                <span className="text-base font-black text-app-text-primary mt-1">₹{totalStats.totalEarned.toLocaleString('en-IN')}</span>
+              </div>
+
+              {/* Deductions Card */}
+              <div className="bg-rose-500/10 dark:bg-rose-500/15 rounded-2xl p-4 border border-rose-500/20 dark:border-rose-500/30 flex flex-col gap-1.5 shadow-sm">
+                <span className="material-symbols-rounded text-rose-600 dark:text-rose-400 select-none text-lg">do_not_disturb_on</span>
+                <span className="text-[8px] uppercase font-black text-rose-600 dark:text-rose-400 tracking-wider">Total Deductions</span>
+                <span className="text-base font-black text-app-text-primary mt-1">₹{totalStats.totalDeductions.toLocaleString('en-IN')}</span>
+              </div>
+
+              {/* Outstanding Advance Card */}
+              <div className="bg-amber-500/10 dark:bg-amber-500/15 rounded-2xl p-4 border border-amber-500/20 dark:border-amber-500/30 flex flex-col gap-1.5 shadow-sm">
+                <span className="material-symbols-rounded text-amber-600 dark:text-amber-400 select-none text-lg">account_balance_wallet</span>
+                <span className="text-[8px] uppercase font-black text-amber-600 dark:text-amber-400 tracking-wider">Outstanding Advance</span>
+                <span className="text-base font-black text-app-text-primary mt-1">₹{totalStats.totalOutstandingAdvance.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Financial Summary Dashboard */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        {/* Payouts Card */}
-        <div className="bg-blue-500/5 dark:bg-blue-500/10 rounded-2xl p-4 border border-blue-500/10 dark:border-blue-500/20 flex flex-col gap-1">
-          <span className="material-symbols-rounded text-blue-500 select-none text-lg">payments</span>
-          <span className="text-[8px] uppercase font-black text-blue-600 dark:text-blue-400 tracking-wider">Total Payouts</span>
-          <span className="text-base font-black text-app-text-primary mt-1">₹{totalStats.totalPaid.toLocaleString('en-IN')}</span>
-        </div>
-
-        {/* Net Due Card */}
-        <div className="bg-emerald-500/5 dark:bg-emerald-500/10 rounded-2xl p-4 border border-emerald-500/10 dark:border-emerald-500/20 flex flex-col gap-1">
-          <span className="material-symbols-rounded text-emerald-500 select-none text-lg">check_circle</span>
-          <span className="text-[8px] uppercase font-black text-emerald-600 dark:text-emerald-400 tracking-wider">Total Earned</span>
-          <span className="text-base font-black text-app-text-primary mt-1">₹{totalStats.totalEarned.toLocaleString('en-IN')}</span>
-        </div>
-
-        {/* Deductions Card */}
-        <div className="bg-rose-500/5 dark:bg-rose-500/10 rounded-2xl p-4 border border-rose-500/10 dark:border-rose-500/20 flex flex-col gap-1">
-          <span className="material-symbols-rounded text-rose-500 select-none text-lg">do_not_disturb_on</span>
-          <span className="text-[8px] uppercase font-black text-rose-600 dark:text-rose-400 tracking-wider">Total Deductions</span>
-          <span className="text-base font-black text-app-text-primary mt-1">₹{totalStats.totalDeductions.toLocaleString('en-IN')}</span>
-        </div>
-
-        {/* Outstanding Advance Card */}
-        <div className="bg-amber-500/5 dark:bg-amber-500/10 rounded-2xl p-4 border border-amber-500/10 dark:border-amber-500/20 flex flex-col gap-1">
-          <span className="material-symbols-rounded text-amber-500 select-none text-lg">account_balance_wallet</span>
-          <span className="text-[8px] uppercase font-black text-amber-600 dark:text-amber-400 tracking-wider">Outstanding Advance</span>
-          <span className="text-base font-black text-app-text-primary mt-1">₹{totalStats.totalOutstandingAdvance.toLocaleString('en-IN')}</span>
-        </div>
+      {/* Reports detailed list section title */}
+      <div className="px-1 mt-2 select-none">
+        <h4 className="text-[10px] font-black text-app-text-secondary uppercase tracking-[0.2em] leading-none">
+          Detailed Payroll Report
+        </h4>
       </div>
 
-      {/* Staff Slips Table / Cards Section */}
       {/* Mobile Card List */}
       <div className="flex flex-col gap-3.5 sm:hidden">
         {filteredStaff.length > 0 ? (

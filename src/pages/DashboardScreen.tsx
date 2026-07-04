@@ -302,7 +302,7 @@ export const DashboardScreen: React.FC = () => {
           {/* Interactive Financial Filter Cards */}
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => setScreen('advance-history')}
+              onClick={() => setScreen('advance')}
               className="flex items-center justify-between p-4 bg-app-surface border border-app-border rounded-[1.5rem] shadow-sm hover:border-amber-500/30 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer text-left w-full group"
             >
               <div className="flex items-center gap-3 overflow-hidden">
@@ -319,7 +319,7 @@ export const DashboardScreen: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setScreen('deduction-history')}
+              onClick={() => setScreen('deduction')}
               className="flex items-center justify-between p-4 bg-app-surface border border-app-border rounded-[1.5rem] shadow-sm hover:border-rose-500/30 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer text-left w-full group"
             >
               <div className="flex items-center gap-3 overflow-hidden">
@@ -454,7 +454,7 @@ export const DashboardScreen: React.FC = () => {
                       key={staff.id}
                       onClick={() => {
                         setActiveStaffProfileId(staff.id);
-                        setScreen('staff-profile');
+                        setScreen('advance-history');
                       }}
                       className="flex items-center justify-between gap-3 p-3 bg-app-bg border border-app-border/40 rounded-2xl hover:border-amber-500/30 transition-all cursor-pointer group"
                     >

@@ -355,55 +355,71 @@ export const SalaryScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-24 animate-in fade-in duration-200">
-      
-      {/* Header controls & Summaries - Double Bezel Architecture */}
-      <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
-        <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4">
-          <CustomSelect
-            value={selectedCycle}
-            onChange={setSelectedCycle}
-            options={[
-              { value: 'Current Month', label: currentMonthLabel },
-              { value: 'Last Month', label: 'Last Month' },
-            ]}
-            className="w-full"
-          />
+    <div className="flex flex-col gap-6 pb-24 animate-in fade-in duration-200 w-full">
+      {/* Page Title & Subtitle */}
+      <div className="flex flex-col gap-1 select-none text-left">
+        <h2 className="text-xl font-extrabold text-app-text-primary tracking-tight">
+          Salary Payouts
+        </h2>
+        <p className="text-xs text-app-text-secondary font-medium">
+          Manage monthly salaries, process payouts, and view staff slips.
+        </p>
+      </div>
 
-          {/* Financial Summary Dashboard */}
-          <div className="grid grid-cols-3 gap-3 pt-3 border-t border-app-border/60">
-            {/* Earned card */}
-            <div className="bg-blue-500/10 dark:bg-blue-500/15 rounded-2xl p-4 text-center border border-blue-500/20 dark:border-blue-500/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
-              <span className="material-symbols-rounded select-none text-blue-700 dark:text-blue-400" style={{ fontSize: '20px' }}>account_balance_wallet</span>
-              <div className="text-lg font-black leading-tight mt-0.5" style={{ color: 'var(--summary-earned)' }}>
-                ₹{summaries.totalEarned.toLocaleString('en-IN')}
+      {/* Header controls & Summaries - Two columns on desktop/tablet, stacked on mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+        {/* Left Section: Cycle selection */}
+        <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
+          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4 h-full justify-center">
+            <CustomSelect
+              value={selectedCycle}
+              onChange={setSelectedCycle}
+              options={[
+                { value: 'Current Month', label: currentMonthLabel },
+                { value: 'Last Month', label: 'Last Month' },
+              ]}
+              className="w-full"
+            />
+          </div>
+        </div>
+
+        {/* Right Section: Financial Summary Dashboard */}
+        <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
+          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4 h-full justify-center">
+            <div className="grid grid-cols-3 gap-3">
+              {/* Earned card */}
+              <div className="bg-blue-500/10 dark:bg-blue-500/15 rounded-2xl p-4 text-center border border-blue-500/20 dark:border-blue-500/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                <span className="material-symbols-rounded select-none text-blue-700 dark:text-blue-400" style={{ fontSize: '20px' }}>account_balance_wallet</span>
+                <div className="text-lg font-black leading-tight mt-0.5" style={{ color: 'var(--summary-earned)' }}>
+                  ₹{summaries.totalEarned.toLocaleString('en-IN')}
+                </div>
+                <div className="text-[8px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-widest">Earned</div>
               </div>
-              <div className="text-[8px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-widest">Earned</div>
-            </div>
-            
-            {/* Paid card */}
-            <div className="bg-emerald-500/10 dark:bg-emerald-500/15 rounded-2xl p-4 text-center border border-emerald-500/20 dark:border-emerald-500/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
-              <span className="material-symbols-rounded select-none text-emerald-700 dark:text-emerald-400" style={{ fontSize: '20px' }}>check_circle</span>
-              <div className="text-lg font-black leading-tight mt-0.5" style={{ color: 'var(--summary-paid)' }}>
-                ₹{summaries.totalPaid.toLocaleString('en-IN')}
+              
+              {/* Paid card */}
+              <div className="bg-emerald-500/10 dark:bg-emerald-500/15 rounded-2xl p-4 text-center border border-emerald-500/20 dark:border-emerald-500/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                <span className="material-symbols-rounded select-none text-emerald-700 dark:text-emerald-400" style={{ fontSize: '20px' }}>check_circle</span>
+                <div className="text-lg font-black leading-tight mt-0.5" style={{ color: 'var(--summary-paid)' }}>
+                  ₹{summaries.totalPaid.toLocaleString('en-IN')}
+                </div>
+                <div className="text-[8px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-widest">Paid</div>
               </div>
-              <div className="text-[8px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-widest">Paid</div>
-            </div>
-            
-            {/* Due card */}
-            <div className="bg-amber-500/10 dark:bg-amber-500/15 rounded-2xl p-4 text-center border border-amber-500/20 dark:border-amber-500/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
-              <span className="material-symbols-rounded select-none text-amber-700 dark:text-amber-400" style={{ fontSize: '20px' }}>pending</span>
-              <div className="text-lg font-black leading-tight mt-0.5" style={{ color: 'var(--summary-due)' }}>
-                ₹{summaries.totalDue.toLocaleString('en-IN')}
+              
+              {/* Due card */}
+              <div className="bg-amber-500/10 dark:bg-amber-500/15 rounded-2xl p-4 text-center border border-amber-500/20 dark:border-amber-500/30 flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                <span className="material-symbols-rounded select-none text-amber-700 dark:text-amber-400" style={{ fontSize: '20px' }}>pending</span>
+                <div className="text-lg font-black leading-tight mt-0.5" style={{ color: 'var(--summary-due)' }}>
+                  ₹{summaries.totalDue.toLocaleString('en-IN')}
+                </div>
+                <div className="text-[8px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-widest">Due</div>
               </div>
-              <div className="text-[8px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-widest">Due</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Staff Salary Cards List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Staff list - Mobile Card View */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full sm:hidden">
         {visibleStaff.map((staff) => {
           const details = getSalaryDetails(staff.id, selectedYearMonth, selectedMonthLabel);
           const outstandingHold = getStaffOutstandingHold(staff.id);
@@ -419,15 +435,24 @@ export const SalaryScreen: React.FC = () => {
             >
               <div className="bg-app-surface border border-app-border/40 rounded-[18px] p-5 flex flex-col gap-4 hover:border-primary/20 dark:hover:border-primary/40 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 cursor-pointer group">
                 
-                {/* Staff details row */}
-                <div className="flex justify-between items-start">
+                {/* Staff Top Info */}
+                <div className="flex justify-between items-start gap-4">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 select-none border-0`}>
-                      {initials}
-                    </div>
+                    {/* Vibrant Avatar Circle or Profile Image */}
+                    {staff.profileImage ? (
+                      <img
+                        src={staff.profileImage}
+                        alt={staff.name}
+                        className="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-app-border/80"
+                      />
+                    ) : (
+                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0`}>
+                        {initials}
+                      </div>
+                    )}
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-app-text-primary text-sm leading-tight group-hover:text-primary transition-colors">
+                        <h4 className="font-extrabold text-app-text-primary text-xs truncate group-hover:text-primary transition-colors">
                           {staff.name}
                         </h4>
                         {staff.status === 'Inactive' && (
@@ -557,6 +582,179 @@ export const SalaryScreen: React.FC = () => {
             <p className="mt-3 text-sm font-semibold">No staff members found.</p>
           </div>
         )}
+      </div>
+
+      {/* Staff list - Desktop Table View */}
+      <div className="hidden sm:block bg-black/[0.012] dark:bg-white/[0.012] border border-app-border rounded-[22px] p-1.5 shadow-sm overflow-hidden w-full">
+        <div className="bg-app-surface border border-app-border/40 rounded-[18px] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-app-bg border-b border-app-border/60 text-app-text-secondary font-black uppercase text-[9px] tracking-wider select-none">
+                  <th className="px-5 py-3.5">Staff Member</th>
+                  <th className="px-5 py-3.5 text-center">Earned</th>
+                  <th className="px-5 py-3.5 text-center">Advance</th>
+                  <th className="px-5 py-3.5 text-center">Deduction</th>
+                  <th className="px-5 py-3.5 text-center text-primary">Net Pay</th>
+                  <th className="px-5 py-3.5 text-center">Status</th>
+                  <th className="px-5 py-3.5 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-app-border/40 font-semibold text-app-text-primary">
+                {visibleStaff.length > 0 ? (
+                  visibleStaff.map((staff) => {
+                    const details = getSalaryDetails(staff.id, selectedYearMonth, selectedMonthLabel);
+                    const outstandingHold = getStaffOutstandingHold(staff.id);
+                    const initials = staff.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+                    return (
+                      <tr 
+                        key={staff.id} 
+                        className="hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer group"
+                        onClick={() => {
+                          setActiveStaffProfileId(staff.id);
+                          setScreen('staff-profile');
+                        }}
+                      >
+                        {/* Staff profile details */}
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-3">
+                            {staff.profileImage ? (
+                              <img
+                                src={staff.profileImage}
+                                alt={staff.name}
+                                className="w-9 h-9 rounded-full object-cover shadow-sm shrink-0 border border-app-border/80"
+                              />
+                            ) : (
+                              <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-[10px] flex items-center justify-center shadow-sm shrink-0 border-0`}>
+                                {initials}
+                              </div>
+                            )}
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-extrabold text-app-text-primary text-xs truncate group-hover:text-primary transition-colors">
+                                  {staff.name}
+                                </h4>
+                                {staff.status === 'Inactive' && (
+                                  <span className="px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-500 font-extrabold text-[8px] uppercase tracking-wider">
+                                    Left
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-app-text-secondary font-semibold mt-0.5">
+                                Rate: ₹{staff.monthlySalary.toLocaleString('en-IN')}/{staff.salaryType === 'Monthly' ? 'mo' : 'day'}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Earned */}
+                        <td className="px-5 py-3.5 text-center text-app-text-primary font-bold">
+                          ₹{details.earned.toLocaleString('en-IN')}
+                        </td>
+
+                        {/* Advance */}
+                        <td className="px-5 py-3.5 text-center font-extrabold text-amber-600 dark:text-amber-400">
+                          ₹{details.advance.toLocaleString('en-IN')}
+                        </td>
+
+                        {/* Deduction */}
+                        <td className="px-5 py-3.5 text-center font-extrabold text-red-500">
+                          ₹{details.deduction.toLocaleString('en-IN')}
+                        </td>
+
+                        {/* Net Pay */}
+                        <td className="px-5 py-3.5 text-center font-black text-primary">
+                          ₹{details.net.toLocaleString('en-IN')}
+                        </td>
+
+                        {/* Due / Status / Hold */}
+                        <td className="px-5 py-3.5">
+                          <div className="flex flex-col items-center gap-1">
+                            {details.due > 0 ? (
+                              <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-extrabold uppercase">
+                                Due: ₹{details.due.toLocaleString('en-IN')}
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-extrabold uppercase">
+                                Fully Paid
+                              </span>
+                            )}
+
+                            {/* Salary Hold Info */}
+                            {outstandingHold > 0 ? (
+                              <div className="flex items-center gap-1 text-[8px] text-amber-600 dark:text-amber-400 font-extrabold uppercase bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10" onClick={(e) => e.stopPropagation()}>
+                                <span className="material-symbols-rounded text-[9px]">lock</span>
+                                <span>₹{outstandingHold.toLocaleString('en-IN')} Hold</span>
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const confirmed = await confirm(`Are you sure you want to release the salary hold for ${staff.name}?`, {
+                                      title: 'Release Salary Hold',
+                                      type: 'success',
+                                      confirmText: 'Release'
+                                    });
+                                    if (confirmed) {
+                                      updateStaff(staff.id, { releasedSalaryHold: true });
+                                    }
+                                  }}
+                                  className="ml-1 px-1 bg-amber-500 hover:bg-amber-600 text-white font-black rounded text-[7px] transition-all cursor-pointer"
+                                >
+                                  Release
+                                </button>
+                              </div>
+                            ) : (
+                              details.releasedAmount > 0 && (
+                                <div className="flex items-center gap-1 text-[8px] text-emerald-600 dark:text-emerald-400 font-extrabold uppercase bg-emerald-500/5 px-2 py-0.5 rounded border border-emerald-500/10">
+                                  <span className="material-symbols-rounded text-[9px]">lock_open</span>
+                                  <span>₹{details.releasedAmount.toLocaleString('en-IN')} Released</span>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-center gap-2">
+                            {details.due > 0 ? (
+                              <button
+                                onClick={() => handleOpenPayModal(staff.id, details.due)}
+                                className="py-1.5 px-3 bg-white dark:bg-slate-900/50 border border-primary text-primary hover:bg-primary/5 text-[10px] font-black rounded-lg shadow-sm hover:shadow transition-all duration-300 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1"
+                              >
+                                <span>Pay Salary</span>
+                                <span className="material-symbols-rounded select-none text-[12px] font-bold">send_to_mobile</span>
+                              </button>
+                            ) : (
+                              <span className="py-1.5 px-3 border border-dashed border-app-border rounded-lg text-[9px] font-bold text-emerald-600 dark:text-emerald-500 text-center select-none bg-emerald-500/5">
+                                Settled
+                              </span>
+                            )}
+
+                            <button
+                              onClick={() => handleOpenSlip(staff.id, selectedMonthLabel)}
+                              className="px-2.5 py-1.5 bg-app-bg border border-app-border hover:bg-slate-50 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 shadow-sm transition-all cursor-pointer active:scale-95 shrink-0"
+                              title="Salary Slip"
+                            >
+                              <span className="material-symbols-rounded select-none" style={{ fontSize: '13px' }}>receipt_long</span>
+                              <span>Slip</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-8 text-center text-app-text-secondary select-none">
+                      No staff members found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {/* Payout Dialog */}

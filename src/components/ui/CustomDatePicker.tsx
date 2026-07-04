@@ -53,8 +53,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
   const handleSelect = (day: Date | undefined) => {
     if (day) {
-      const offsetDate = new Date(day.getTime() - day.getTimezoneOffset() * 60000);
-      const dateStr = offsetDate.toISOString().split('T')[0];
+      const dateStr = format(day, 'yyyy-MM-dd');
       onChange(dateStr);
       setIsOpen(false);
       if (onOpenChange) {
@@ -64,14 +63,16 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   };
 
   const handlePrevDay = () => {
-    const prevDay = new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000);
-    const dateStr = prevDay.toISOString().split('T')[0];
+    const prevDay = new Date(selectedDate);
+    prevDay.setDate(prevDay.getDate() - 1);
+    const dateStr = format(prevDay, 'yyyy-MM-dd');
     onChange(dateStr);
   };
 
   const handleNextDay = () => {
-    const nextDay = new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000);
-    const dateStr = nextDay.toISOString().split('T')[0];
+    const nextDay = new Date(selectedDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    const dateStr = format(nextDay, 'yyyy-MM-dd');
     onChange(dateStr);
   };
 

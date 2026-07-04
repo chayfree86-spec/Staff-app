@@ -53,6 +53,16 @@ if ($action === 'list') {
     respond(['ok' => true, 'businesses' => $list, 'currentUserId' => (string) $auth['user_id']]);
 }
 
+if ($action === 'switch') {
+    $businessId = require_int_id($input, 'businessId');
+    $_SESSION['business_id'] = $businessId;
+    $data = load_bootstrap_data($pdo, (string) $businessId);
+    respond([
+        'ok' => true,
+        'data' => $data
+    ]);
+}
+
 if ($action === 'toggle_user') {
     $userId = require_int_id($input, 'userId');
     $isActive = !empty($input['isActive']) ? 1 : 0;

@@ -425,15 +425,18 @@ export const AdvanceScreen: React.FC = () => {
     return (
       <div className="flex flex-col gap-6 animate-in fade-in duration-200">
         {/* Header bar */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
             <button
               onClick={() => setScreen('more')}
-              className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer shrink-0"
+              className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer shrink-0 mt-0.5"
             >
               <span className="material-symbols-rounded select-none">arrow_back</span>
             </button>
-            <h2 className="text-sm font-black text-app-text-primary tracking-tight select-none">Advance Ledger</h2>
+            <div className="flex flex-col gap-1 select-none text-left">
+              <h2 className="text-xl font-extrabold text-app-text-primary tracking-tight">Staff Advances Ledger</h2>
+              <p className="text-xs text-app-text-secondary font-medium">Track advance payments given to staff and monitor outstanding balances.</p>
+            </div>
           </div>
           
           <button

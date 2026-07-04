@@ -9,6 +9,7 @@ export const DeductionHistoryScreen: React.FC = () => {
   const { confirm } = useAlertConfirm();
   const {
     activeStaffProfileId,
+    previousScreen,
     staffList,
     deductionList,
     addDeduction,
@@ -42,7 +43,7 @@ export const DeductionHistoryScreen: React.FC = () => {
         </span>
         <p className="mt-3 text-sm">Staff member not found.</p>
         <button
-          onClick={() => setScreen('staff')}
+          onClick={() => setScreen(previousScreen || 'staff')}
           className="mt-5 px-6 py-2.5 bg-primary text-white rounded-app-card text-xs font-bold shadow-md hover:bg-opacity-95 cursor-pointer"
         >
           Back to Staff
@@ -112,18 +113,18 @@ export const DeductionHistoryScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4 pb-24 animate-in fade-in duration-200">
+    <div className="flex flex-col gap-4 pb-24 animate-in fade-in duration-200 w-full">
       {/* Header bar */}
       <div className="flex items-center gap-3">
         <button
-          onClick={() => setScreen('staff-profile')}
+          onClick={() => setScreen(previousScreen || 'staff-profile')}
           className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0"
         >
           <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>arrow_back</span>
         </button>
-        <div className="flex-1">
-          <h2 className="text-base font-bold text-app-text-primary">Deduction History</h2>
-          <p className="text-[10px] text-app-text-secondary font-bold uppercase tracking-wider">{staff.name}</p>
+        <div className="flex-1 select-none text-left">
+          <h2 className="text-xl font-extrabold text-app-text-primary tracking-tight">Deduction History</h2>
+          <p className="text-xs text-app-text-secondary font-semibold uppercase tracking-wider">{staff.name}</p>
         </div>
         <button
           onClick={handleOpenAdd}
@@ -149,7 +150,8 @@ export const DeductionHistoryScreen: React.FC = () => {
       </div>
 
       {/* Full list of all deductions */}
-      <div className="flex flex-col gap-2">
+      {/* List of deductions - Mobile Card View */}
+      <div className="flex flex-col gap-2 sm:hidden">
         {allStaffDeductions.length === 0 ? (
           <div className="bg-app-surface border border-app-border rounded-app-card p-12 text-center text-app-text-secondary">
             <span className="material-symbols-rounded text-4xl text-slate-300 dark:text-slate-700">remove_circle</span>
@@ -159,7 +161,7 @@ export const DeductionHistoryScreen: React.FC = () => {
           allStaffDeductions.map((d) => (
             <div
               key={d.id}
-              className="flex items-center justify-between py-2.5 px-4 rounded-xl border border-app-border/40 bg-app-surface hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all duration-150 group"
+              className="flex items-center justify-between py-2.5 px-4 rounded-xl border border-app-border/40 bg-app-surface hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all duration-150 group text-left"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 flex items-center justify-center shrink-0">
@@ -194,6 +196,72 @@ export const DeductionHistoryScreen: React.FC = () => {
             </div>
           ))
         )}
+      </div>
+
+      {/* List of deductions - Desktop Table View */}
+      <div className="hidden sm:block bg-black/[0.012] dark:bg-white/[0.012] border border-app-border rounded-[22px] p-1.5 shadow-sm overflow-hidden w-full">
+        <div className="bg-app-surface border border-app-border/40 rounded-[18px] overflow-hidden">
+          {allStaffDeductions.length === 0 ? (
+            <div className="p-12 text-center text-app-text-secondary">
+              <span className="material-symbols-rounded text-4xl text-slate-300 dark:text-slate-700">remove_circle</span>
+              <p className="mt-2 text-sm font-semibold">No deductions recorded for this staff member.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-app-bg border-b border-app-border/60 text-app-text-secondary font-black uppercase text-[9px] tracking-wider select-none">
+                    <th className="px-5 py-3.5">Date</th>
+                    <th className="px-5 py-3.5 text-center">Type</th>
+                    <th className="px-5 py-3.5">Remarks</th>
+                    <th className="px-5 py-3.5 text-right text-rose-500">Amount</th>
+                    <th className="px-5 py-3.5 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-app-border/40 font-semibold text-app-text-primary">
+                  {allStaffDeductions.map((d) => {
+                    return (
+                      <tr key={d.id} className="hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
+                        <td className="px-5 py-3.5 font-bold">
+                          {format(parseISO(d.date), 'dd MMM yyyy')}
+                        </td>
+                        <td className="px-5 py-3.5 text-center">
+                          <span className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold text-[9px] uppercase tracking-wider">
+                            Deduction
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-app-text-secondary font-medium truncate max-w-[200px]">
+                          {d.remarks || '-'}
+                        </td>
+                        <td className="px-5 py-3.5 text-right font-extrabold text-sm text-rose-600">
+                          -₹{d.amount.toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => handleOpenEdit(d)}
+                              className="w-7 h-7 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary flex items-center justify-center transition-colors cursor-pointer"
+                              title="Edit"
+                            >
+                              <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>edit</span>
+                            </button>
+                            <button
+                              onClick={() => handleDelete(d.id)}
+                              className="w-7 h-7 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                              title="Delete"
+                            >
+                              <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>delete</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Add Deduction Modal */}

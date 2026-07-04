@@ -45,18 +45,21 @@ export const BusinessScreen: React.FC = () => {
   return (
     <div className="flex flex-col gap-4 pb-24 animate-in fade-in duration-200">
       {/* Header bar */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <button
           onClick={() => setScreen('more')}
-          className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0"
+          className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0 mt-0.5"
         >
           <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>arrow_back</span>
         </button>
-        <h2 className="text-base font-bold text-app-text-primary">Business Profile</h2>
+        <div className="flex flex-col gap-1 select-none text-left">
+          <h2 className="text-xl font-extrabold text-app-text-primary tracking-tight">Business Profile</h2>
+          <p className="text-xs text-app-text-secondary font-medium">Update store name, contact number, address, and upload logo.</p>
+        </div>
       </div>
 
       {/* Profile Form */}
-      <div className="bg-app-surface p-5 rounded-app-card border border-app-border shadow-sm flex flex-col gap-4">
+      <div className="bg-app-surface p-5 rounded-app-card border border-app-border shadow-sm flex flex-col gap-4 max-w-xl mx-auto w-full">
         {saveStatus && (
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-500 rounded-app-card text-xs font-semibold border border-emerald-200 flex items-center gap-2">
             <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>check_circle</span>

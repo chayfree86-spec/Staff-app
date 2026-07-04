@@ -61,7 +61,16 @@ export const MoreScreen: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6 pb-24 animate-in fade-in duration-200">
-      
+      {/* Page Title & Subtitle */}
+      <div className="flex flex-col gap-1 select-none text-left">
+        <h2 className="text-xl font-extrabold text-app-text-primary tracking-tight">
+          More Features
+        </h2>
+        <p className="text-xs text-app-text-secondary font-medium">
+          Access advanced ledgers, deduction logs, and system settings.
+        </p>
+      </div>
+
       {/* Premium Combined Business Header Card */}
       <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[2rem] p-1.5 shadow-[0_15px_35px_rgba(0,0,0,0.02)]">
         <div className="relative overflow-hidden bg-app-surface border border-app-border/40 rounded-[26px] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -114,7 +123,7 @@ export const MoreScreen: React.FC = () => {
       </div>
 
       {/* Grid Layout of modern PWA Tiles */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Card 1: Advances Ledger */}
         <div 
@@ -236,7 +245,7 @@ export const MoreScreen: React.FC = () => {
         {isPrimaryAdmin && (
           <div 
             onClick={() => setScreen('businesses')}
-            className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-2xl p-1 shadow-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer group col-span-1 md:col-span-2"
+            className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-2xl p-1 shadow-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer group col-span-1 md:col-span-2 lg:col-span-4"
           >
             <div className="bg-app-surface border border-app-border/40 rounded-[calc(1rem-0.125rem)] p-5 flex flex-col justify-between h-full min-h-[140px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
               <div className="flex items-start justify-between gap-4">

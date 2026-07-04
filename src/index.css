@@ -244,16 +244,14 @@ button:active {
   }
 }
 
-/* Safe Area Utilities only for mobile devices to keep desktop view unchanged */
-@media (max-width: 1023px) {
-  /* Always keep a minimum gap below the nav labels, even on devices with no
-     home-indicator inset (env() resolves to 0 there), then add extra room
-     for notched/gesture-bar devices on top of that minimum. */
-  .pb-safe {
-    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
-  }
-  .pt-safe {
-    padding-top: env(safe-area-inset-top);
-  }
+/* Safe Area Utilities */
+/* Always keep a minimum gap below the nav labels, even on devices with no
+   home-indicator inset (env() resolves to 0 there), then add extra room
+   for notched/gesture-bar devices on top of that minimum. */
+.pb-safe {
+  padding-bottom: calc(0.9rem + env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
 }
 

@@ -242,3 +242,8 @@ export async function updateBusinessUserRequest(user: {
 export async function deleteBusinessUserRequest(userId: string): Promise<void> {
   await apiPost('/businesses.php', { action: 'delete_user', userId });
 }
+
+export async function switchBusinessRequest(businessId: string): Promise<ApiBootstrapData> {
+  const res = await apiPost<{ data: ApiBootstrapData }>('/businesses.php', { action: 'switch', businessId });
+  return res.data;
+}
