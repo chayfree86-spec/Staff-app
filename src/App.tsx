@@ -304,6 +304,15 @@ function App() {
             50% { transform: translate3d(15px, 4px, 0); }
             100% { transform: translate3d(0, -5px, 0); }
           }
+          @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .animate-gradient-move {
+            background-size: 200% 200%;
+            animation: gradient-move 3s ease infinite;
+          }
         `}</style>
 
         {/* Top Wave Header */}
@@ -457,7 +466,7 @@ function App() {
                     placeholder="Enter mobile or email..."
                     value={identifierInput}
                     onChange={(e) => setIdentifierInput(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none focus:border-primary transition-all font-bold"
+                    className="w-full pl-11 pr-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-indigo-600 dark:text-indigo-400 placeholder:text-app-text-secondary focus:outline-none focus:border-indigo-500 transition-all font-black"
                   />
                 </div>
               </div>
@@ -468,20 +477,32 @@ function App() {
                 </label>
                 {loginMethod === 'pin' ? (
                   <div className="flex justify-center gap-3 max-w-xs mx-auto w-full py-1">
-                    {[0, 1, 2, 3].map((index) => (
-                      <input
-                        key={index}
-                        ref={(el) => { pinRefs.current[index] = el; }}
-                        type="password"
-                        inputMode="numeric"
-                        maxLength={1}
-                        value={passwordInput[index] || ''}
-                        onChange={(e) => handlePinChange(e.target.value, index)}
-                        onKeyDown={(e) => handlePinKeyDown(e, index)}
-                        onPaste={index === 0 ? handlePinPaste : undefined}
-                        className="w-12 h-12 text-center text-xl font-black bg-app-bg border border-app-border rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-app-text-primary"
-                      />
-                    ))}
+                    {[0, 1, 2, 3].map((index) => {
+                      const hasDigit = passwordInput.length > index;
+                      return (
+                        <div key={index} className="relative w-12 h-12 group/pin">
+                          <input
+                            ref={(el) => { pinRefs.current[index] = el; }}
+                            type="password"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={passwordInput[index] || ''}
+                            onChange={(e) => handlePinChange(e.target.value, index)}
+                            onKeyDown={(e) => handlePinKeyDown(e, index)}
+                            onPaste={index === 0 ? handlePinPaste : undefined}
+                            className="absolute inset-0 w-full h-full text-center text-transparent bg-transparent border-2 border-app-border rounded-xl focus:outline-none focus:border-indigo-500 transition-all focus:scale-105 z-10 caret-transparent selection:bg-transparent"
+                            autoComplete="one-time-code"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-xl bg-app-bg border border-app-border group-focus-within/pin:border-indigo-500 transition-all">
+                            {hasDigit ? (
+                              <div className="w-3.5 h-3.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-500 to-emerald-400 animate-gradient-move shadow-[0_0_8px_rgba(139,92,246,0.3)] shrink-0" />
+                            ) : (
+                              <div className="w-1.5 h-1.5 rounded-full bg-app-border/70 group-hover/pin:bg-indigo-500/40 transition-colors shrink-0" />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="relative">
