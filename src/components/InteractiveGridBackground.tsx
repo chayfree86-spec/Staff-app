@@ -41,7 +41,7 @@ export function InteractiveGridBackground() {
     const spacing = 28; // Space between dots
     const baseRadius = 1.0;
     const maxRadius = 1.8;
-    const influenceRadius = 130;
+    const influenceRadius = 220;
 
     const draw = () => {
       // Clear canvas
