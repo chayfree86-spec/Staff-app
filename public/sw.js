@@ -1,4 +1,4 @@
-const CACHE_NAME = 'staff-app-cache-v3';
+const CACHE_NAME = 'staff-app-cache-v4';
 const OFFLINE_URL = '/';
 
 const INITIAL_CACHES = [
@@ -6,6 +6,7 @@ const INITIAL_CACHES = [
   '/index.html',
   '/manifest.json',
   '/pwa-icon.png',
+  '/material-symbols-rounded.ttf',
 ];
 
 self.addEventListener('install', (event) => {
@@ -38,6 +39,27 @@ self.addEventListener('fetch', (event) => {
 
   // CRITICAL: NEVER cache API calls. Data must always come directly from the API.
   if (event.request.url.includes('/api/')) {
+    return;
+  }
+
+  // Cache First Strategy for font and assets that do not change often:
+  if (event.request.url.includes('/material-symbols-rounded.ttf') || event.request.url.includes('/pwa-icon.png')) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(event.request).then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        });
+      })
+    );
     return;
   }
 
