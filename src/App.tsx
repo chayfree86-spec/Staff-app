@@ -7,26 +7,19 @@ import { useStore } from './store/useStore';
 // form is pre-filled (including PIN) the next time the app is opened.
 const REMEMBER_LOGIN_KEY = 'staffapp_remember_login';
 
-interface RememberedLogin {
-  identifier: string;
-  secret: string;
-  method: 'password' | 'pin';
-}
-
-const loadRememberedLogin = (): RememberedLogin | null => {
+const getRememberedIdentifier = (): string => {
   try {
-    const raw = localStorage.getItem(REMEMBER_LOGIN_KEY);
-    return raw ? (JSON.parse(raw) as RememberedLogin) : null;
+    return localStorage.getItem(REMEMBER_LOGIN_KEY) || '';
   } catch {
-    return null;
+    return '';
   }
 };
 
 function App() {
-  const { isLoggedIn, isSessionRestoring, login, restoreSession, triggerAutoAttendance, currentDate, settings, businessInfo } = useStore();
-  const [identifierInput, setIdentifierInput] = useState(() => loadRememberedLogin()?.identifier ?? '');
-  const [passwordInput, setPasswordInput] = useState(() => loadRememberedLogin()?.secret ?? '');
-  const [loginMethod, setLoginMethod] = useState<'password' | 'pin'>(() => loadRememberedLogin()?.method ?? 'password');
+  const { isLoggedIn, isSessionRestoring, login, restoreSession, triggerAutoAttendance, currentDate, settings, businessInfo, currentUser } = useStore();
+  const [identifierInput, setIdentifierInput] = useState(() => getRememberedIdentifier());
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loginMethod, setLoginMethod] = useState<'password' | 'pin'>('password');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,6 +89,28 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, triggerAutoAttendance]);
+
+  // Load saved credentials on logout or mount
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setIdentifierInput(getRememberedIdentifier());
+      setPasswordInput('');
+    }
+  }, [isLoggedIn]);
+
+  // Save successful login username/mobile to localStorage
+  useEffect(() => {
+    if (isLoggedIn && currentUser) {
+      const loginId = currentUser.mobile || currentUser.email;
+      if (loginId) {
+        try {
+          localStorage.setItem(REMEMBER_LOGIN_KEY, loginId);
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }, [isLoggedIn, currentUser]);
   // Auto-detect login method based on input value (digits/mobile -> PIN, email/text -> Password)
   useEffect(() => {
     const trimmed = identifierInput.trim();
@@ -140,16 +155,7 @@ function App() {
     const success = await login(identifierInput, passwordInput, loginMethod);
     setIsSubmitting(false);
     if (success) {
-      try {
-        localStorage.setItem(
-          REMEMBER_LOGIN_KEY,
-          JSON.stringify({ identifier: identifierInput, secret: passwordInput, method: loginMethod })
-        );
-      } catch {
-        // localStorage unavailable (e.g. private browsing) — not remembering is fine.
-      }
       setError('');
-      setIdentifierInput('');
       setPasswordInput('');
     } else {
       setError('Invalid login details. Try again.');
