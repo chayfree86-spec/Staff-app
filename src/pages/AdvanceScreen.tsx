@@ -248,13 +248,80 @@ export const AdvanceScreen: React.FC = () => {
             />
           </div>
 
-          {/* List of advances in page (Table Format) */}
+          {/* List of advances in page (Table Format / Mobile Cards) */}
           <div className="flex flex-col gap-3.5">
             <h4 className="text-[10px] font-black text-app-text-secondary uppercase tracking-[0.15em] select-none px-1">
               Advances History Ledger
             </h4>
             
-            <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[20px] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
+            {/* Mobile Card List */}
+            <div className="flex flex-col gap-3.5 sm:hidden">
+              {filteredStaffAdvances.map((adv) => (
+                <div 
+                  key={adv.id}
+                  className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-2xl p-1 shadow-sm"
+                >
+                  <div className="bg-app-surface border border-app-border/40 rounded-[calc(1rem-0.125rem)] p-4 flex flex-col gap-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-semibold text-app-text-secondary">
+                        {format(parseISO(adv.date), 'dd MMM yyyy')}
+                      </span>
+                      <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black tracking-wider uppercase select-none ${
+                        adv.amount < 0 
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400' 
+                          : 'bg-primary/10 text-primary dark:bg-primary/20'
+                      }`}>
+                        {adv.amount < 0 ? 'Credit' : 'Debit'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-end">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[8px] uppercase font-bold text-app-text-secondary tracking-wider leading-none">Remarks</span>
+                        <span className="text-xs font-bold text-app-text-primary mt-1">{adv.remarks}</span>
+                      </div>
+                      
+                      <div className="text-right">
+                        <span className="text-[8px] uppercase font-bold text-app-text-secondary tracking-wider leading-none block">Amount</span>
+                        <span className={`text-base font-black leading-none block mt-1 ${
+                          adv.amount < 0 
+                            ? 'text-emerald-600 dark:text-emerald-500' 
+                            : 'text-primary'
+                        }`}>
+                          {adv.amount < 0 ? '-' : '+'}₹{Math.abs(adv.amount).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 pt-3 border-t border-app-border/40 mt-1">
+                      <button
+                        onClick={() => startEdit(adv)}
+                        className="px-3 py-1.5 rounded-xl text-indigo-600 bg-indigo-500/10 hover:bg-indigo-500/20 dark:hover:bg-indigo-950/30 flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-rounded select-none text-sm">edit</span>
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(adv.id)}
+                        className="px-3 py-1.5 rounded-xl text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 dark:hover:bg-rose-950/30 flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-rounded select-none text-sm">delete</span>
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {filteredStaffAdvances.length === 0 && (
+                <div className="bg-app-surface border border-app-border/50 rounded-2xl p-8 text-center text-xs text-app-text-secondary font-semibold">
+                  No transactions found for this period.
+                </div>
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[20px] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
               <div className="bg-app-surface border border-app-border/40 rounded-[15px] overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
