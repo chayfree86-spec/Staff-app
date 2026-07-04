@@ -495,9 +495,9 @@ function App() {
                           />
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-xl bg-app-bg border border-app-border group-focus-within/pin:border-indigo-500 transition-all">
                             {hasDigit ? (
-                              <div className="w-3.5 h-3.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-500 to-emerald-400 animate-gradient-move shadow-[0_0_8px_rgba(139,92,246,0.3)] shrink-0" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-500 to-emerald-400 animate-gradient-move shadow-[0_0_8px_rgba(139,92,246,0.3)] shrink-0" />
                             ) : (
-                              <div className="w-1.5 h-1.5 rounded-full bg-app-border/70 group-hover/pin:bg-indigo-500/40 transition-colors shrink-0" />
+                              <div className="w-1 h-1 rounded-full bg-app-border/70 group-hover/pin:bg-indigo-500/40 transition-colors shrink-0" />
                             )}
                           </div>
                         </div>
