@@ -237,6 +237,12 @@ export const AttendanceScreen: React.FC = () => {
           const isSaving = saveStatus === staff.id;
           const initials = staff.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
+          let stripColorClass = 'bg-slate-400';
+          if (currentStatus === 'Present') stripColorClass = 'bg-emerald-500';
+          else if (currentStatus === 'Absent') stripColorClass = 'bg-rose-500';
+          else if (currentStatus === 'Half Day') stripColorClass = 'bg-amber-500';
+          else if (currentStatus === 'Holiday') stripColorClass = 'bg-indigo-500';
+
           return (
             <div
               key={staff.id}
@@ -244,7 +250,7 @@ export const AttendanceScreen: React.FC = () => {
             >
               {/* Auto-save flashing indicator */}
               {isSaving && (
-                <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500 animate-pulse z-10" />
+                <div className={`absolute top-0 left-0 right-0 h-1 ${stripColorClass} animate-pulse z-10`} />
               )}
 
               <div className="bg-app-surface border border-app-border/40 rounded-[18px] p-4 flex flex-col gap-4 hover:border-primary/20 dark:hover:border-primary/40 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 cursor-pointer group">
