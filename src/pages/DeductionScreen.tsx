@@ -464,8 +464,70 @@ export const DeductionScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Staff cards grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+        {/* Staff cards grid / Mobile List */}
+        {/* Mobile List View */}
+        <div className="flex flex-col gap-2.5 sm:hidden">
+          {filteredStaff.map((s) => {
+            const totalDeds = getStaffDeductionsTotal(s.id);
+            const initials = s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+            const profileGradient = getProfileGradient(s.name);
+            
+            return (
+              <div
+                key={s.id}
+                onClick={() => {
+                  setSelectedStaffIdForHistory(s.id);
+                  setHistoryMonthFilter(currentDate.slice(0, 7));
+                }}
+                className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-xl p-1 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <div className="bg-app-surface border border-app-border/40 rounded-[10px] p-3.5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    {s.profileImage ? (
+                      <img
+                        src={s.profileImage}
+                        alt={s.name}
+                        className="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-app-border/40"
+                      />
+                    ) : (
+                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${profileGradient} text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0`}>
+                        {initials}
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="font-bold text-app-text-primary text-xs">{s.name}</h4>
+                      <span className="text-[8px] font-black text-app-text-secondary uppercase tracking-wider block mt-0.5">Deduction Ledger</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-right">
+                      <span className="text-[7.5px] font-black text-app-text-secondary uppercase tracking-[0.12em] leading-none block">Total Fined</span>
+                      <span className={`text-sm font-black mt-1 leading-none block ${totalDeds > 0 ? 'text-rose-600 font-extrabold' : 'text-app-text-secondary'}`}>
+                        ₹{totalDeds.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    <div className="w-6.5 h-6.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-rounded select-none text-xs font-bold">chevron_right</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {filteredStaff.length === 0 && (
+            <div className="bg-app-surface border border-app-border rounded-xl p-12 text-center text-app-text-secondary">
+              <span className="material-symbols-rounded text-4xl text-slate-300 dark:text-slate-700 select-none">
+                group
+              </span>
+              <p className="mt-2 text-sm font-semibold">No staff members found.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Grid View */}
+        <div className="hidden sm:grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
           {filteredStaff.map((s) => {
             const totalDeds = getStaffDeductionsTotal(s.id);
             const initials = s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
