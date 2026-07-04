@@ -11,21 +11,12 @@ export const DashboardScreen: React.FC = () => {
     advanceList,
     deductionList,
     payoutList,
-    addStaff,
     setScreen,
     setActiveStaffProfileId,
     currentDate,
     currentUser,
+    setIsAddStaffModalOpen,
   } = useStore();
-
-  // Modal state — Add Staff
-  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
-  const [newStaffName, setNewStaffName] = useState('');
-  const [newStaffMobile, setNewStaffMobile] = useState('');
-  const [newStaffSalary, setNewStaffSalary] = useState('');
-  const [newStaffSalaryType, setNewStaffSalaryType] = useState('Monthly');
-  const [newStaffBasis, setNewStaffBasis] = useState('Attendance Based');
-  const [staffError, setStaffError] = useState('');
 
   // 1. Today's attendance counts
   const activeStaff = staffList.filter((s) => s.status === 'Active');
@@ -130,7 +121,15 @@ export const DashboardScreen: React.FC = () => {
   const formattedDate = format(parseISO(currentDate), 'd MMM yyyy');
 
   const quickActions = [
-    { icon: 'person_add', label: 'Add Staff', color: 'primary', onClick: () => setIsStaffModalOpen(true) },
+    {
+      icon: 'person_add',
+      label: 'Add Staff',
+      color: 'primary',
+      onClick: () => {
+        setScreen('staff');
+        setIsAddStaffModalOpen(true);
+      }
+    },
     { icon: 'event_available', label: 'Mark Attendance', color: 'emerald', onClick: () => setScreen('attendance') },
     { icon: 'assignment', label: 'Attendance Report', color: 'blue', onClick: () => setScreen('reports') },
     { icon: 'account_balance_wallet', label: 'Salary Management', color: 'amber', onClick: () => setScreen('salary') },
@@ -145,31 +144,7 @@ export const DashboardScreen: React.FC = () => {
     violet: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
   };
 
-  const handleAddStaffSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newStaffName.trim() || !newStaffMobile.trim() || !newStaffSalary.trim()) {
-      setStaffError('Please fill in all fields.');
-      return;
-    }
-    if (newStaffMobile.length < 10) {
-      setStaffError('Mobile number must be at least 10 digits.');
-      return;
-    }
-    setStaffError('');
-    addStaff({
-      name: newStaffName,
-      mobile: newStaffMobile,
-      monthlySalary: Number(newStaffSalary),
-      salaryType: newStaffSalaryType as 'Monthly' | 'Daily',
-      calculationBasis: newStaffBasis as 'Attendance Based' | 'Fixed Salary',
-      joiningDate: new Date().toISOString().split('T')[0],
-      status: 'Active',
-    });
-    setNewStaffName('');
-    setNewStaffMobile('');
-    setNewStaffSalary('');
-    setIsStaffModalOpen(false);
-  };
+
 
   return (
     <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200 max-w-2xl mx-auto w-full">
@@ -351,93 +326,6 @@ export const DashboardScreen: React.FC = () => {
             );
           })}
         </div>
-      </div>
-
-      {/* Add Staff Modal */}
-      {isStaffModalOpen && (
-        <CustomDialog
-          isOpen={isStaffModalOpen}
-          onClose={() => setIsStaffModalOpen(false)}
-          title="Add New Staff Member"
-          actions={
-            <>
-              <button
-                onClick={() => setIsStaffModalOpen(false)}
-                className="px-4 py-2 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddStaffSubmit}
-                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-500 text-white rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-sm"
-              >
-                Add Staff
-              </button>
-            </>
-          }
-        >
-          <form onSubmit={handleAddStaffSubmit} className="flex flex-col gap-4">
-            {staffError && (
-              <div className="p-2.5 bg-red-50 dark:bg-red-950/20 text-red-500 rounded-app-card text-xs border border-red-200">
-                {staffError}
-              </div>
-            )}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Name</label>
-              <input
-                type="text"
-                placeholder="e.g. Rahul Sharma"
-                value={newStaffName}
-                onChange={(e) => setNewStaffName(e.target.value)}
-                className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none focus:border-primary transition-all font-semibold"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Mobile Number</label>
-              <input
-                type="tel"
-                placeholder="10-digit mobile number"
-                value={newStaffMobile}
-                onChange={(e) => setNewStaffMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none focus:border-primary transition-all font-semibold"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <CustomSelect
-                label="Salary Type"
-                value={newStaffSalaryType}
-                onChange={setNewStaffSalaryType}
-                options={[
-                  { value: 'Monthly', label: 'Monthly' },
-                  { value: 'Daily', label: 'Daily' },
-                ]}
-              />
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Salary Amount</label>
-                <input
-                  type="number"
-                  placeholder="₹"
-                  value={newStaffSalary}
-                  onChange={(e) => setNewStaffSalary(e.target.value)}
-                  className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none focus:border-primary no-spinners transition-all font-semibold"
-                />
-              </div>
-            </div>
-
-            <CustomSelect
-              label="Salary Calculation Basis"
-              value={newStaffBasis}
-              onChange={setNewStaffBasis}
-              options={[
-                { value: 'Attendance Based', label: 'Attendance Based' },
-                { value: 'Fixed Salary', label: 'Fixed Salary' },
-              ]}
-            />
-          </form>
-        </CustomDialog>
-      )}
-    </div>
+      </div>    </div>
   );
 };

@@ -19,12 +19,13 @@ export const StaffScreen: React.FC = () => {
     setScreen,
     setActiveStaffProfileId,
     currentDate,
+    isAddStaffModalOpen,
+    setIsAddStaffModalOpen,
   } = useStore();
 
   const { alert } = useAlertConfirm();
 
   const [search, setSearch] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
@@ -135,7 +136,7 @@ export const StaffScreen: React.FC = () => {
     setAddress('');
     setProfileImage('');
     setSalary('');
-    setIsModalOpen(false);
+    setIsAddStaffModalOpen(false);
   };
 
   const handleOpenEdit = (staff: any) => {
@@ -247,7 +248,7 @@ export const StaffScreen: React.FC = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-black text-app-text-primary tracking-tight">Staff</h2>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => setIsAddStaffModalOpen(true)}
           className="w-10 h-10 rounded-full bg-app-surface border border-app-border flex items-center justify-center text-app-text-primary shadow-sm hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer"
         >
           <span className="material-symbols-rounded select-none text-[20px]">add</span>
@@ -342,7 +343,7 @@ export const StaffScreen: React.FC = () => {
 
         {/* "Add New Staff" Card - styled like a staff card */}
         <div
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => setIsAddStaffModalOpen(true)}
           className="bg-black/[0.015] dark:bg-white/[0.015] border border-dashed border-app-border hover:border-primary/50 dark:hover:border-primary/70 rounded-[1.25rem] p-1 shadow-sm transition-all duration-300 active:scale-98 cursor-pointer group"
         >
           <div className="h-full min-h-[110px] bg-app-surface/50 border border-dashed border-app-border/60 rounded-[18px] flex flex-col items-center justify-center py-6 px-5 hover:bg-app-surface transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] text-app-text-secondary hover:text-primary">
@@ -387,15 +388,15 @@ export const StaffScreen: React.FC = () => {
       </div>
 
       {/* Add Staff Dialog */}
-      {isModalOpen && (
+      {isAddStaffModalOpen && (
         <CustomDialog
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          isOpen={isAddStaffModalOpen}
+          onClose={() => setIsAddStaffModalOpen(false)}
           title="Register New Staff Member"
           actions={
             <>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => setIsAddStaffModalOpen(false)}
                 className="px-4 py-2 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
               >
                 Cancel
