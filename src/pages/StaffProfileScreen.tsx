@@ -870,6 +870,36 @@ export const StaffProfileScreen: React.FC = () => {
             </div>
           </div>
 
+          {/* Standalone Full-Width Month Picker */}
+          <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1 shadow-sm w-full select-none">
+            <div className="bg-app-surface border border-app-border/40 rounded-[18px] p-3 flex items-center justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                disabled={isJoiningMonthOrBefore(profileDate)}
+                className="w-10 h-10 flex items-center justify-center bg-app-bg border border-app-border text-app-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-30 disabled:pointer-events-none shrink-0"
+              >
+                <span className="material-symbols-rounded select-none text-[20px]">chevron_left</span>
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-rounded text-primary text-lg select-none">calendar_month</span>
+                <span className="text-sm font-black text-app-text-primary tracking-tight">
+                  {currentMonthName}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                disabled={isFutureMonth(profileDate)}
+                className="w-10 h-10 flex items-center justify-center bg-app-bg border border-app-border text-app-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-30 disabled:pointer-events-none shrink-0"
+              >
+                <span className="material-symbols-rounded select-none text-[20px]">chevron_right</span>
+              </button>
+            </div>
+          </div>
+
           {/* Attendance Calendar Card - Double Bezel Architecture */}
           <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-sm">
             <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4">
@@ -881,29 +911,6 @@ export const StaffProfileScreen: React.FC = () => {
                   <div>
                     <h3 className="text-xs font-bold text-app-text-primary uppercase tracking-wider">Attendance calendar</h3>
                   </div>
-                </div>
-                
-                {/* Month navigation switcher */}
-                <div className="flex items-center bg-app-bg border border-app-border rounded-xl p-0.5 shadow-sm select-none">
-                  <button
-                    type="button"
-                    onClick={handlePrevMonth}
-                    disabled={isJoiningMonthOrBefore(profileDate)}
-                    className="w-7 h-7 flex items-center justify-center text-app-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer active:scale-95 disabled:opacity-30 disabled:pointer-events-none shrink-0"
-                  >
-                    <span className="material-symbols-rounded select-none text-[16px]">chevron_left</span>
-                  </button>
-                  <span className="px-3 text-xs font-black text-app-text-primary tracking-tight min-w-[90px] text-center">
-                    {currentMonthName}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleNextMonth}
-                    disabled={isFutureMonth(profileDate)}
-                    className="w-7 h-7 flex items-center justify-center text-app-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer active:scale-95 disabled:opacity-30 disabled:pointer-events-none shrink-0"
-                  >
-                    <span className="material-symbols-rounded select-none text-[16px]">chevron_right</span>
-                  </button>
                 </div>
               </div>
 
