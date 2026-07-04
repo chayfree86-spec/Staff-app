@@ -17,6 +17,19 @@ export const AttendanceScreen: React.FC = () => {
   } = useStore();
 
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [markingProgress, setMarkingProgress] = useState<{
+    isOpen: boolean;
+    currentIndex: number;
+    total: number;
+    currentStaffName: string;
+    isComplete: boolean;
+  }>({
+    isOpen: false,
+    currentIndex: 0,
+    total: 0,
+    currentStaffName: '',
+    isComplete: false,
+  });
 
   const selectedDateStr = currentDate;
   const dayRecords = attendance[selectedDateStr] || {};
@@ -65,11 +78,60 @@ export const AttendanceScreen: React.FC = () => {
   };
 
   const handleMarkAllPresent = () => {
-    markAllPresent(selectedDateStr);
-    setSaveStatus('all');
-    setTimeout(() => {
-      setSaveStatus(null);
-    }, 1000);
+    // Only mark active staff members that are not already present or holiday
+    const eligibleStaff = activeStaff.filter(staff => {
+      const record = dayRecords[staff.id];
+      return !record || (record.status !== 'Present' && record.status !== 'Holiday');
+    });
+
+    if (eligibleStaff.length === 0) {
+      setMarkingProgress({
+        isOpen: true,
+        currentIndex: activeStaff.length,
+        total: activeStaff.length,
+        currentStaffName: 'All staff are already present!',
+        isComplete: true,
+      });
+      return;
+    }
+
+    setMarkingProgress({
+      isOpen: true,
+      currentIndex: 0,
+      total: eligibleStaff.length,
+      currentStaffName: eligibleStaff[0].name,
+      isComplete: false,
+    });
+
+    let index = 0;
+    const interval = setInterval(() => {
+      const staff = eligibleStaff[index];
+      if (staff) {
+        markAttendance(selectedDateStr, staff.id, 'Present');
+        index++;
+        if (index < eligibleStaff.length) {
+          setMarkingProgress(prev => ({
+            ...prev,
+            currentIndex: index,
+            currentStaffName: eligibleStaff[index].name,
+          }));
+        } else {
+          clearInterval(interval);
+          setMarkingProgress(prev => ({
+            ...prev,
+            currentIndex: eligibleStaff.length,
+            currentStaffName: 'All staff marked present successfully!',
+            isComplete: true,
+          }));
+          setSaveStatus('all');
+          setTimeout(() => {
+            setSaveStatus(null);
+          }, 1000);
+        }
+      } else {
+        clearInterval(interval);
+      }
+    }, 450);
   };
 
   const getProfileGradient = (name: string) => {
@@ -286,6 +348,124 @@ export const AttendanceScreen: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Custom Marking Progress Modal */}
+      {markingProgress.isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fade-in select-none">
+          <div className="relative w-full max-w-sm bg-app-surface border border-app-border rounded-[2rem] p-1 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
+            {/* Animated Wave Background at the top of the modal */}
+            <div className="absolute top-0 inset-x-0 h-28 overflow-hidden pointer-events-none rounded-t-[2rem] z-0">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-green-500/10 to-transparent" />
+              <svg 
+                className="absolute bottom-0 w-full h-12" 
+                viewBox="0 0 1440 320" 
+                preserveAspectRatio="none"
+                style={{
+                  fill: 'var(--color-present)',
+                  fillOpacity: 0.1,
+                  animation: 'wave-move-1 6s ease-in-out infinite',
+                }}
+              >
+                <path d="M0,160 C320,300 480,80 800,240 C1120,400 1280,120 1440,200 L1440,320 L0,320 Z" />
+              </svg>
+              <svg 
+                className="absolute bottom-0 w-full h-10" 
+                viewBox="0 0 1440 320" 
+                preserveAspectRatio="none"
+                style={{
+                  fill: 'var(--color-present)',
+                  fillOpacity: 0.08,
+                  animation: 'wave-move-2 8s ease-in-out infinite',
+                }}
+              >
+                <path d="M0,224 C320,120 640,300 960,180 C1280,60 1440,240 1440,240 L1440,320 L0,320 Z" />
+              </svg>
+            </div>
+
+            {/* Modal Content */}
+            <div className="relative bg-app-surface/90 border border-app-border/40 rounded-[30px] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] flex flex-col items-center text-center gap-5 mt-2 z-10">
+              
+              {/* Header Icon */}
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner relative">
+                {markingProgress.isComplete ? (
+                  <span className="material-symbols-rounded text-emerald-500 text-3xl animate-bounce">check_circle</span>
+                ) : (
+                  <span className="material-symbols-rounded text-emerald-500 text-3xl animate-spin">sync</span>
+                )}
+              </div>
+
+              {/* Status Header */}
+              <div>
+                <h3 className="text-base font-black text-app-text-primary tracking-tight">
+                  {markingProgress.isComplete ? 'Attendance Completed' : 'Marking Attendance'}
+                </h3>
+                <p className="text-[10px] font-bold text-app-text-secondary uppercase tracking-[0.15em] mt-1">
+                  {markingProgress.isComplete 
+                    ? 'All staff are present!' 
+                    : `Processing Staff (${markingProgress.currentIndex} of ${markingProgress.total})`}
+                </p>
+              </div>
+
+              {/* Current Name Card */}
+              <div className="w-full bg-app-bg border border-app-border rounded-2xl p-4 flex flex-col items-center justify-center min-h-[72px]">
+                <span className="text-xs font-bold text-app-text-secondary">
+                  {markingProgress.isComplete ? 'Status' : 'Current Staff'}
+                </span>
+                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-1 animate-pulse">
+                  {markingProgress.currentStaffName}
+                </span>
+              </div>
+
+              {/* Progress Bar & Percentage */}
+              <div className="w-full flex flex-col gap-2">
+                <div className="w-full h-3 bg-app-bg border border-app-border rounded-full overflow-hidden p-0.5 shadow-inner">
+                  <div 
+                    className="h-full bg-gradient-to-r from-emerald-500 to-green-600 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                    style={{ 
+                      width: `${markingProgress.total > 0 ? (markingProgress.currentIndex / markingProgress.total) * 100 : 0}%` 
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between items-center text-[10px] font-black text-app-text-secondary uppercase tracking-wider px-1">
+                  <span>{markingProgress.currentIndex} / {markingProgress.total} Staff</span>
+                  <span>{Math.round(markingProgress.total > 0 ? (markingProgress.currentIndex / markingProgress.total) * 100 : 0)}%</span>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              {markingProgress.isComplete && (
+                <button
+                  onClick={() => setMarkingProgress(prev => ({ ...prev, isOpen: false }))}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/10 cursor-pointer active:scale-98 transition-all"
+                >
+                  Done
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Styles for Modal animations */}
+      <style>{`
+        @keyframes modal-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: modal-fade-in 0.2s ease-out forwards;
+        }
+        @keyframes wave-move-1 {
+          0% { transform: translate3d(-20px, 0, 0); }
+          50% { transform: translate3d(20px, 5px, 0); }
+          100% { transform: translate3d(-20px, 0, 0); }
+        }
+        @keyframes wave-move-2 {
+          0% { transform: translate3d(20px, 0, 0); }
+          50% { transform: translate3d(-20px, -6px, 0); }
+          100% { transform: translate3d(20px, 0, 0); }
+        }
+      `}</style>
     </div>
   );
 };
