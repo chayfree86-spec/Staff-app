@@ -42,6 +42,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/data.php';
+require_once __DIR__ . '/salary_snapshot.php';
 
 // Keep API responses JSON even when something throws (e.g. PDO constraint errors).
 set_exception_handler(static function (Throwable $e): void {

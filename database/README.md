@@ -20,7 +20,7 @@ Main tables:
 Conventions:
 
 - Simple INT AUTO_INCREMENT primary keys (1, 2, 3, ...); the server assigns ids on insert.
-- Money is stored as paise in integer columns.
+- Money is stored as whole rupees in integer columns (no paise/decimal conversion).
 - `salary_month` is always the first day of the month, for example `2026-07-01`.
 - `staff_transactions.kind` distinguishes `advance_given`, `advance_returned`, and `deduction`.
 - `attendance_records` enforces one row per staff member per date.
@@ -37,12 +37,12 @@ Fresh install (phpMyAdmin):
 
 1. Open phpMyAdmin.
 2. Create/select the `staff` database.
-3. Import `001_create_staff_database.sql` (creates the full current schema — numeric ids, MEDIUMTEXT images).
+3. Import `001_create_staff_database.sql` (creates the full current schema — numeric ids, MEDIUMTEXT images, whole-rupee amounts).
 4. Import `002_seed_default_staff_business.sql`.
 
-Existing UUID-based installs: migration `004_simple_numeric_ids` converts all ids to
-simple numbers while keeping the data. It was applied via a temporary `api/migrate.php`
-runner (deleted after use); `003_expand_image_columns.sql` is kept for history only.
+Existing installs that predate a schema change should run the newer numbered
+migration directly (e.g. `005_paise_to_rupees.sql`). `003_expand_image_columns.sql`
+and `004_simple_numeric_ids.sql` are kept for history only.
 
 The `schema_migrations` table records which migrations were applied.
 

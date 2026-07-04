@@ -1,6 +1,6 @@
 -- Staff App database schema
 -- Target database: MySQL 8+ / MariaDB 10.4+
--- Money values are stored in paise to avoid decimal rounding issues.
+-- Money values are stored as whole rupees (no paise/decimal conversion).
 -- Store date/time values in Indian local time (Asia/Kolkata). Set the backend DB session timezone to +05:30.
 -- IDs are simple INT AUTO_INCREMENT values; the server assigns them on insert.
 
@@ -75,8 +75,8 @@ CREATE TABLE staff (
   address TEXT,
   avatar_initials VARCHAR(4),
   profile_image_url MEDIUMTEXT,
-  monthly_salary_paise INT UNSIGNED NOT NULL DEFAULT 0,
-  per_day_salary_paise INT UNSIGNED NOT NULL DEFAULT 0,
+  monthly_salary INT UNSIGNED NOT NULL DEFAULT 0,
+  per_day_salary INT UNSIGNED NOT NULL DEFAULT 0,
   salary_type ENUM('monthly', 'daily') NOT NULL DEFAULT 'monthly',
   calculation_basis ENUM('attendance_based', 'fixed_salary') NOT NULL DEFAULT 'attendance_based',
   joining_date DATE NOT NULL,
@@ -124,7 +124,7 @@ CREATE TABLE staff_transactions (
   business_id INT UNSIGNED NOT NULL,
   staff_id INT UNSIGNED NOT NULL,
   kind ENUM('advance_given', 'advance_returned', 'deduction') NOT NULL,
-  amount_paise INT UNSIGNED NOT NULL,
+  amount INT UNSIGNED NOT NULL,
   transaction_date DATE NOT NULL,
   remarks TEXT,
   created_by INT UNSIGNED,
@@ -137,7 +137,7 @@ CREATE TABLE staff_transactions (
     FOREIGN KEY (business_id, staff_id) REFERENCES staff(business_id, id) ON DELETE CASCADE,
   CONSTRAINT fk_transactions_created_by_v2
     FOREIGN KEY (created_by) REFERENCES app_users(id) ON DELETE SET NULL,
-  CONSTRAINT chk_transaction_amount_positive_v2 CHECK (amount_paise > 0)
+  CONSTRAINT chk_transaction_amount_positive_v2 CHECK (amount > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE salary_payouts (
@@ -145,7 +145,7 @@ CREATE TABLE salary_payouts (
   business_id INT UNSIGNED NOT NULL,
   staff_id INT UNSIGNED NOT NULL,
   salary_month DATE NOT NULL,
-  amount_paise INT UNSIGNED NOT NULL,
+  amount INT UNSIGNED NOT NULL,
   payout_date DATE NOT NULL,
   payment_mode VARCHAR(50),
   remarks TEXT,
@@ -168,13 +168,13 @@ CREATE TABLE salary_slip_snapshots (
   business_id INT UNSIGNED NOT NULL,
   staff_id INT UNSIGNED NOT NULL,
   salary_month DATE NOT NULL,
-  earned_paise INT UNSIGNED NOT NULL DEFAULT 0,
-  advance_adjusted_paise INT UNSIGNED NOT NULL DEFAULT 0,
-  deduction_paise INT UNSIGNED NOT NULL DEFAULT 0,
-  hold_paise INT UNSIGNED NOT NULL DEFAULT 0,
-  released_paise INT UNSIGNED NOT NULL DEFAULT 0,
-  net_payable_paise INT UNSIGNED NOT NULL DEFAULT 0,
-  paid_paise INT UNSIGNED NOT NULL DEFAULT 0,
+  earned INT UNSIGNED NOT NULL DEFAULT 0,
+  advance_adjusted INT UNSIGNED NOT NULL DEFAULT 0,
+  deduction INT UNSIGNED NOT NULL DEFAULT 0,
+  hold INT UNSIGNED NOT NULL DEFAULT 0,
+  released INT UNSIGNED NOT NULL DEFAULT 0,
+  net_payable INT UNSIGNED NOT NULL DEFAULT 0,
+  paid INT UNSIGNED NOT NULL DEFAULT 0,
   payment_status ENUM('unpaid', 'partial', 'paid') NOT NULL DEFAULT 'unpaid',
   present_days DECIMAL(5,2) NOT NULL DEFAULT 0,
   absent_days DECIMAL(5,2) NOT NULL DEFAULT 0,

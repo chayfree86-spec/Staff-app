@@ -28,6 +28,7 @@ export const StaffProfileScreen: React.FC = () => {
     setScreen,
     currentDate,
     markAttendance,
+    settings,
   } = useStore();
 
   // Modal states
@@ -37,6 +38,7 @@ export const StaffProfileScreen: React.FC = () => {
   const [isDeductionOpen, setIsDeductionOpen] = useState(false);
   const [isEditTxOpen, setIsEditTxOpen] = useState(false);
   const [isAdvHistoryOpen, setIsAdvHistoryOpen] = useState(false);
+  const [isDedHistoryOpen, setIsDedHistoryOpen] = useState(false);
 
   // Month navigation state for profile view
   const [profileDate, setProfileDate] = useState(currentDate);
@@ -423,14 +425,13 @@ export const StaffProfileScreen: React.FC = () => {
   const allTimeGiven = allStaffAdvances.filter((a) => a.amount > 0).reduce((sum, a) => sum + a.amount, 0);
   const allTimeReturned = allStaffAdvances.filter((a) => a.amount < 0).reduce((sum, a) => sum + Math.abs(a.amount), 0);
   const allTimeNet = allTimeGiven - allTimeReturned;
+
+  const allStaffDeductions = deductionList.filter((d) => d.staffId === staff.id).sort((a, b) => b.date.localeCompare(a.date));
+  const allTimeDeductionTotal = allStaffDeductions.reduce((sum, d) => sum + d.amount, 0);
   
   const paidAmount = payoutList
     .filter(p => p.staffId === staff.id && p.month === currentMonthLabel)
     .reduce((sum, item) => sum + item.amount, 0);
-
-  const staffPayouts = payoutList
-    .filter(p => p.staffId === staff.id && p.month === currentMonthLabel)
-    .sort((a, b) => b.date.localeCompare(a.date));
 
   // 5. Hold/Release calculations
   let holdAmount = 0;
@@ -513,16 +514,28 @@ export const StaffProfileScreen: React.FC = () => {
     return record?.status || null;
   };
 
+  // A weekly-holiday date (e.g. every Sunday) can only be Holiday/Absent;
+  // any other date can only be Present/Half Day/Absent.
+  const isWeeklyHolidayDay = (dayNum: number) => {
+    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+    const dayName = format(parseISO(dStr), 'EEEE');
+    return settings.weeklyHoliday.includes(dayName);
+  };
+
   const handleDayClick = (dayNum: number) => {
     if (isFutureDay(dayNum)) return;
     const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
     const currentStatus = attendance[dStr]?.[staff.id]?.status || 'Unmarked';
-    
-    // Cycle sequence: Unmarked -> Present -> Half Day -> Absent -> Holiday -> Unmarked
-    const sequence: any[] = ['Unmarked', 'Present', 'Half Day', 'Absent', 'Holiday'];
+
+    // Cycle sequence differs by day type:
+    // Weekly holiday date -> Unmarked -> Holiday -> Absent
+    // Normal date -> Unmarked -> Present -> Half Day -> Absent
+    const sequence: any[] = isWeeklyHolidayDay(dayNum)
+      ? ['Unmarked', 'Holiday', 'Absent']
+      : ['Unmarked', 'Present', 'Half Day', 'Absent'];
     const currentIndex = sequence.includes(currentStatus) ? sequence.indexOf(currentStatus) : 0;
     const nextStatus = sequence[(currentIndex + 1) % sequence.length];
-    
+
     markAttendance(dStr, staff.id, nextStatus);
   };
 
@@ -979,19 +992,23 @@ export const StaffProfileScreen: React.FC = () => {
           
           {/* Payment and Deduction Card - Double Bezel Architecture */}
           <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-sm">
-            <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4">
+            <div
+              onClick={() => setIsDedHistoryOpen(true)}
+              className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4 cursor-pointer hover:border-rose-500/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 group select-none"
+            >
               <div className="flex items-center justify-between pb-3 border-b border-app-border/60">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center">
                     <span className="material-symbols-rounded select-none" style={{ fontSize: '16px' }}>receipt_long</span>
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-app-text-primary uppercase tracking-wider">Payment and deduction</h3>
+                    <h3 className="text-xs font-bold text-app-text-primary uppercase tracking-wider">Deduction</h3>
                     <p className="text-[9px] text-app-text-secondary font-bold uppercase tracking-wider mt-0.5">Current month entries</p>
                   </div>
                 </div>
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setAmount('');
                     setRemarks('');
                     setTxDate(currentDate);
@@ -1005,139 +1022,29 @@ export const StaffProfileScreen: React.FC = () => {
                 </button>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                {/* Earned Salary Row */}
-                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-app-bg border border-app-border/30">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>payments</span>
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-app-text-primary text-xs">Earned salary</h4>
-                      <p className="text-[9px] text-app-text-secondary font-bold uppercase tracking-wider mt-0.5">{currentMonthLabel} cycle • Credit</p>
-                    </div>
-                  </div>
-                  <div className="font-bold text-emerald-600 text-xs">
-                    ₹{earnedSalary.toLocaleString('en-IN')}
-                  </div>
+              {/* Deduction Monthly Stats Row */}
+              <div className="grid grid-cols-2 gap-2 bg-app-bg p-3 rounded-xl border border-app-border/40 text-center">
+                <div>
+                  <div className="text-[8px] text-app-text-secondary uppercase font-bold tracking-wider">This Month</div>
+                  <div className="text-xs font-black text-rose-600 mt-1">₹{totalAdjusted.toLocaleString('en-IN')}</div>
                 </div>
-
-                {/* Advance Adjusted Row */}
-                {totalAdvances > 0 && (
-                  <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-app-bg border border-app-border/30">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>wallet</span>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-app-text-primary text-xs">Advance adjusted</h4>
-                        <p className="text-[9px] text-app-text-secondary font-bold uppercase tracking-wider mt-0.5">At salary run • Debit</p>
-                      </div>
-                    </div>
-                    <div className="font-bold text-rose-600 text-xs">
-                      ₹{totalAdvances.toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                )}
-
-                {/* Deductions Total Row */}
-                {totalAdjusted > 0 && (
-                  <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-app-bg border border-app-border/30">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>remove_circle</span>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-app-text-primary text-xs">Deductions</h4>
-                        <p className="text-[9px] text-app-text-secondary font-bold uppercase tracking-wider mt-0.5">At salary run • Debit</p>
-                      </div>
-                    </div>
-                    <div className="font-bold text-rose-600 text-xs">
-                      ₹{totalAdjusted.toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                )}
-
-                {/* Individual Deductions (e.g. Breakage, etc) */}
-                {staffDeductions.map((d) => (
-                  <div 
-                    key={d.id} 
-                    onClick={() => handleOpenEditTx(d, 'Deduction')}
-                    className="flex items-center justify-between py-2 px-3 rounded-xl cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/30 border border-transparent hover:border-app-border/10 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>remove_circle</span>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-app-text-primary text-xs group-hover:text-primary transition-colors">{d.remarks || 'Deduction'}</h4>
-                        <p className="text-[9px] font-bold text-app-text-secondary mt-0.5">{format(parseISO(d.date), 'dd MMM')} • Deduction</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 font-bold text-rose-600 text-xs">
-                      <span>₹{d.amount.toLocaleString('en-IN')}</span>
-                      {/* Inline Actions */}
-                      <div className="flex items-center gap-1.5 ml-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenEditTx(d, 'Deduction');
-                          }}
-                          className="w-5.5 h-5.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary flex items-center justify-center transition-colors cursor-pointer"
-                          title="Edit"
-                        >
-                          <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>edit</span>
-                        </button>
-                        <button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            const confirmed = await confirm('Are you sure you want to delete this deduction?', {
-                              title: 'Delete Deduction',
-                              type: 'danger',
-                              confirmText: 'Delete'
-                            });
-                            if (confirmed) {
-                              deleteDeduction(d.id);
-                            }
-                          }}
-                          className="w-5.5 h-5.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
-                          title="Delete"
-                        >
-                          <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>delete</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Individual Payouts / Payments */}
-                {staffPayouts.map((p) => (
-                  <div 
-                    key={p.id} 
-                    className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-emerald-500/[0.02] border border-emerald-500/10 group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>check_circle</span>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="font-bold text-app-text-primary text-xs">Salary Paid</h4>
-                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 font-extrabold text-[8px] uppercase tracking-wider">
-                            {p.paymentMode || 'Cash'}
-                          </span>
-                        </div>
-                        <p className="text-[9px] font-bold text-app-text-secondary mt-0.5">
-                          {format(parseISO(p.date), 'dd MMM yyyy')} {p.remarks ? `• ${p.remarks}` : ''}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="font-bold text-emerald-600 text-xs">
-                      ₹{p.amount.toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                ))}
+                <div className="border-l border-app-border/40">
+                  <div className="text-[8px] text-app-text-secondary uppercase font-bold tracking-wider">All-Time Total</div>
+                  <div className="text-xs font-black text-rose-600 mt-1">₹{allTimeDeductionTotal.toLocaleString('en-IN')}</div>
+                </div>
               </div>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setScreen('deduction-history');
+                }}
+                className="text-center text-[10px] text-app-text-secondary font-bold hover:text-rose-500 transition-colors flex items-center justify-center gap-1 mt-1 cursor-pointer"
+              >
+                <span>Click to view detailed history</span>
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '12px' }}>arrow_forward</span>
+              </button>
             </div>
           </div>
 
@@ -1190,10 +1097,17 @@ export const StaffProfileScreen: React.FC = () => {
                 </div>
               </div>
 
-              <div className="text-center text-[10px] text-app-text-secondary font-bold group-hover:text-amber-500 transition-colors flex items-center justify-center gap-1 mt-1">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setScreen('advance-history');
+                }}
+                className="text-center text-[10px] text-app-text-secondary font-bold hover:text-amber-500 transition-colors flex items-center justify-center gap-1 mt-1 cursor-pointer"
+              >
                 <span>Click to view detailed history</span>
                 <span className="material-symbols-rounded select-none" style={{ fontSize: '12px' }}>arrow_forward</span>
-              </div>
+              </button>
             </div>
           </div>
 
@@ -1934,6 +1848,113 @@ export const StaffProfileScreen: React.FC = () => {
                   </div>
                 );
               })
+            )}
+          </div>
+        </div>
+      </CustomDialog>
+
+      {/* Deduction History Dialog */}
+      <CustomDialog
+        isOpen={isDedHistoryOpen}
+        onClose={() => setIsDedHistoryOpen(false)}
+        title={`Deduction History - ${staff.name}`}
+        bodyClass="max-h-[75vh]"
+        actions={
+          <>
+            <button
+              onClick={() => {
+                setIsDedHistoryOpen(false); // Close history first to prevent modal layering conflict
+                setAmount('');
+                setRemarks('');
+                setTxDate(currentDate);
+                setTxError('');
+                setIsDeductionOpen(true);
+              }}
+              className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-sm shadow-rose-500/10 active:scale-95 mr-auto"
+            >
+              <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>add</span>
+              <span>Deduction</span>
+            </button>
+            <button
+              onClick={() => setIsDedHistoryOpen(false)}
+              className="px-4 py-2 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              Close
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          {/* All-time Stats Box */}
+          <div className="grid grid-cols-2 gap-2 bg-app-bg p-3 rounded-xl border border-app-border/40 text-center select-none shrink-0">
+            <div>
+              <div className="text-[9px] text-app-text-secondary uppercase font-bold tracking-wider">This Month</div>
+              <div className="text-xs font-black text-rose-600 mt-1">₹{totalAdjusted.toLocaleString('en-IN')}</div>
+            </div>
+            <div className="border-l border-app-border/40">
+              <div className="text-[9px] text-app-text-secondary uppercase font-bold tracking-wider">All-Time Total</div>
+              <div className="text-xs font-black text-rose-600 mt-1">₹{allTimeDeductionTotal.toLocaleString('en-IN')}</div>
+            </div>
+          </div>
+
+          {/* Scrollable list of all deductions */}
+          <div className="flex flex-col gap-1.5 max-h-[40vh] overflow-y-auto pr-1">
+            {allStaffDeductions.length === 0 ? (
+              <div className="text-center py-8 text-xs text-app-text-secondary font-medium">
+                No deductions recorded for this staff member.
+              </div>
+            ) : (
+              allStaffDeductions.map((d) => (
+                <div
+                  key={d.id}
+                  className="flex items-center justify-between py-2 px-3 rounded-xl border border-app-border/10 bg-app-bg/30 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 transition-all duration-150 group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>remove_circle</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-app-text-primary text-xs">{d.remarks || 'Deduction'}</h4>
+                      <p className="text-[10px] text-app-text-secondary group-hover:text-app-text-primary mt-0.5 transition-colors">
+                        {format(parseISO(d.date), 'dd MMM yyyy')} • Deduction
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 font-bold text-rose-600 text-xs">
+                    <span>₹{d.amount.toLocaleString('en-IN')}</span>
+                    <div className="flex items-center gap-1.5 ml-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsDedHistoryOpen(false);
+                          handleOpenEditTx(d, 'Deduction');
+                        }}
+                        className="w-5.5 h-5.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary flex items-center justify-center transition-colors cursor-pointer"
+                        title="Edit"
+                      >
+                        <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>edit</span>
+                      </button>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const confirmed = await confirm('Are you sure you want to delete this deduction?', {
+                            title: 'Delete Deduction',
+                            type: 'danger',
+                            confirmText: 'Delete'
+                          });
+                          if (confirmed) {
+                            deleteDeduction(d.id);
+                          }
+                        }}
+                        className="w-5.5 h-5.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                        title="Delete"
+                      >
+                        <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>delete</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>

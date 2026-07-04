@@ -64,6 +64,8 @@ foreach ($entries as $entry) {
         $status,
         $auth['user_id'],
     ]);
+
+    recompute_salary_slip_for_date($pdo, $businessId, $staffId, $date, (int) $auth['user_id']);
 }
 
 respond(['ok' => true]);

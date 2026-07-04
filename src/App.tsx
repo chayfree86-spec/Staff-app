@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from './components/Layout';
 import { useStore } from './store/useStore';
 
@@ -6,6 +6,59 @@ function App() {
   const { isLoggedIn, login, restoreSession, triggerAutoAttendance, currentDate, settings, businessInfo } = useStore();
   const [identifierInput, setIdentifierInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+
+  const pinRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const handlePinChange = (value: string, index: number) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (!cleaned) {
+      const newPin = passwordInput.split('');
+      newPin[index] = '';
+      const finalVal = newPin.join('');
+      setPasswordInput(finalVal);
+      return;
+    }
+
+    const val = cleaned[cleaned.length - 1];
+    const newPin = passwordInput.split('');
+    for (let k = 0; k < index; k++) {
+      if (!newPin[k]) newPin[k] = '';
+    }
+    newPin[index] = val;
+    const finalVal = newPin.join('');
+    setPasswordInput(finalVal);
+
+    if (index < 3) {
+      pinRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handlePinKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace') {
+      const currentVal = passwordInput[index] || '';
+      if (!currentVal && index > 0) {
+        const newPin = passwordInput.split('');
+        newPin[index - 1] = '';
+        setPasswordInput(newPin.join(''));
+        pinRefs.current[index - 1]?.focus();
+        e.preventDefault();
+      } else {
+        const newPin = passwordInput.split('');
+        newPin[index] = '';
+        setPasswordInput(newPin.join(''));
+      }
+    }
+  };
+
+  const handlePinPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
+    if (pasted) {
+      setPasswordInput(pasted);
+      const targetIndex = Math.min(pasted.length, 3);
+      pinRefs.current[targetIndex]?.focus();
+    }
+  };
   const [loginMethod, setLoginMethod] = useState<'password' | 'pin'>('password');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,10 +72,33 @@ function App() {
       triggerAutoAttendance();
       const interval = setInterval(() => {
         triggerAutoAttendance();
-      }, 30000);
+      }, 60000);
       return () => clearInterval(interval);
     }
-  }, [isLoggedIn, currentDate, settings.autoAttendanceEnabled, settings.autoAttendanceTime, triggerAutoAttendance]);
+  }, [isLoggedIn, triggerAutoAttendance]);
+  // Auto-detect login method based on input value (digits/mobile -> PIN, email/text -> Password)
+  useEffect(() => {
+    const trimmed = identifierInput.trim();
+    if (!trimmed) {
+      setLoginMethod('password');
+      return;
+    }
+    
+    let detectedMethod: 'password' | 'pin' = 'password';
+    if (trimmed.includes('@')) {
+      detectedMethod = 'password';
+    } else {
+      const isNumeric = /^[+\d\s-]+$/.test(trimmed) || /^\d/.test(trimmed);
+      detectedMethod = isNumeric ? 'pin' : 'password';
+    }
+
+    setLoginMethod((prev) => {
+      if (prev !== detectedMethod) {
+        setPasswordInput(''); // Reset password input when switching method
+      }
+      return detectedMethod;
+    });
+  }, [identifierInput]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +108,10 @@ function App() {
     }
     if (!passwordInput.trim()) {
       setError(loginMethod === 'pin' ? 'Enter PIN.' : 'Enter password.');
+      return;
+    }
+    if (loginMethod === 'pin' && passwordInput.length !== 4) {
+      setError('Enter a 4-digit PIN.');
       return;
     }
 
@@ -74,40 +154,8 @@ function App() {
                 {error}
               </div>
             )}
-
             {/* Form */}
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-2 p-1 bg-app-bg border border-app-border rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginMethod('password');
-                    setPasswordInput('');
-                  }}
-                  className={`py-2 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
-                    loginMethod === 'password'
-                      ? 'bg-app-surface text-primary shadow-sm'
-                      : 'text-app-text-secondary'
-                  }`}
-                >
-                  Password
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginMethod('pin');
-                    setPasswordInput('');
-                  }}
-                  className={`py-2 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
-                    loginMethod === 'pin'
-                      ? 'bg-app-surface text-primary shadow-sm'
-                      : 'text-app-text-secondary'
-                  }`}
-                >
-                  PIN
-                </button>
-              </div>
-
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Mobile or Email</label>
                 <div className="relative">
@@ -128,19 +176,37 @@ function App() {
                 <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">
                   {loginMethod === 'pin' ? 'PIN' : 'Password'}
                 </label>
-                <div className="relative">
-                  <span className="material-symbols-rounded absolute left-3.5 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
-                    lock
-                  </span>
-                  <input
-                    type={loginMethod === 'pin' ? 'tel' : 'password'}
-                    inputMode={loginMethod === 'pin' ? 'numeric' : undefined}
-                    placeholder={loginMethod === 'pin' ? 'Enter PIN...' : 'Enter password...'}
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(loginMethod === 'pin' ? e.target.value.replace(/\D/g, '').slice(0, 6) : e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none focus:border-primary transition-all font-bold tracking-widest"
-                  />
-                </div>
+                {loginMethod === 'pin' ? (
+                  <div className="flex justify-center gap-3 max-w-xs mx-auto w-full py-1">
+                    {[0, 1, 2, 3].map((index) => (
+                      <input
+                        key={index}
+                        ref={(el) => { pinRefs.current[index] = el; }}
+                        type="password"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={passwordInput[index] || ''}
+                        onChange={(e) => handlePinChange(e.target.value, index)}
+                        onKeyDown={(e) => handlePinKeyDown(e, index)}
+                        onPaste={index === 0 ? handlePinPaste : undefined}
+                        className="w-12 h-12 text-center text-xl font-black bg-app-bg border border-app-border rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-app-text-primary"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <span className="material-symbols-rounded absolute left-3.5 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
+                      lock
+                    </span>
+                    <input
+                      type="password"
+                      placeholder="Enter password..."
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none focus:border-primary transition-all font-bold tracking-widest"
+                    />
+                  </div>
+                )}
               </div>
 
               <button

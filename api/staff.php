@@ -58,8 +58,8 @@ function staff_payload_from_input(array $input): array
         'address' => str_or_null($staff['address'] ?? null),
         'avatar_initials' => substr((string) ($staff['avatar'] ?? initials_for_name($name)), 0, 4),
         'profile_image_url' => str_or_null($staff['profileImage'] ?? null),
-        'monthly_salary_paise' => paise_from_rupees((float) ($staff['monthlySalary'] ?? 0)),
-        'per_day_salary_paise' => paise_from_rupees((float) ($staff['perDaySalary'] ?? 0)),
+        'monthly_salary' => whole_rupees((float) ($staff['monthlySalary'] ?? 0)),
+        'per_day_salary' => whole_rupees((float) ($staff['perDaySalary'] ?? 0)),
         'salary_type' => $salaryType,
         'calculation_basis' => $calculationBasis,
         'joining_date' => $joiningDate,
@@ -75,7 +75,7 @@ if ($action === 'create') {
     $stmt = $pdo->prepare(
         'INSERT INTO staff (
             business_id, name, father_name, mobile, mobile2, address,
-            avatar_initials, profile_image_url, monthly_salary_paise, per_day_salary_paise,
+            avatar_initials, profile_image_url, monthly_salary, per_day_salary,
             salary_type, calculation_basis, joining_date, status, deactivation_date,
             released_salary_hold, owner_user_id
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -89,8 +89,8 @@ if ($action === 'create') {
         $payload['address'],
         $payload['avatar_initials'],
         $payload['profile_image_url'],
-        $payload['monthly_salary_paise'],
-        $payload['per_day_salary_paise'],
+        $payload['monthly_salary'],
+        $payload['per_day_salary'],
         $payload['salary_type'],
         $payload['calculation_basis'],
         $payload['joining_date'],
@@ -100,7 +100,10 @@ if ($action === 'create') {
         $auth['user_id'],
     ]);
 
-    respond(['ok' => true, 'id' => (int) $pdo->lastInsertId()]);
+    $newStaffId = (int) $pdo->lastInsertId();
+    recompute_salary_slip_all_months($pdo, $businessId, $newStaffId, (int) $auth['user_id']);
+
+    respond(['ok' => true, 'id' => $newStaffId]);
 }
 
 if ($action === 'update') {
@@ -111,8 +114,8 @@ if ($action === 'update') {
     $stmt = $pdo->prepare(
         'UPDATE staff SET
             name = ?, father_name = ?, mobile = ?, mobile2 = ?, address = ?,
-            avatar_initials = ?, profile_image_url = ?, monthly_salary_paise = ?,
-            per_day_salary_paise = ?, salary_type = ?, calculation_basis = ?,
+            avatar_initials = ?, profile_image_url = ?, monthly_salary = ?,
+            per_day_salary = ?, salary_type = ?, calculation_basis = ?,
             joining_date = ?, status = ?, deactivation_date = ?, released_salary_hold = ?
          WHERE id = ? AND business_id = ?'
     );
@@ -124,8 +127,8 @@ if ($action === 'update') {
         $payload['address'],
         $payload['avatar_initials'],
         $payload['profile_image_url'],
-        $payload['monthly_salary_paise'],
-        $payload['per_day_salary_paise'],
+        $payload['monthly_salary'],
+        $payload['per_day_salary'],
         $payload['salary_type'],
         $payload['calculation_basis'],
         $payload['joining_date'],
@@ -135,6 +138,8 @@ if ($action === 'update') {
         $id,
         $businessId,
     ]);
+
+    recompute_salary_slip_all_months($pdo, $businessId, $id, (int) $auth['user_id']);
 
     respond(['ok' => true, 'id' => $id]);
 }

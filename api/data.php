@@ -43,8 +43,8 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
             'name' => $row['name'],
             'mobile' => $row['mobile'] ?? '',
             'avatar' => $row['avatar_initials'] ?: initials_for_name($row['name']),
-            'monthlySalary' => rupees_from_paise((int) $row['monthly_salary_paise']),
-            'perDaySalary' => rupees_from_paise((int) $row['per_day_salary_paise']),
+            'monthlySalary' => (int) $row['monthly_salary'],
+            'perDaySalary' => (int) $row['per_day_salary'],
             'salaryType' => title_from_enum($row['salary_type']),
             'calculationBasis' => title_from_enum($row['calculation_basis']),
             'joiningDate' => $row['joining_date'],
@@ -77,7 +77,7 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
     $advanceList = [];
     $deductionList = [];
     foreach ($stmt->fetchAll() as $row) {
-        $amount = rupees_from_paise((int) $row['amount_paise']);
+        $amount = (int) $row['amount'];
         if ($row['kind'] === 'advance_given' || $row['kind'] === 'advance_returned') {
             $advanceList[] = [
                 'id' => (string) $row['id'],
@@ -104,7 +104,7 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
         return [
             'id' => (string) $row['id'],
             'staffId' => (string) $row['staff_id'],
-            'amount' => rupees_from_paise((int) $row['amount_paise']),
+            'amount' => (int) $row['amount'],
             'date' => $row['payout_date'],
             'month' => date('F Y', strtotime($row['salary_month'])),
             'paymentMode' => $row['payment_mode'],

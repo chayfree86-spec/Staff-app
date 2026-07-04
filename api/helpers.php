@@ -28,11 +28,6 @@ function require_user(): array
     ];
 }
 
-function rupees_from_paise(?int $paise): int
-{
-    return (int) round(($paise ?? 0) / 100);
-}
-
 function title_from_enum(?string $value): string
 {
     $value = str_replace('_', ' ', (string) $value);
@@ -44,9 +39,10 @@ function enum_from_title(?string $value): string
     return strtolower(str_replace(' ', '_', trim((string) $value)));
 }
 
-function paise_from_rupees(float|int $rupees): int
+// Money is stored as whole rupees; round any decimal input down to a whole number.
+function whole_rupees(float|int $amount): int
 {
-    return (int) round($rupees * 100);
+    return (int) round((float) $amount);
 }
 
 function require_post(): void

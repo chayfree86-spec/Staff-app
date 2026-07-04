@@ -198,6 +198,7 @@ export interface BusinessAccount {
   id: string;
   name: string;
   mobile?: string | null;
+  address?: string | null;
   staffCount: number;
   users: BusinessUser[];
 }
@@ -212,4 +213,32 @@ export async function listBusinessesRequest(): Promise<{ businesses: BusinessAcc
 
 export async function toggleUserActiveRequest(userId: string, isActive: boolean): Promise<void> {
   await apiPost('/businesses.php', { action: 'toggle_user', userId, isActive });
+}
+
+export async function updateBusinessAccountRequest(business: {
+  businessId: string;
+  name: string;
+  mobile?: string;
+  address?: string;
+}): Promise<void> {
+  await apiPost('/businesses.php', { action: 'update_business', ...business });
+}
+
+export async function deleteBusinessRequest(businessId: string): Promise<void> {
+  await apiPost('/businesses.php', { action: 'delete_business', businessId });
+}
+
+export async function updateBusinessUserRequest(user: {
+  userId: string;
+  name: string;
+  mobile?: string;
+  email?: string;
+  password?: string;
+  pin?: string;
+}): Promise<void> {
+  await apiPost('/businesses.php', { action: 'update_user', ...user });
+}
+
+export async function deleteBusinessUserRequest(userId: string): Promise<void> {
+  await apiPost('/businesses.php', { action: 'delete_user', userId });
 }

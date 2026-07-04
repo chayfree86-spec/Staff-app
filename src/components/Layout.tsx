@@ -13,6 +13,8 @@ import { BusinessScreen } from '../pages/BusinessScreen';
 import { SettingsScreen } from '../pages/SettingsScreen';
 import { CreateBusinessScreen } from '../pages/CreateBusinessScreen';
 import { BusinessesScreen } from '../pages/BusinessesScreen';
+import { AdvanceHistoryScreen } from '../pages/AdvanceHistoryScreen';
+import { DeductionHistoryScreen } from '../pages/DeductionHistoryScreen';
 import { CustomDialog } from './ui/CustomDialog';
 import { format, parseISO } from 'date-fns';
 
@@ -127,6 +129,10 @@ export const Layout: React.FC = () => {
         return <CreateBusinessScreen />;
       case 'businesses':
         return <BusinessesScreen />;
+      case 'advance-history':
+        return <AdvanceHistoryScreen />;
+      case 'deduction-history':
+        return <DeductionHistoryScreen />;
       default:
         return <AttendanceScreen />;
     }
@@ -160,6 +166,10 @@ export const Layout: React.FC = () => {
         return 'New Business';
       case 'businesses':
         return 'Businesses & Users';
+      case 'advance-history':
+        return 'Advance History';
+      case 'deduction-history':
+        return 'Deduction History';
       default:
         return 'Staff Attendance';
     }

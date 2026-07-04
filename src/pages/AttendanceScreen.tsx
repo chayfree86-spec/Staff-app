@@ -13,6 +13,7 @@ export const AttendanceScreen: React.FC = () => {
     markAllPresent,
     setScreen,
     setActiveStaffProfileId,
+    settings,
   } = useStore();
 
   const [search, setSearch] = useState('');
@@ -20,6 +21,10 @@ export const AttendanceScreen: React.FC = () => {
 
   const selectedDateStr = currentDate;
   const dayRecords = attendance[selectedDateStr] || {};
+
+  // A weekly-holiday date (e.g. every Sunday) can only be Holiday/Absent;
+  // any other date can only be Present/Half Day/Absent.
+  const isHolidayDate = settings.weeklyHoliday.includes(format(parseISO(selectedDateStr), 'EEEE'));
 
   // Filter staff by status (Active) and search query
   const activeStaff = staffList.filter(
@@ -35,6 +40,7 @@ export const AttendanceScreen: React.FC = () => {
     let present = 0;
     let absent = 0;
     let halfDay = 0;
+    let holiday = 0;
 
     const days = eachDayOfInterval({ start, end });
     days.forEach((day) => {
@@ -44,13 +50,14 @@ export const AttendanceScreen: React.FC = () => {
         if (record.status === 'Present') present++;
         if (record.status === 'Absent') absent++;
         if (record.status === 'Half Day') halfDay++;
+        if (record.status === 'Holiday') holiday++;
       }
     });
 
-    return { present, absent, halfDay };
+    return { present, absent, halfDay, holiday };
   };
 
-  const handleStatusChange = (staffId: string, status: 'Present' | 'Absent' | 'Half Day') => {
+  const handleStatusChange = (staffId: string, status: 'Present' | 'Absent' | 'Half Day' | 'Holiday') => {
     markAttendance(selectedDateStr, staffId, status);
     
     // Quick auto-save animation indicator
@@ -89,10 +96,11 @@ export const AttendanceScreen: React.FC = () => {
       if (record?.status === 'Present') acc.present++;
       else if (record?.status === 'Absent') acc.absent++;
       else if (record?.status === 'Half Day') acc.halfDay++;
+      else if (record?.status === 'Holiday') acc.holiday++;
       else acc.unmarked++;
       return acc;
     },
-    { present: 0, absent: 0, halfDay: 0, unmarked: 0 }
+    { present: 0, absent: 0, halfDay: 0, holiday: 0, unmarked: 0 }
   );
 
   return (
@@ -122,35 +130,50 @@ export const AttendanceScreen: React.FC = () => {
                 />
               </div>
 
-              {/* Mark All Present Button - Button-in-Button Style */}
-              <button
-                onClick={handleMarkAllPresent}
-                className="group/btn pl-4.5 pr-3 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl text-sm font-extrabold flex items-center gap-2.5 hover:from-emerald-600 hover:to-green-700 shadow-md shadow-emerald-500/10 cursor-pointer shrink-0 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95"
-              >
-                <span className="hidden xs:inline">Mark All Present</span>
-                <span className="xs:hidden">Mark All</span>
-                <div className="w-6.5 h-6.5 rounded-full bg-white/20 flex items-center justify-center group-hover/btn:scale-110 transition-transform animate-none">
-                  <span className="material-symbols-rounded select-none" style={{ fontSize: '12px' }}>done_all</span>
-                </div>
-              </button>
+              {/* Mark All Present Button - Button-in-Button Style (hidden on weekly holiday dates, since those can only be Holiday/Absent) */}
+              {!isHolidayDate && (
+                <button
+                  onClick={handleMarkAllPresent}
+                  className="group/btn pl-4.5 pr-3 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl text-sm font-extrabold flex items-center gap-2.5 hover:from-emerald-600 hover:to-green-700 shadow-md shadow-emerald-500/10 cursor-pointer shrink-0 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95"
+                >
+                  <span className="hidden xs:inline">Mark All Present</span>
+                  <span className="xs:hidden">Mark All</span>
+                  <div className="w-6.5 h-6.5 rounded-full bg-white/20 flex items-center justify-center group-hover/btn:scale-110 transition-transform animate-none">
+                    <span className="material-symbols-rounded select-none" style={{ fontSize: '12px' }}>done_all</span>
+                  </div>
+                </button>
+              )}
             </div>
           </div>
 
           {/* Attendance Day Summary - Premium Double Bezel Style cards */}
-          <div className="grid grid-cols-3 gap-3 pt-3 border-t border-app-border/60">
-            <div className="bg-emerald-500/10 rounded-2xl p-3 text-center border border-emerald-500/20 dark:border-emerald-500/30">
-              <div className="text-xl font-black text-present leading-tight">{summary.present}</div>
-              <div className="text-[8.5px] uppercase font-bold text-present tracking-widest mt-0.5">Present</div>
+          {isHolidayDate ? (
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-app-border/60">
+              <div className="bg-info/10 rounded-2xl p-3 text-center border border-info/20 dark:border-info/30">
+                <div className="text-xl font-black text-info leading-tight">{summary.holiday}</div>
+                <div className="text-[8.5px] uppercase font-bold text-info tracking-widest mt-0.5">Holiday</div>
+              </div>
+              <div className="bg-rose-500/10 rounded-2xl p-3 text-center border border-rose-500/20 dark:border-rose-500/30">
+                <div className="text-xl font-black text-absent leading-tight">{summary.absent}</div>
+                <div className="text-[8.5px] uppercase font-bold text-absent tracking-widest mt-0.5">Absent</div>
+              </div>
             </div>
-            <div className="bg-rose-500/10 rounded-2xl p-3 text-center border border-rose-500/20 dark:border-rose-500/30">
-              <div className="text-xl font-black text-absent leading-tight">{summary.absent}</div>
-              <div className="text-[8.5px] uppercase font-bold text-absent tracking-widest mt-0.5">Absent</div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3 pt-3 border-t border-app-border/60">
+              <div className="bg-emerald-500/10 rounded-2xl p-3 text-center border border-emerald-500/20 dark:border-emerald-500/30">
+                <div className="text-xl font-black text-present leading-tight">{summary.present}</div>
+                <div className="text-[8.5px] uppercase font-bold text-present tracking-widest mt-0.5">Present</div>
+              </div>
+              <div className="bg-rose-500/10 rounded-2xl p-3 text-center border border-rose-500/20 dark:border-rose-500/30">
+                <div className="text-xl font-black text-absent leading-tight">{summary.absent}</div>
+                <div className="text-[8.5px] uppercase font-bold text-absent tracking-widest mt-0.5">Absent</div>
+              </div>
+              <div className="bg-amber-500/10 rounded-2xl p-3 text-center border border-amber-500/20 dark:border-amber-500/30">
+                <div className="text-xl font-black text-halfday leading-tight">{summary.halfDay}</div>
+                <div className="text-[8.5px] uppercase font-bold text-halfday tracking-widest mt-0.5">Half Day</div>
+              </div>
             </div>
-            <div className="bg-amber-500/10 rounded-2xl p-3 text-center border border-amber-500/20 dark:border-amber-500/30">
-              <div className="text-xl font-black text-halfday leading-tight">{summary.halfDay}</div>
-              <div className="text-[8.5px] uppercase font-bold text-halfday tracking-widest mt-0.5">Half Day</div>
-            </div>
-          </div>
+          )}
 
           {saveStatus === 'all' && (
             <div className="text-center text-xs font-bold text-emerald-500 flex items-center justify-center gap-1.5 py-1">
@@ -210,39 +233,65 @@ export const AttendanceScreen: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Status Selectors */}
-                <div className="grid grid-cols-3 gap-2 mt-0.5">
-                  <button
-                    onClick={() => handleStatusChange(staff.id, 'Present')}
-                    className={`py-2 rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer ${
-                      currentStatus === 'Present'
-                        ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md shadow-emerald-500/20 border-0'
-                        : 'bg-app-bg border border-app-border/40 text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    Present ({stats.present})
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(staff.id, 'Absent')}
-                    className={`py-2 rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer ${
-                      currentStatus === 'Absent'
-                        ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-md shadow-rose-500/20 border-0'
-                        : 'bg-app-bg border border-app-border/40 text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    Absent ({stats.absent})
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(staff.id, 'Half Day')}
-                    className={`py-2 rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer ${
-                      currentStatus === 'Half Day'
-                        ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/20 border-0'
-                        : 'bg-app-bg border border-app-border/40 text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    Half Day ({stats.halfDay})
-                  </button>
-                </div>
+                {/* Status Selectors: holiday dates only allow Holiday/Absent;
+                    normal dates only allow Present/Half Day/Absent. */}
+                {isHolidayDate ? (
+                  <div className="grid grid-cols-2 gap-2 mt-0.5">
+                    <button
+                      onClick={() => handleStatusChange(staff.id, 'Holiday')}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer ${
+                        currentStatus === 'Holiday'
+                          ? 'bg-info text-white shadow-md shadow-info/20 border-0'
+                          : 'bg-app-bg border border-app-border/40 text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      Holiday ({stats.holiday})
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(staff.id, 'Absent')}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer ${
+                        currentStatus === 'Absent'
+                          ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-md shadow-rose-500/20 border-0'
+                          : 'bg-app-bg border border-app-border/40 text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      Absent ({stats.absent})
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2 mt-0.5">
+                    <button
+                      onClick={() => handleStatusChange(staff.id, 'Present')}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer ${
+                        currentStatus === 'Present'
+                          ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md shadow-emerald-500/20 border-0'
+                          : 'bg-app-bg border border-app-border/40 text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      Present ({stats.present})
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(staff.id, 'Absent')}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer ${
+                        currentStatus === 'Absent'
+                          ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-md shadow-rose-500/20 border-0'
+                          : 'bg-app-bg border border-app-border/40 text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      Absent ({stats.absent})
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(staff.id, 'Half Day')}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer ${
+                        currentStatus === 'Half Day'
+                          ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/20 border-0'
+                          : 'bg-app-bg border border-app-border/40 text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      Half Day ({stats.halfDay})
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );
