@@ -215,7 +215,7 @@ function App() {
         />
 
         {/* Wave Layers at the bottom */}
-        <div className="absolute inset-x-0 bottom-0 w-[120%] left-[-10%] h-[280px] overflow-hidden pointer-events-none z-10">
+        <div className="absolute inset-x-0 bottom-0 w-[120%] left-[-10%] h-[280px] overflow-hidden pointer-events-none z-10 lg:hidden">
           {/* Wave 1 */}
           <svg 
             className="absolute bottom-0 w-full h-full" 
@@ -316,7 +316,7 @@ function App() {
         `}</style>
 
         {/* Top Wave Header */}
-        <div className="absolute inset-x-0 top-0 w-[120%] left-[-10%] h-[180px] sm:h-[220px] overflow-hidden pointer-events-none z-0">
+        <div className="absolute inset-x-0 top-0 w-[120%] left-[-10%] h-[180px] sm:h-[220px] overflow-hidden pointer-events-none z-0 lg:hidden">
           {/* Header Wave 1 */}
           <svg 
             className="absolute top-0 w-full h-full rotate-180" 
@@ -370,7 +370,7 @@ function App() {
         </div>
 
         {/* Bottom Wave Footer */}
-        <div className="absolute inset-x-0 bottom-0 w-[120%] left-[-10%] h-[180px] sm:h-[220px] overflow-hidden pointer-events-none z-0">
+        <div className="absolute inset-x-0 bottom-0 w-[120%] left-[-10%] h-[180px] sm:h-[220px] overflow-hidden pointer-events-none z-0 lg:hidden">
           {/* Footer Wave 1 */}
           <svg 
             className="absolute bottom-0 w-full h-full" 
