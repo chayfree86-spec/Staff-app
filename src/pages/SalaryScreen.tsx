@@ -24,7 +24,6 @@ export const SalaryScreen: React.FC = () => {
     settings,
   } = useStore();
 
-  const [search, setSearch] = useState('');
   const [selectedCycle, setSelectedCycle] = useState('Current Month');
   
   // Payout Modal states
@@ -72,6 +71,7 @@ export const SalaryScreen: React.FC = () => {
     let daysHoliday = 0;
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
+      if (dateStr > currentDate) return;
       if (dateStr.startsWith(joiningYearMonth) && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;
@@ -110,8 +110,7 @@ export const SalaryScreen: React.FC = () => {
     const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
     const prevMonthLabelStr = format(prevDateObj, 'MMMM yyyy');
 
-    const hasPrevPayout = payoutList.some(p => p.staffId === staffId && p.month === prevMonthLabelStr);
-    const defaultMonth = hasPrevPayout ? currentMonthLabelStr : prevMonthLabelStr;
+    const defaultMonth = currentMonthLabelStr;
 
     return {
       options: [
@@ -183,9 +182,6 @@ export const SalaryScreen: React.FC = () => {
 
   // Filter staff to include active staff and inactive staff deactivated in the selected cycle month
   const visibleStaff = staffList.filter(s => {
-    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
-    if (!matchesSearch) return false;
-    
     if (s.status === 'Active') return true;
     
     // Include inactive staff if they were deactivated in the selected month
@@ -206,6 +202,7 @@ export const SalaryScreen: React.FC = () => {
     let daysHoliday = 0;
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
+      if (dateStr > currentDate) return;
       if (dateStr.startsWith(targetYearMonth) && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;
@@ -346,7 +343,7 @@ export const SalaryScreen: React.FC = () => {
     }
 
     setPayoutError('');
-    paySalary(payoutStaffId, amount, payoutMonth, currentDate, payoutMode, payoutRemarks);
+    paySalary(payoutStaffId, amount, payoutMonth, payoutDate, payoutMode, payoutRemarks);
     setPayoutStaffId(null);
     setPayoutAmount('');
     setPayoutDate('');
@@ -363,32 +360,15 @@ export const SalaryScreen: React.FC = () => {
       {/* Header controls & Summaries - Double Bezel Architecture */}
       <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
         <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-            <div className="w-full sm:w-auto shrink-0">
-              <CustomSelect
-                value={selectedCycle}
-                onChange={setSelectedCycle}
-                options={[
-                  { value: 'Current Month', label: currentMonthLabel },
-                  { value: 'Last Month', label: 'Last Month' },
-                ]}
-                className="w-full sm:w-48"
-              />
-            </div>
-
-            <div className="relative flex-1">
-              <span className="material-symbols-rounded absolute left-3.5 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
-                search
-              </span>
-              <input
-                type="text"
-                placeholder="Search staff members..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none focus:border-primary transition-all font-semibold"
-              />
-            </div>
-          </div>
+          <CustomSelect
+            value={selectedCycle}
+            onChange={setSelectedCycle}
+            options={[
+              { value: 'Current Month', label: currentMonthLabel },
+              { value: 'Last Month', label: 'Last Month' },
+            ]}
+            className="w-full"
+          />
 
           {/* Financial Summary Dashboard */}
           <div className="grid grid-cols-3 gap-3 pt-3 border-t border-app-border/60">
@@ -586,20 +566,20 @@ export const SalaryScreen: React.FC = () => {
           onClose={() => setPayoutStaffId(null)}
           title={`Pay Salary`}
           actions={
-            <>
+            <div className="flex gap-3 w-full">
               <button
                 onClick={() => setPayoutStaffId(null)}
-                className="px-4 py-2 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
+                className="flex-1 py-3 px-4 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-sm font-bold active:scale-95 transition-all cursor-pointer text-center"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePayoutSubmit}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-sm shadow-primary/10"
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-black active:scale-95 shadow-md shadow-indigo-600/10 transition-all cursor-pointer text-center"
               >
                 Confirm Payment
               </button>
-            </>
+            </div>
           }
         >
           {(() => {
@@ -754,11 +734,13 @@ export const SalaryScreen: React.FC = () => {
                   </div>
 
                   {/* Payment Date */}
-                  <div className="flex flex-col gap-1 bg-app-bg px-3.5 py-2.5 rounded-xl border border-app-border">
-                    <label className="text-[9px] font-bold text-app-text-secondary uppercase tracking-widest leading-none">Payment Date (Today)</label>
-                    <span className="text-xs font-black text-app-text-primary mt-1.5 leading-none">
-                      {format(parseISO(currentDate), 'dd MMM yyyy')}
-                    </span>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Payment Date</label>
+                    <CustomDatePicker
+                      value={payoutDate}
+                      onChange={setPayoutDate}
+                      className="w-full"
+                    />
                   </div>
 
                   {/* Payment Mode */}

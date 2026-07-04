@@ -138,8 +138,7 @@ export const StaffProfileScreen: React.FC = () => {
     const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
     const prevMonthLabelStr = format(prevDateObj, 'MMMM yyyy');
 
-    const hasPrevPayout = payoutList.some(p => p.staffId === staffId && p.month === prevMonthLabelStr);
-    const defaultMonth = hasPrevPayout ? currentMonthLabelStr : prevMonthLabelStr;
+    const defaultMonth = currentMonthLabelStr;
 
     return {
       options: [
@@ -160,6 +159,7 @@ export const StaffProfileScreen: React.FC = () => {
     let daysHoliday = 0;
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
+      if (dateStr > currentDate) return;
       if (dateStr.startsWith(targetYearMonth) && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;
@@ -303,7 +303,7 @@ export const StaffProfileScreen: React.FC = () => {
     }
 
     setPayoutError('');
-    paySalary(staff.id, amount, payoutMonth, currentDate, payoutMode, payoutRemarks);
+    paySalary(staff.id, amount, payoutMonth, payoutDate, payoutMode, payoutRemarks);
     setIsPayoutOpen(false);
     setPayoutAmount('');
     setPayoutDate('');
@@ -396,6 +396,7 @@ export const StaffProfileScreen: React.FC = () => {
 
   daysInMonth.forEach((day) => {
     const dateStr = format(day, 'yyyy-MM-dd');
+    if (dateStr > currentDate) return;
     const record = attendance[dateStr]?.[staff.id];
     if (record) {
       if (record.status === 'Present') presentDays++;
@@ -702,66 +703,57 @@ export const StaffProfileScreen: React.FC = () => {
     <div className="flex flex-col gap-6 pb-24 animate-in fade-in duration-200">
       
       {/* Back button and actions row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full select-none">
+      <div className="flex items-center justify-between gap-4 w-full select-none">
         <button
           onClick={() => setScreen('staff')}
-          className="text-xs font-bold text-app-text-secondary hover:text-primary flex items-center gap-1 cursor-pointer"
+          className="w-10 h-10 rounded-xl bg-app-surface border border-app-border flex items-center justify-center text-app-text-secondary active:scale-95 transition-all cursor-pointer shadow-sm hover:text-primary"
         >
-          <span className="material-symbols-rounded text-sm select-none">arrow_back</span>
-          <span>Back to staff</span>
+          <span className="material-symbols-rounded select-none text-xl">arrow_back</span>
         </button>
 
         {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Active/Deactive Toggle */}
-          <div className="flex items-center gap-2 bg-app-surface border border-app-border rounded-xl px-3 py-1.5 shadow-sm">
-            <span className="text-[10px] font-black text-app-text-secondary uppercase tracking-wider">Status:</span>
-            <span className={`text-xs font-bold ${staff.status === 'Active' ? 'text-emerald-600' : 'text-rose-500'}`}>
-              {staff.status === 'Active' ? 'Active' : 'Inactive'}
-            </span>
-            <button
-              type="button"
-              onClick={async () => {
-                const isDeactivating = staff.status === 'Active';
-                const message = isDeactivating
-                  ? `Are you sure you want to deactivate ${staff.name}? Deactivating will automatically mark them as Absent for today.`
-                  : `Are you sure you want to activate ${staff.name}?`;
-                
-                const confirmed = await confirm(message, {
-                  title: isDeactivating ? 'Deactivate Staff' : 'Activate Staff',
-                  type: isDeactivating ? 'danger' : 'success',
-                  confirmText: isDeactivating ? 'Deactivate' : 'Activate',
-                });
+          <button
+            onClick={async () => {
+              const isDeactivating = staff.status === 'Active';
+              const message = isDeactivating
+                ? `Are you sure you want to deactivate ${staff.name}? Deactivating will automatically mark them as Absent for today.`
+                : `Are you sure you want to activate ${staff.name}?`;
+              
+              const confirmed = await confirm(message, {
+                title: isDeactivating ? 'Deactivate Staff' : 'Activate Staff',
+                type: isDeactivating ? 'danger' : 'success',
+                confirmText: isDeactivating ? 'Deactivate' : 'Activate',
+              });
 
-                if (confirmed) {
-                  updateStaff(staff.id, {
-                    status: isDeactivating ? 'Inactive' : 'Active',
-                    deactivationDate: isDeactivating ? currentDate : undefined,
-                  });
-                  if (isDeactivating) {
-                    markAttendance(currentDate, staff.id, 'Absent');
-                  }
+              if (confirmed) {
+                updateStaff(staff.id, {
+                  status: isDeactivating ? 'Inactive' : 'Active',
+                  deactivationDate: isDeactivating ? currentDate : undefined,
+                });
+                if (isDeactivating) {
+                  markAttendance(currentDate, staff.id, 'Absent');
                 }
-              }}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                staff.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                  staff.status === 'Active' ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
+              }
+            }}
+            className={`px-3 py-2 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95 ${
+              staff.status === 'Active' 
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
+                : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${staff.status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'} shrink-0`} />
+            <span>{staff.status === 'Active' ? 'Active' : 'Inactive'}</span>
+          </button>
 
           {/* Update button */}
           <button
             onClick={handleEditOpen}
-            className="px-3.5 py-1.5 bg-app-surface border border-app-border text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            className="w-10 h-10 rounded-xl bg-app-surface border border-app-border flex items-center justify-center text-indigo-600 dark:text-indigo-400 active:scale-95 transition-all cursor-pointer shadow-sm"
+            title="Update Details"
           >
-            <span className="material-symbols-rounded select-none text-primary" style={{ fontSize: '15px' }}>edit</span>
-            <span>Update</span>
+            <span className="material-symbols-rounded select-none text-lg">edit</span>
           </button>
 
           {/* Delete button */}
@@ -778,16 +770,16 @@ export const StaffProfileScreen: React.FC = () => {
                 setScreen('staff');
               }
             }}
-            className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 active:scale-95 transition-all cursor-pointer shadow-sm"
+            title="Delete Employee"
           >
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '15px' }}>delete</span>
-            <span>Delete</span>
+            <span className="material-symbols-rounded select-none text-lg">delete</span>
           </button>
         </div>
       </div>
 
       {/* 1. TOP PROFILE BANNER CARD */}
-      <div className={`w-full bg-gradient-to-r ${getProfileGradient(staff.name)} rounded-app-card p-6 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-md`}>
+      <div className={`w-full bg-gradient-to-r ${getProfileGradient(staff.name)} rounded-app-card p-6 text-white flex items-center gap-6 shadow-md`}>
         
         {/* Left Side: Avatar with upload indicator, Text info */}
         <div className="flex items-center gap-4">
@@ -822,7 +814,7 @@ export const StaffProfileScreen: React.FC = () => {
               )}
               
               {/* Camera badge with clean white border to prevent dark outline bleed */}
-              <div className="absolute -bottom-0.5 -right-0.5 w-5.5 h-5.5 rounded-full bg-white text-primary border-2 border-white flex items-center justify-center shadow-sm select-none group-hover:scale-110 transition-transform">
+              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-white text-primary border-2 border-white flex items-center justify-center shadow-sm select-none active:scale-110 transition-transform">
                 <span className="material-symbols-rounded font-bold" style={{ fontSize: '11px' }}>photo_camera</span>
               </div>
             </label>
@@ -841,16 +833,6 @@ export const StaffProfileScreen: React.FC = () => {
             <p className="text-[10px] text-white/70 mt-1.5 leading-none">
               {staff.status === 'Active' ? 'Active employee' : 'Inactive employee'}
             </p>
-          </div>
-        </div>
-
-        {/* Right Side: Remaining Due Salary */}
-        <div className="bg-white/15 backdrop-blur-lg border border-white/25 rounded-2xl px-6 py-3.5 flex flex-col items-end justify-center gap-1 shadow-[0_8px_32px_rgba(0,0,0,0.12)] select-none shrink-0 self-end md:self-auto min-w-[140px]">
-          <div className="text-[9px] text-white/85 uppercase font-black tracking-widest leading-none">
-            Remaining Due
-          </div>
-          <div className="text-3xl md:text-4xl font-black tracking-tight leading-none text-white mt-1">
-            ₹{Math.max(0, netPayable - paidAmount).toLocaleString('en-IN')}
           </div>
         </div>
       </div>
@@ -889,6 +871,36 @@ export const StaffProfileScreen: React.FC = () => {
             </div>
           </div>
 
+          {/* Standalone Full-Width Month Picker */}
+          <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1 shadow-sm w-full select-none">
+            <div className="bg-app-surface border border-app-border/40 rounded-[18px] p-3 flex items-center justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                disabled={isJoiningMonthOrBefore(profileDate)}
+                className="w-10 h-10 flex items-center justify-center bg-app-bg border border-app-border text-app-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-30 disabled:pointer-events-none shrink-0"
+              >
+                <span className="material-symbols-rounded select-none text-[20px]">chevron_left</span>
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-rounded text-primary text-lg select-none">calendar_month</span>
+                <span className="text-sm font-black text-app-text-primary tracking-tight">
+                  {currentMonthName}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                disabled={isFutureMonth(profileDate)}
+                className="w-10 h-10 flex items-center justify-center bg-app-bg border border-app-border text-app-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-30 disabled:pointer-events-none shrink-0"
+              >
+                <span className="material-symbols-rounded select-none text-[20px]">chevron_right</span>
+              </button>
+            </div>
+          </div>
+
           {/* Attendance Calendar Card - Double Bezel Architecture */}
           <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-sm">
             <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4">
@@ -900,29 +912,6 @@ export const StaffProfileScreen: React.FC = () => {
                   <div>
                     <h3 className="text-xs font-bold text-app-text-primary uppercase tracking-wider">Attendance calendar</h3>
                   </div>
-                </div>
-                
-                {/* Month navigation switcher */}
-                <div className="flex items-center bg-app-bg border border-app-border rounded-xl p-0.5 shadow-sm select-none">
-                  <button
-                    type="button"
-                    onClick={handlePrevMonth}
-                    disabled={isJoiningMonthOrBefore(profileDate)}
-                    className="w-7 h-7 flex items-center justify-center text-app-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer active:scale-95 disabled:opacity-30 disabled:pointer-events-none shrink-0"
-                  >
-                    <span className="material-symbols-rounded select-none text-[16px]">chevron_left</span>
-                  </button>
-                  <span className="px-3 text-xs font-black text-app-text-primary tracking-tight min-w-[90px] text-center">
-                    {currentMonthName}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleNextMonth}
-                    disabled={isFutureMonth(profileDate)}
-                    className="w-7 h-7 flex items-center justify-center text-app-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer active:scale-95 disabled:opacity-30 disabled:pointer-events-none shrink-0"
-                  >
-                    <span className="material-symbols-rounded select-none text-[16px]">chevron_right</span>
-                  </button>
                 </div>
               </div>
 
@@ -959,14 +948,14 @@ export const StaffProfileScreen: React.FC = () => {
                       <div
                         key={`day-${dayNum}`}
                         onClick={() => !isFuture && handleDayClick(dayNum)}
-                        className={`aspect-square rounded-xl flex flex-col items-center justify-center font-black text-sm sm:text-base border transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                        className={`aspect-square rounded-xl flex flex-col items-center justify-center font-black text-sm sm:text-base border transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                           isFuture ? 'border-app-border/40 bg-app-bg/50 text-app-text-secondary/30 pointer-events-none opacity-40' :
-                          status === 'Present' ? 'bg-present border-present text-white shadow-sm hover:scale-110 cursor-pointer' :
-                          status === 'Absent' ? 'bg-absent border-absent text-white shadow-sm hover:scale-110 cursor-pointer' :
-                          status === 'Half Day' ? 'bg-halfday border-halfday text-white shadow-sm hover:scale-110 cursor-pointer' :
-                          status === 'Holiday' ? 'bg-info border-info text-white shadow-sm hover:scale-110 cursor-pointer' :
-                          isJoinDay ? 'border-primary border-2 bg-app-bg text-app-text-primary hover:scale-110 cursor-pointer shadow-md shadow-primary/5' :
-                          'border-app-border bg-app-bg text-app-text-secondary hover:border-primary/20 hover:scale-110 cursor-pointer'
+                          status === 'Present' ? 'bg-present border-present text-white shadow-sm active:scale-95 cursor-pointer' :
+                          status === 'Absent' ? 'bg-absent border-absent text-white shadow-sm active:scale-95 cursor-pointer' :
+                          status === 'Half Day' ? 'bg-halfday border-halfday text-white shadow-sm active:scale-95 cursor-pointer' :
+                          status === 'Holiday' ? 'bg-info border-info text-white shadow-sm active:scale-95 cursor-pointer' :
+                          isJoinDay ? 'border-primary border-2 bg-app-bg text-app-text-primary active:scale-95 cursor-pointer shadow-md shadow-primary/5' :
+                          'border-app-border bg-app-bg text-app-text-secondary active:scale-95 cursor-pointer'
                         }`}
                       >
                         <span className={isJoinDay ? 'mt-0.5' : ''}>{dayNum}</span>
@@ -1821,7 +1810,7 @@ export const StaffProfileScreen: React.FC = () => {
                             setIsAdvHistoryOpen(false);
                             handleOpenEditTx(a, 'Advance');
                           }}
-                          className="w-5.5 h-5.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary flex items-center justify-center transition-colors cursor-pointer"
+                          className="w-6 h-6 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary flex items-center justify-center transition-colors cursor-pointer"
                           title="Edit"
                         >
                           <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>edit</span>
@@ -1838,7 +1827,7 @@ export const StaffProfileScreen: React.FC = () => {
                               deleteAdvance(a.id);
                             }
                           }}
-                          className="w-5.5 h-5.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                          className="w-6 h-6 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
                           title="Delete"
                         >
                           <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>delete</span>
@@ -1929,7 +1918,7 @@ export const StaffProfileScreen: React.FC = () => {
                           setIsDedHistoryOpen(false);
                           handleOpenEditTx(d, 'Deduction');
                         }}
-                        className="w-5.5 h-5.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary flex items-center justify-center transition-colors cursor-pointer"
+                        className="w-6 h-6 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-app-text-secondary hover:text-app-text-primary flex items-center justify-center transition-colors cursor-pointer"
                         title="Edit"
                       >
                         <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>edit</span>
@@ -1946,7 +1935,7 @@ export const StaffProfileScreen: React.FC = () => {
                             deleteDeduction(d.id);
                           }
                         }}
-                        className="w-5.5 h-5.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                        className="w-6 h-6 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
                         title="Delete"
                       >
                         <span className="material-symbols-rounded select-none" style={{ fontSize: '11px' }}>delete</span>
@@ -1967,20 +1956,20 @@ export const StaffProfileScreen: React.FC = () => {
           onClose={() => setIsPayoutOpen(false)}
           title={`Pay Salary`}
           actions={
-            <>
+            <div className="flex gap-3 w-full">
               <button
                 onClick={() => setIsPayoutOpen(false)}
-                className="px-4 py-2 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
+                className="flex-1 py-3 px-4 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-sm font-bold active:scale-95 transition-all cursor-pointer text-center"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePayoutSubmit}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-sm shadow-primary/10"
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-black active:scale-95 shadow-md shadow-indigo-600/10 transition-all cursor-pointer text-center"
               >
                 Confirm Payment
               </button>
-            </>
+            </div>
           }
         >
           {(() => {
@@ -2132,11 +2121,13 @@ export const StaffProfileScreen: React.FC = () => {
                   </div>
 
                   {/* Payment Date */}
-                  <div className="flex flex-col gap-1 bg-app-bg px-3.5 py-2.5 rounded-xl border border-app-border">
-                    <label className="text-[9px] font-bold text-app-text-secondary uppercase tracking-widest leading-none">Payment Date (Today)</label>
-                    <span className="text-xs font-black text-app-text-primary mt-1.5 leading-none">
-                      {format(parseISO(currentDate), 'dd MMM yyyy')}
-                    </span>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Payment Date</label>
+                    <CustomDatePicker
+                      value={payoutDate}
+                      onChange={setPayoutDate}
+                      className="w-full"
+                    />
                   </div>
 
                   {/* Payment Mode */}

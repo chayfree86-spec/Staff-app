@@ -63,10 +63,12 @@ export const AdvanceScreen: React.FC = () => {
     0
   );
 
-  // Filter staff list based on search
-  const filteredStaff = activeStaff.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filter staff list based on search and positive outstanding advance (> 0)
+  const filteredStaff = activeStaff.filter(s => {
+    const outstanding = getOutstandingAdvance(s.id);
+    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
+    return outstanding > 0 && matchesSearch;
+  });
 
   const handleGiveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -248,13 +250,80 @@ export const AdvanceScreen: React.FC = () => {
             />
           </div>
 
-          {/* List of advances in page (Table Format) */}
+          {/* List of advances in page (Table Format / Mobile Cards) */}
           <div className="flex flex-col gap-3.5">
             <h4 className="text-[10px] font-black text-app-text-secondary uppercase tracking-[0.15em] select-none px-1">
               Advances History Ledger
             </h4>
             
-            <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[20px] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
+            {/* Mobile Card List */}
+            <div className="flex flex-col gap-3.5 sm:hidden">
+              {filteredStaffAdvances.map((adv) => (
+                <div 
+                  key={adv.id}
+                  className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-2xl p-1 shadow-sm"
+                >
+                  <div className="bg-app-surface border border-app-border/40 rounded-[calc(1rem-0.125rem)] p-4 flex flex-col gap-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-semibold text-app-text-secondary">
+                        {format(parseISO(adv.date), 'dd MMM yyyy')}
+                      </span>
+                      <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black tracking-wider uppercase select-none ${
+                        adv.amount < 0 
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400' 
+                          : 'bg-primary/10 text-primary dark:bg-primary/20'
+                      }`}>
+                        {adv.amount < 0 ? 'Credit' : 'Debit'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-end">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[8px] uppercase font-bold text-app-text-secondary tracking-wider leading-none">Remarks</span>
+                        <span className="text-xs font-bold text-app-text-primary mt-1">{adv.remarks}</span>
+                      </div>
+                      
+                      <div className="text-right">
+                        <span className="text-[8px] uppercase font-bold text-app-text-secondary tracking-wider leading-none block">Amount</span>
+                        <span className={`text-base font-black leading-none block mt-1 ${
+                          adv.amount < 0 
+                            ? 'text-emerald-600 dark:text-emerald-500' 
+                            : 'text-primary'
+                        }`}>
+                          {adv.amount < 0 ? '-' : '+'}₹{Math.abs(adv.amount).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 pt-3 border-t border-app-border/40 mt-1">
+                      <button
+                        onClick={() => startEdit(adv)}
+                        className="px-3 py-1.5 rounded-xl text-indigo-600 bg-indigo-500/10 hover:bg-indigo-500/20 dark:hover:bg-indigo-950/30 flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-rounded select-none text-sm">edit</span>
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(adv.id)}
+                        className="px-3 py-1.5 rounded-xl text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 dark:hover:bg-rose-950/30 flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-rounded select-none text-sm">delete</span>
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {filteredStaffAdvances.length === 0 && (
+                <div className="bg-app-surface border border-app-border/50 rounded-2xl p-8 text-center text-xs text-app-text-secondary font-semibold">
+                  No transactions found for this period.
+                </div>
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[20px] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
               <div className="bg-app-surface border border-app-border/40 rounded-[15px] overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
@@ -356,40 +425,40 @@ export const AdvanceScreen: React.FC = () => {
     return (
       <div className="flex flex-col gap-6 animate-in fade-in duration-200">
         {/* Header bar */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setScreen('more')}
+              className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer shrink-0"
+            >
+              <span className="material-symbols-rounded select-none">arrow_back</span>
+            </button>
+            <h2 className="text-sm font-black text-app-text-primary tracking-tight select-none">Advance Ledger</h2>
+          </div>
+          
           <button
-            onClick={() => setScreen('more')}
-            className="w-10 h-10 rounded-full bg-app-surface border border-app-border text-app-text-secondary flex items-center justify-center hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer"
+            onClick={() => {
+              setGiveError('');
+              setIsGiveModalOpen(true);
+            }}
+            className="group/btn px-4 py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:opacity-95 shadow-sm transition-all duration-300 active:scale-95 cursor-pointer shrink-0"
           >
-            <span className="material-symbols-rounded select-none">arrow_back</span>
+            <span>Give Advance</span>
+            <div className="w-5.5 h-5.5 rounded-full bg-white/20 flex items-center justify-center group-hover/btn:scale-110 transition-transform">
+              <span className="material-symbols-rounded text-xs select-none">add</span>
+            </div>
           </button>
-          <h2 className="text-sm font-black text-app-text-primary tracking-tight select-none">Advance Ledger</h2>
         </div>
 
         {/* Outstanding Summary card */}
         <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[1.25rem] p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.015)]">
-          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-between gap-4">
-            <div>
-              <div className="rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.2em] font-black bg-amber-500/10 text-amber-600 w-max select-none">
-                Total Outstanding Advance
-              </div>
-              <h3 className="text-3xl font-black text-amber-500 mt-2.5">
-                ₹{totalOutstanding.toLocaleString('en-IN')}
-              </h3>
+          <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+            <div className="rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.2em] font-black bg-amber-500/10 text-amber-600 w-max select-none">
+              Total Outstanding Advance
             </div>
-            
-            <button
-              onClick={() => {
-                setGiveError('');
-                setIsGiveModalOpen(true);
-              }}
-              className="group/btn pl-4 pr-2 py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 hover:opacity-95 shadow-sm transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer"
-            >
-              <span>Give Advance</span>
-              <div className="w-5.5 h-5.5 rounded-full bg-white/20 flex items-center justify-center group-hover/btn:scale-110 transition-transform">
-                <span className="material-symbols-rounded text-xs select-none">add</span>
-              </div>
-            </button>
+            <h3 className="text-3xl font-black text-amber-500 mt-2.5">
+              ₹{totalOutstanding.toLocaleString('en-IN')}
+            </h3>
           </div>
         </div>
 
@@ -418,8 +487,70 @@ export const AdvanceScreen: React.FC = () => {
             </div>
           </div>
           
-          {/* Staff cards grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+          {/* Staff cards grid / Mobile List */}
+          {/* Mobile List View */}
+          <div className="flex flex-col gap-2.5 sm:hidden">
+            {filteredStaff.map((s) => {
+              const outstanding = getOutstandingAdvance(s.id);
+              const initials = s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+              const profileGradient = getProfileGradient(s.name);
+              
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => {
+                    setSelectedStaffIdForHistory(s.id);
+                    setHistoryMonthFilter('All');
+                  }}
+                  className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-xl p-1 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  <div className="bg-app-surface border border-app-border/40 rounded-[10px] p-3.5 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      {s.profileImage ? (
+                        <img
+                          src={s.profileImage}
+                          alt={s.name}
+                          className="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-app-border/40"
+                        />
+                      ) : (
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${profileGradient} text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0`}>
+                          {initials}
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="font-bold text-app-text-primary text-xs">{s.name}</h4>
+                        <span className="text-[8px] font-black text-app-text-secondary uppercase tracking-wider block mt-0.5">Staff Ledger</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <span className="text-[7.5px] font-black text-app-text-secondary uppercase tracking-[0.12em] leading-none block">Outstanding</span>
+                        <span className={`text-sm font-black mt-1 leading-none block ${outstanding > 0 ? 'text-amber-500 font-extrabold' : 'text-app-text-secondary'}`}>
+                          ₹{outstanding.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                      <div className="w-6.5 h-6.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-rounded select-none text-xs font-bold">chevron_right</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {filteredStaff.length === 0 && (
+              <div className="bg-app-surface border border-app-border rounded-xl p-12 text-center text-app-text-secondary">
+                <span className="material-symbols-rounded text-4xl text-slate-300 dark:text-slate-700 select-none">
+                  group
+                </span>
+                <p className="mt-2 text-sm font-semibold">No staff members found.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table/Grid View */}
+          <div className="hidden sm:grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
             {filteredStaff.map((s) => {
               const outstanding = getOutstandingAdvance(s.id);
               const initials = s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();

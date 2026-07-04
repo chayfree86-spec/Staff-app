@@ -49,7 +49,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
   staffId,
   monthLabel,
 }) => {
-  const { staffList, attendance, advanceList, deductionList, payoutList, businessInfo, settings } = useStore();
+  const { staffList, attendance, advanceList, deductionList, payoutList, businessInfo, settings, currentDate } = useStore();
 
   const staff = staffList.find((s) => s.id === staffId);
   if (!staff || !isOpen) return null;
@@ -76,6 +76,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
   let holidayDays = 0;
 
   Object.entries(attendance).forEach(([dateStr, record]) => {
+    if (dateStr > currentDate) return;
     if (dateStr.startsWith(targetYearMonth) && record[staffId]) {
       const status = record[staffId].status;
       if (status === 'Present') presentDays++;
@@ -249,20 +250,20 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
               <h3 className="text-[8px] font-bold text-app-text-secondary uppercase tracking-widest leading-none">Attendance Summary</h3>
               <div className="grid grid-cols-5 bg-app-surface border border-app-border/50 rounded-xl py-1.5 text-center text-[9px] font-bold">
                 <div className="border-r border-app-border/30">
-                  <div className="text-app-text-secondary text-[7px] uppercase">Present</div>
-                  <div className="text-app-text-primary font-black mt-0.5">{presentDays}</div>
+                  <div className="text-emerald-600 dark:text-emerald-500 text-[7px] uppercase">Present</div>
+                  <div className="text-emerald-600 dark:text-emerald-500 font-black mt-0.5">{presentDays}</div>
                 </div>
                 <div className="border-r border-app-border/30">
-                  <div className="text-app-text-secondary text-[7px] uppercase">Half Day</div>
-                  <div className="text-app-text-primary font-black mt-0.5">{halfDays}</div>
+                  <div className="text-amber-500 dark:text-amber-400 text-[7px] uppercase">Half Day</div>
+                  <div className="text-amber-500 dark:text-amber-400 font-black mt-0.5">{halfDays}</div>
                 </div>
                 <div className="border-r border-app-border/30">
-                  <div className="text-app-text-secondary text-[7px] uppercase">Holiday</div>
-                  <div className="text-app-text-primary font-black mt-0.5">{holidayDays}</div>
+                  <div className="text-blue-500 dark:text-blue-400 text-[7px] uppercase">Holiday</div>
+                  <div className="text-blue-500 dark:text-blue-400 font-black mt-0.5">{holidayDays}</div>
                 </div>
                 <div className="border-r border-app-border/30">
-                  <div className="text-app-text-secondary text-[7px] uppercase">Absent</div>
-                  <div className="text-app-text-primary font-black mt-0.5">{absentDays}</div>
+                  <div className="text-rose-500 dark:text-rose-400 text-[7px] uppercase">Absent</div>
+                  <div className="text-rose-500 dark:text-rose-400 font-black mt-0.5">{absentDays}</div>
                 </div>
                 <div>
                   <div className="text-primary text-[7px] uppercase">Paid Days</div>
@@ -383,24 +384,24 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="px-6 py-3.5 bg-app-bg border-t border-app-border/60 flex justify-end gap-2 shrink-0">
-          <button
-            onClick={handleShare}
-            className="px-3.5 py-1.5 bg-app-surface border border-app-border hover:bg-slate-50 dark:hover:bg-slate-800 text-app-text-primary rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>share</span>
-            <span>Share Slip</span>
-          </button>
+        <div className="px-6 py-4 bg-app-bg border-t border-app-border/60 flex flex-col sm:flex-row sm:justify-end gap-2 shrink-0 w-full">
           <button
             onClick={handlePrint}
-            className="px-3.5 py-1.5 bg-primary text-white hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+            className="w-full sm:w-auto px-4 py-3 bg-primary text-white hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-[0.98]"
           >
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '14px' }}>download</span>
+            <span className="material-symbols-rounded select-none" style={{ fontSize: '15px' }}>download</span>
             <span>Download PDF / Print</span>
           </button>
           <button
+            onClick={handleShare}
+            className="w-full sm:w-auto px-4 py-3 bg-app-surface border border-app-border hover:bg-slate-50 dark:hover:bg-slate-800 text-app-text-primary rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
+          >
+            <span className="material-symbols-rounded select-none" style={{ fontSize: '15px' }}>share</span>
+            <span>Share Slip</span>
+          </button>
+          <button
             onClick={onClose}
-            className="px-3.5 py-1.5 bg-app-surface border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all cursor-pointer"
+            className="w-full sm:w-auto px-4 py-3 bg-app-surface border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all flex items-center justify-center cursor-pointer active:scale-[0.98]"
           >
             Close
           </button>

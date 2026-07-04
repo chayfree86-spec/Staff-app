@@ -1,4 +1,4 @@
-const CACHE_NAME = 'staff-app-cache-v3';
+const CACHE_NAME = 'staff-app-cache-v4';
 const OFFLINE_URL = '/';
 
 const INITIAL_CACHES = [
@@ -6,7 +6,25 @@ const INITIAL_CACHES = [
   '/index.html',
   '/manifest.json',
   '/pwa-icon.png',
+  '/material-symbols-rounded.ttf',
 ];
+
+// Helper to fetch resource with a timeout (in milliseconds)
+const fetchWithTimeout = (request, timeoutMs = 1000) => {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error('Fetch timeout')), timeoutMs);
+    fetch(request).then(
+      (response) => {
+        clearTimeout(timeoutId);
+        resolve(response);
+      },
+      (err) => {
+        clearTimeout(timeoutId);
+        reject(err);
+      }
+    );
+  });
+};
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -38,6 +56,36 @@ self.addEventListener('fetch', (event) => {
 
   // CRITICAL: NEVER cache API calls. Data must always come directly from the API.
   if (event.request.url.includes('/api/')) {
+    return;
+  }
+
+  // Network-First with Cache-Fallback and Timeout for local static graphics, fonts, and assets:
+  // This allows updated files on the server to load immediately on refresh,
+  // while falling back to cached versions within 1 second if offline or on a slow connection.
+  const isStaticAsset = 
+    event.request.url.includes('/material-symbols-rounded.ttf') || 
+    event.request.url.includes('/pwa-icon.png') ||
+    event.request.url.includes('/favicon.svg') ||
+    event.request.url.includes('/logo-transparent.png') ||
+    event.request.url.includes('/splashbg.png');
+
+  if (isStaticAsset) {
+    event.respondWith(
+      fetchWithTimeout(event.request, 1000)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // If timeout or network failure, load from cache instantly
+          return caches.match(event.request);
+        })
+    );
     return;
   }
 

@@ -19,12 +19,13 @@ export const StaffScreen: React.FC = () => {
     setScreen,
     setActiveStaffProfileId,
     currentDate,
+    isAddStaffModalOpen,
+    setIsAddStaffModalOpen,
   } = useStore();
 
   const { alert } = useAlertConfirm();
 
   const [search, setSearch] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
@@ -135,7 +136,7 @@ export const StaffScreen: React.FC = () => {
     setAddress('');
     setProfileImage('');
     setSalary('');
-    setIsModalOpen(false);
+    setIsAddStaffModalOpen(false);
   };
 
   const handleOpenEdit = (staff: any) => {
@@ -241,33 +242,17 @@ export const StaffScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5 pb-24 animate-in fade-in duration-200">
+    <div className="flex flex-col gap-5 pb-44 animate-in fade-in duration-200">
       
       {/* Title bar: Heading and Add Button */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-black text-app-text-primary tracking-tight">Staff</h2>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => setIsAddStaffModalOpen(true)}
           className="w-10 h-10 rounded-full bg-app-surface border border-app-border flex items-center justify-center text-app-text-primary shadow-sm hover:border-primary/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95 cursor-pointer"
         >
           <span className="material-symbols-rounded select-none text-[20px]">add</span>
         </button>
-      </div>
-
-      {/* Search Bar - Double Bezel Look */}
-      <div className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-2xl p-1 shadow-sm">
-        <div className="relative bg-app-surface border border-app-border/40 rounded-[calc(1rem-0.125rem)]">
-          <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
-            search
-          </span>
-          <input
-            type="text"
-            placeholder="Search staff members..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-transparent text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none font-semibold"
-          />
-        </div>
       </div>
 
       {/* Staff list cards grid (Halved radius: 2.5rem -> 1.25rem, inner core: calc(2.5rem-0.25rem) i.e. 36px -> 18px) */}
@@ -356,6 +341,24 @@ export const StaffScreen: React.FC = () => {
           );
         })}
 
+        {/* "Add New Staff" Card - styled like a staff card */}
+        <div
+          onClick={() => setIsAddStaffModalOpen(true)}
+          className="bg-black/[0.015] dark:bg-white/[0.015] border border-dashed border-app-border hover:border-primary/50 dark:hover:border-primary/70 rounded-[1.25rem] p-1 shadow-sm transition-all duration-300 active:scale-98 cursor-pointer group"
+        >
+          <div className="h-full min-h-[110px] bg-app-surface/50 border border-dashed border-app-border/60 rounded-[18px] flex flex-col items-center justify-center py-6 px-5 hover:bg-app-surface transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] text-app-text-secondary hover:text-primary">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#A855F7]/10 to-[#7C3AED]/10 text-primary flex items-center justify-center shadow-sm shrink-0 border border-primary/20 group-hover:scale-105 transition-transform duration-300">
+              <span className="material-symbols-rounded select-none text-xl">person_add</span>
+            </div>
+            <span className="text-[11px] font-black uppercase tracking-wider mt-3 select-none leading-none">
+              Add New Staff
+            </span>
+            <p className="text-[9px] text-app-text-secondary/70 font-semibold mt-1.5 select-none leading-none">
+              Register another employee
+            </p>
+          </div>
+        </div>
+
         {filteredStaff.length === 0 && (
           <div className="col-span-full bg-app-surface border border-app-border rounded-app-card p-12 text-center text-app-text-secondary">
             <span className="material-symbols-rounded text-4xl text-slate-300 dark:text-slate-700">
@@ -366,16 +369,34 @@ export const StaffScreen: React.FC = () => {
         )}
       </div>
 
+      {/* Search Bar - Double Bezel Look (Fixed position above bottom menu bar) */}
+      <div className="fixed bottom-[calc(56px+env(safe-area-inset-bottom))] left-0 right-0 bg-app-surface/90 backdrop-blur-md border-t border-app-border p-4 z-30 shadow-[0_-8px_20px_rgba(0,0,0,0.04)] select-none">
+        <div className="max-w-md mx-auto bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-2xl p-1">
+          <div className="relative bg-app-surface border border-app-border/40 rounded-[calc(1rem-0.125rem)]">
+            <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
+              search
+            </span>
+            <input
+              type="text"
+              placeholder="Search staff members..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-transparent text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none font-semibold"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Add Staff Dialog */}
-      {isModalOpen && (
+      {isAddStaffModalOpen && (
         <CustomDialog
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          isOpen={isAddStaffModalOpen}
+          onClose={() => setIsAddStaffModalOpen(false)}
           title="Register New Staff Member"
           actions={
             <>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => setIsAddStaffModalOpen(false)}
                 className="px-4 py-2 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
               >
                 Cancel

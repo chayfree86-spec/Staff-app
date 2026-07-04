@@ -95,6 +95,7 @@ interface AppState {
   activeStaffProfileId: string | null;
   currentDate: string; // YYYY-MM-DD
   searchQuery: string;
+  isAddStaffModalOpen: boolean;
   staffList: Staff[];
   attendance: Record<string, Record<string, AttendanceRecord>>; // date -> staffId -> record
   advanceList: AdvanceRecord[];
@@ -116,6 +117,7 @@ interface AppState {
   setActiveStaffProfileId: (id: string | null) => void;
   setCurrentDate: (date: string) => void;
   setSearchQuery: (query: string) => void;
+  setIsAddStaffModalOpen: (open: boolean) => void;
   addStaff: (staff: Omit<Staff, 'id' | 'avatar' | 'perDaySalary'>) => void;
   updateStaff: (id: string, updates: Partial<Staff>) => void;
   deleteStaff: (id: string) => void;
@@ -184,6 +186,7 @@ export const useStore = create<AppState>((set, get) => ({
   activeStaffProfileId: null,
   currentDate: new Date().toISOString().split('T')[0],
   searchQuery: '',
+  isAddStaffModalOpen: false,
   staffList: [],
   attendance: {},
   advanceList: [],
@@ -268,6 +271,7 @@ export const useStore = create<AppState>((set, get) => ({
   setActiveStaffProfileId: (id) => set({ activeStaffProfileId: id }),
   setCurrentDate: (date) => set({ currentDate: date }),
   setSearchQuery: (query) => set({ searchQuery: query }),
+  setIsAddStaffModalOpen: (open) => set({ isAddStaffModalOpen: open }),
 
   addStaff: (staff) => {
     const initials = staff.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);

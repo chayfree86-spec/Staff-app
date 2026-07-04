@@ -75,6 +75,7 @@ export const ReportsScreen: React.FC = () => {
     let daysAbsent = 0;
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
+      if (dateStr > currentDate) return;
       if (dateStr.startsWith(targetYearMonth) && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;
@@ -230,7 +231,7 @@ export const ReportsScreen: React.FC = () => {
       </div>
 
       {/* Financial Summary Dashboard */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {/* Payouts Card */}
         <div className="bg-blue-500/5 dark:bg-blue-500/10 rounded-2xl p-4 border border-blue-500/10 dark:border-blue-500/20 flex flex-col gap-1">
           <span className="material-symbols-rounded text-blue-500 select-none text-lg">payments</span>
@@ -260,8 +261,119 @@ export const ReportsScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Staff Slips Table Section */}
-      <div className="bg-black/[0.012] dark:bg-white/[0.012] border border-app-border rounded-[22px] p-1.5 shadow-sm overflow-hidden">
+      {/* Staff Slips Table / Cards Section */}
+      {/* Mobile Card List */}
+      <div className="flex flex-col gap-3.5 sm:hidden">
+        {filteredStaff.length > 0 ? (
+          filteredStaff.map((staff) => {
+            const details = getSalaryDetails(staff.id, selectedYearMonth, selectedMonthLabel);
+            const outstandingAdv = getStaffOutstandingAdvance(staff.id);
+            const initials = staff.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+            return (
+              <div 
+                key={staff.id}
+                className="bg-black/[0.012] dark:bg-white/[0.012] border border-app-border rounded-2xl p-1 shadow-sm"
+              >
+                <div className="bg-app-surface border border-app-border/40 rounded-[calc(1rem-0.125rem)] p-4 flex flex-col gap-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-xs flex items-center justify-center shadow-sm select-none`}>
+                      {initials}
+                    </div>
+                    <div>
+                      <div className="font-bold text-app-text-primary text-xs">{staff.name}</div>
+                      <div className="text-[9px] text-app-text-secondary mt-0.5">{getStaffRoleText(staff)}</div>
+                    </div>
+                  </div>
+
+                  {/* Attendance pills */}
+                  <div className="flex flex-wrap items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wider select-none bg-app-bg/50 p-2 rounded-xl border border-app-border/40">
+                    <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md">
+                      {details.daysPresent}P
+                    </span>
+                    {details.daysHalf > 0 && (
+                      <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md">
+                        {details.daysHalf}HD
+                      </span>
+                    )}
+                    {details.daysHoliday > 0 && (
+                      <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md">
+                        {details.daysHoliday}H
+                      </span>
+                    )}
+                    {details.daysAbsent > 0 && (
+                      <span className="px-1.5 py-0.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-md">
+                        {details.daysAbsent}A
+                      </span>
+                    )}
+                    <span className="text-app-text-secondary font-bold text-[8px] ml-auto">
+                      ({details.totalDaysCredited} Paid Days)
+                    </span>
+                  </div>
+
+                  {/* Financial metrics */}
+                  <div className="grid grid-cols-3 gap-2 text-center py-1">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[7.5px] font-black text-app-text-secondary uppercase tracking-[0.12em] leading-none">Deduction</span>
+                      <span className="text-xs font-black text-rose-600 mt-1">
+                        ₹{details.deduction.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[7.5px] font-black text-app-text-secondary uppercase tracking-[0.12em] leading-none">Advance (OS)</span>
+                      <span className="text-xs font-black text-rose-600 mt-1">
+                        ₹{details.advanceAdjusted.toLocaleString('en-IN')}
+                      </span>
+                      {outstandingAdv > 0 && (
+                        <span className="text-[6.5px] text-amber-600 dark:text-amber-400 font-black mt-0.5 uppercase tracking-wide">
+                          (Bal: ₹{outstandingAdv})
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[7.5px] font-black text-app-text-secondary uppercase tracking-[0.12em] leading-none">Net Salary</span>
+                      <span className="text-xs font-black text-app-text-primary mt-1">
+                        ₹{details.net.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions & Status row */}
+                  <div className="flex justify-between items-center pt-3 border-t border-app-border/40 mt-1">
+                    <span className={`inline-block text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                      details.paid >= details.net
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-450 border border-emerald-500/20'
+                        : details.paid > 0
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                        : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                    }`}>
+                      {details.paid >= details.net ? 'Fully Paid' : details.paid > 0 ? 'Partially Paid' : 'Unpaid'}
+                    </span>
+                    
+                    <button
+                      onClick={() => handleOpenSlip(staff.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white hover:opacity-95 font-bold rounded-xl text-[10px] uppercase tracking-wider transition-all duration-300 active:scale-95 cursor-pointer shadow-sm shadow-indigo-500/15"
+                    >
+                      <span className="material-symbols-rounded select-none text-[12px] font-bold">receipt_long</span>
+                      <span>View Slip</span>
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="bg-app-surface border border-app-border rounded-2xl p-8 text-center text-xs text-app-text-secondary font-semibold">
+            No employees found matching search query.
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden sm:block bg-black/[0.012] dark:bg-white/[0.012] border border-app-border rounded-[22px] p-1.5 shadow-sm overflow-hidden">
         <div className="bg-app-surface border border-app-border/40 rounded-[18px] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">

@@ -23,7 +23,7 @@ const loadRememberedLogin = (): RememberedLogin | null => {
 };
 
 function App() {
-  const { isLoggedIn, isSessionRestoring, login, restoreSession, triggerAutoAttendance, currentDate, settings, businessInfo } = useStore();
+  const { isLoggedIn, isSessionRestoring, login, restoreSession, triggerAutoAttendance, currentDate, settings, businessInfo, currentUser } = useStore();
   const [identifierInput, setIdentifierInput] = useState(() => loadRememberedLogin()?.identifier ?? '');
   const [passwordInput, setPasswordInput] = useState(() => loadRememberedLogin()?.secret ?? '');
   const [loginMethod, setLoginMethod] = useState<'password' | 'pin'>(() => loadRememberedLogin()?.method ?? 'password');
@@ -34,6 +34,18 @@ function App() {
 
   const handlePinChange = (value: string, index: number) => {
     const cleaned = value.replace(/\D/g, '');
+    
+    // Handle autofill/paste of multiple digits (e.g. "1234")
+    if (cleaned.length > 1) {
+      const pinArray = cleaned.slice(0, 4).split('');
+      const finalVal = pinArray.join('');
+      setPasswordInput(finalVal);
+      
+      const nextIndex = Math.min(pinArray.length - 1, 3);
+      pinRefs.current[nextIndex]?.focus();
+      return;
+    }
+
     if (!cleaned) {
       const newPin = passwordInput.split('');
       newPin[index] = '';
@@ -42,7 +54,7 @@ function App() {
       return;
     }
 
-    const val = cleaned[cleaned.length - 1];
+    const val = cleaned;
     const newPin = passwordInput.split('');
     for (let k = 0; k < index; k++) {
       if (!newPin[k]) newPin[k] = '';
@@ -96,6 +108,16 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, triggerAutoAttendance]);
+
+  // Load saved credentials on logout
+  useEffect(() => {
+    if (!isLoggedIn) {
+      const saved = loadRememberedLogin();
+      setIdentifierInput(saved?.identifier ?? '');
+      setPasswordInput(saved?.secret ?? '');
+      setLoginMethod(saved?.method ?? 'password');
+    }
+  }, [isLoggedIn]);
   // Auto-detect login method based on input value (digits/mobile -> PIN, email/text -> Password)
   useEffect(() => {
     const trimmed = identifierInput.trim();
@@ -146,11 +168,9 @@ function App() {
           JSON.stringify({ identifier: identifierInput, secret: passwordInput, method: loginMethod })
         );
       } catch {
-        // localStorage unavailable (e.g. private browsing) — not remembering is fine.
+        // ignore
       }
       setError('');
-      setIdentifierInput('');
-      setPasswordInput('');
     } else {
       setError('Invalid login details. Try again.');
     }
@@ -284,6 +304,15 @@ function App() {
             50% { transform: translate3d(15px, 4px, 0); }
             100% { transform: translate3d(0, -5px, 0); }
           }
+          @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .animate-gradient-move {
+            background-size: 200% 200%;
+            animation: gradient-move 3s ease infinite;
+          }
         `}</style>
 
         {/* Top Wave Header */}
@@ -404,10 +433,15 @@ function App() {
                 className="w-16 h-16 rounded-2xl object-cover shadow-lg border border-app-border/40 hover:scale-105 transition-transform duration-300"
               />
               <div className="text-center">
-                <h1 className="text-lg font-black tracking-tight text-app-text-primary">
-                  {businessInfo.name || 'Staff App'}
+                <h1 className="text-2xl font-black tracking-tight select-none">
+                  <span className="text-app-text-primary">Easy</span>
+                  <span className="text-indigo-600 dark:text-indigo-400">Attendance</span>
                 </h1>
-                <p className="text-[10px] font-bold text-app-text-secondary uppercase tracking-[0.2em] mt-1">Business Manager</p>
+                <p className="text-[9px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-widest mt-1.5 flex items-center justify-center gap-2.5 select-none">
+                  <span className="w-5 h-[1.5px] bg-indigo-500/20 dark:bg-indigo-400/30 rounded-full shrink-0"></span>
+                  <span>STAFF ATTENDANCE MADE EASY</span>
+                  <span className="w-5 h-[1.5px] bg-indigo-500/20 dark:bg-indigo-400/30 rounded-full shrink-0"></span>
+                </p>
               </div>
             </div>
 
@@ -432,7 +466,7 @@ function App() {
                     placeholder="Enter mobile or email..."
                     value={identifierInput}
                     onChange={(e) => setIdentifierInput(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary placeholder:text-app-text-secondary focus:outline-none focus:border-primary transition-all font-bold"
+                    className="w-full pl-11 pr-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-indigo-600 dark:text-indigo-400 placeholder:text-app-text-secondary focus:outline-none focus:border-indigo-500 transition-all font-black"
                   />
                 </div>
               </div>
@@ -443,20 +477,32 @@ function App() {
                 </label>
                 {loginMethod === 'pin' ? (
                   <div className="flex justify-center gap-3 max-w-xs mx-auto w-full py-1">
-                    {[0, 1, 2, 3].map((index) => (
-                      <input
-                        key={index}
-                        ref={(el) => { pinRefs.current[index] = el; }}
-                        type="password"
-                        inputMode="numeric"
-                        maxLength={1}
-                        value={passwordInput[index] || ''}
-                        onChange={(e) => handlePinChange(e.target.value, index)}
-                        onKeyDown={(e) => handlePinKeyDown(e, index)}
-                        onPaste={index === 0 ? handlePinPaste : undefined}
-                        className="w-12 h-12 text-center text-xl font-black bg-app-bg border border-app-border rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-app-text-primary"
-                      />
-                    ))}
+                    {[0, 1, 2, 3].map((index) => {
+                      const hasDigit = passwordInput.length > index;
+                      return (
+                        <div key={index} className="relative w-12 h-12 group/pin">
+                          <input
+                            ref={(el) => { pinRefs.current[index] = el; }}
+                            type="password"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={passwordInput[index] || ''}
+                            onChange={(e) => handlePinChange(e.target.value, index)}
+                            onKeyDown={(e) => handlePinKeyDown(e, index)}
+                            onPaste={index === 0 ? handlePinPaste : undefined}
+                            className="absolute inset-0 w-full h-full text-center text-transparent bg-transparent border-2 border-app-border rounded-xl focus:outline-none focus:border-indigo-500 transition-all focus:scale-105 z-10 caret-transparent selection:bg-transparent"
+                            autoComplete="one-time-code"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-xl bg-app-bg border border-app-border group-focus-within/pin:border-indigo-500 transition-all">
+                            {hasDigit ? (
+                              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-500 to-emerald-400 animate-gradient-move shadow-[0_0_8px_rgba(139,92,246,0.3)] shrink-0" />
+                            ) : (
+                              <div className="w-1 h-1 rounded-full bg-app-border/70 group-hover/pin:bg-indigo-500/40 transition-colors shrink-0" />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="relative">

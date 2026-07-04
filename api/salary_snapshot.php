@@ -25,6 +25,7 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
     $stmt = $pdo->prepare(
         "SELECT status, COUNT(*) AS cnt FROM attendance_records
          WHERE business_id = ? AND staff_id = ? AND DATE_FORMAT(attendance_date, '%Y-%m') = ?
+           AND attendance_date <= CURRENT_DATE()
          GROUP BY status"
     );
     $stmt->execute([$businessId, $staffId, $monthPrefix]);
