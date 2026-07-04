@@ -278,7 +278,6 @@ export const useStore = create<AppState>((set, get) => ({
       avatar: initials,
       perDaySalary: Math.round(staff.salaryType === 'Monthly' ? staff.monthlySalary / 30 : staff.monthlySalary),
     };
-    
     // Auto-mark attendance from joiningDate to currentDate (inclusive)
     const start = parseISO(staff.joiningDate);
     const end = parseISO(get().currentDate);

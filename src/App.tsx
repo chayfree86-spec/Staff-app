@@ -1,12 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from './components/Layout';
-import { InteractiveGridBackground } from './components/InteractiveGridBackground';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import { useStore } from './store/useStore';
+
+// Remembers the last identifier/secret/method used to sign in, so the login
+// form is pre-filled (including PIN) the next time the app is opened.
+const REMEMBER_LOGIN_KEY = 'staffapp_remember_login';
+
+interface RememberedLogin {
+  identifier: string;
+  secret: string;
+  method: 'password' | 'pin';
+}
+
+const loadRememberedLogin = (): RememberedLogin | null => {
+  try {
+    const raw = localStorage.getItem(REMEMBER_LOGIN_KEY);
+    return raw ? (JSON.parse(raw) as RememberedLogin) : null;
+  } catch {
+    return null;
+  }
+};
 
 function App() {
   const { isLoggedIn, isSessionRestoring, login, restoreSession, triggerAutoAttendance, currentDate, settings, businessInfo } = useStore();
-  const [identifierInput, setIdentifierInput] = useState('');
-  const [passwordInput, setPasswordInput] = useState('');
+  const [identifierInput, setIdentifierInput] = useState(() => loadRememberedLogin()?.identifier ?? '');
+  const [passwordInput, setPasswordInput] = useState(() => loadRememberedLogin()?.secret ?? '');
+  const [loginMethod, setLoginMethod] = useState<'password' | 'pin'>(() => loadRememberedLogin()?.method ?? 'password');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const pinRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -60,9 +82,6 @@ function App() {
       pinRefs.current[targetIndex]?.focus();
     }
   };
-  const [loginMethod, setLoginMethod] = useState<'password' | 'pin'>('password');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     restoreSession();
@@ -101,6 +120,7 @@ function App() {
     });
   }, [identifierInput]);
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifierInput.trim()) {
@@ -120,6 +140,14 @@ function App() {
     const success = await login(identifierInput, passwordInput, loginMethod);
     setIsSubmitting(false);
     if (success) {
+      try {
+        localStorage.setItem(
+          REMEMBER_LOGIN_KEY,
+          JSON.stringify({ identifier: identifierInput, secret: passwordInput, method: loginMethod })
+        );
+      } catch {
+        // localStorage unavailable (e.g. private browsing) — not remembering is fine.
+      }
       setError('');
       setIdentifierInput('');
       setPasswordInput('');
@@ -130,13 +158,107 @@ function App() {
 
   if (isSessionRestoring) {
     return (
-      <div className="min-h-screen bg-app-bg text-app-text-primary flex items-center justify-center p-6 relative overflow-hidden select-none">
-        <InteractiveGridBackground />
-        <div className="flex flex-col items-center gap-4.5 z-10">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-500 animate-spin flex items-center justify-center shadow-lg shadow-indigo-500/10 border border-white/10">
-            <span className="material-symbols-rounded text-white select-none animate-pulse-slow" style={{ fontSize: '22px' }}>sync</span>
+      <div className="min-h-screen w-screen bg-[#FAF9FF] flex items-center justify-center relative overflow-hidden select-none">
+        {/* Inline style for wave animations */}
+        <style>{`
+          @keyframes wave-move-1 {
+            0% { transform: translate3d(-20px, 0, 0); }
+            50% { transform: translate3d(20px, 5px, 0); }
+            100% { transform: translate3d(-20px, 0, 0); }
+          }
+          @keyframes wave-move-2 {
+            0% { transform: translate3d(20px, 0, 0); }
+            50% { transform: translate3d(-20px, -6px, 0); }
+            100% { transform: translate3d(20px, 0, 0); }
+          }
+          @keyframes wave-move-3 {
+            0% { transform: translate3d(0, -5px, 0); }
+            50% { transform: translate3d(15px, 4px, 0); }
+            100% { transform: translate3d(0, -5px, 0); }
+          }
+          .animate-fade-in-up {
+            animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
+          @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+          }
+        `}</style>
+
+        {/* Static dots layer */}
+        <div className="absolute inset-0 bg-grid-dots opacity-15 pointer-events-none z-0" />
+
+        {/* Soft purple glow */}
+        <div 
+          className="absolute top-1/4 left-1/4 w-[350px] h-[350px] rounded-full pointer-events-none z-0 filter blur-[80px]" 
+          style={{ backgroundColor: 'rgba(124, 58, 237, 0.15)' }} 
+        />
+
+        {/* Wave Layers at the bottom */}
+        <div className="absolute inset-x-0 bottom-0 w-[120%] left-[-10%] h-[280px] overflow-hidden pointer-events-none z-10">
+          {/* Wave 1 */}
+          <svg 
+            className="absolute bottom-0 w-full h-full" 
+            viewBox="0 0 1440 320" 
+            preserveAspectRatio="none"
+            style={{
+              fill: '#7C3AED',
+              fillOpacity: 0.18,
+              filter: 'blur(3px)',
+              animation: 'wave-move-1 8s ease-in-out infinite',
+              willChange: 'transform',
+              transform: 'translateZ(0)',
+            }}
+          >
+            <path d="M0,160 C320,300 480,80 800,240 C1120,400 1280,120 1440,200 L1440,320 L0,320 Z" />
+          </svg>
+          
+          {/* Wave 2 */}
+          <svg 
+            className="absolute bottom-0 w-full h-full" 
+            viewBox="0 0 1440 320" 
+            preserveAspectRatio="none"
+            style={{
+              fill: '#8B5CF6',
+              fillOpacity: 0.15,
+              filter: 'blur(4px)',
+              animation: 'wave-move-2 10s ease-in-out infinite',
+              willChange: 'transform',
+              transform: 'translateZ(0)',
+            }}
+          >
+            <path d="M0,224 C320,120 640,300 960,180 C1280,60 1440,240 1440,240 L1440,320 L0,320 Z" />
+          </svg>
+          
+          {/* Wave 3 */}
+          <svg 
+            className="absolute bottom-0 w-full h-full" 
+            viewBox="0 0 1440 320" 
+            preserveAspectRatio="none"
+            style={{
+              fill: '#A855F7',
+              fillOpacity: 0.12,
+              filter: 'blur(5px)',
+              animation: 'wave-move-3 12s ease-in-out infinite',
+              willChange: 'transform',
+              transform: 'translateZ(0)',
+            }}
+          >
+            <path d="M0,128 C480,240 960,40 1440,160 L1440,320 L0,320 Z" />
+          </svg>
+        </div>
+
+        {/* Central Logo and Loader */}
+        <div className="flex flex-col items-center justify-center z-20 animate-fade-in-up px-6">
+          <img
+            src="/logo-transparent.png"
+            alt="EasyAttendance Logo"
+            className="w-64 sm:w-80 h-auto object-contain filter drop-shadow-[0_10px_25px_rgba(124,58,237,0.12)]"
+            style={{ imageRendering: '-webkit-optimize-contrast' }}
+          />
+          <div className="mt-8 flex flex-col items-center gap-2">
+            <div className="w-5 h-5 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
           </div>
-          <span className="text-[9px] font-black uppercase tracking-[0.25em] text-app-text-secondary select-none animate-pulse">Loading Session...</span>
         </div>
       </div>
     );
@@ -144,8 +266,133 @@ function App() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-app-bg text-app-text-primary flex items-center justify-center p-6 relative overflow-hidden select-none">
-        <InteractiveGridBackground />
+      <div className="min-h-screen bg-app-bg text-app-text-primary flex items-center justify-center p-6 bg-grid-dots select-none relative overflow-hidden">
+        {/* Style block for animations */}
+        <style>{`
+          @keyframes wave-move-1 {
+            0% { transform: translate3d(-20px, 0, 0); }
+            50% { transform: translate3d(20px, 5px, 0); }
+            100% { transform: translate3d(-20px, 0, 0); }
+          }
+          @keyframes wave-move-2 {
+            0% { transform: translate3d(20px, 0, 0); }
+            50% { transform: translate3d(-20px, -6px, 0); }
+            100% { transform: translate3d(20px, 0, 0); }
+          }
+          @keyframes wave-move-3 {
+            0% { transform: translate3d(0, -5px, 0); }
+            50% { transform: translate3d(15px, 4px, 0); }
+            100% { transform: translate3d(0, -5px, 0); }
+          }
+        `}</style>
+
+        {/* Top Wave Header */}
+        <div className="absolute inset-x-0 top-0 w-[120%] left-[-10%] h-[180px] sm:h-[220px] overflow-hidden pointer-events-none z-0">
+          {/* Header Wave 1 */}
+          <svg 
+            className="absolute top-0 w-full h-full rotate-180" 
+            viewBox="0 0 1440 320" 
+            preserveAspectRatio="none"
+            style={{
+              fill: '#7C3AED',
+              fillOpacity: 0.18,
+              filter: 'blur(3px)',
+              animation: 'wave-move-1 9s ease-in-out infinite',
+              willChange: 'transform',
+              transform: 'translateZ(0)',
+            }}
+          >
+            <path d="M0,160 C320,300 480,80 800,240 C1120,400 1280,120 1440,200 L1440,320 L0,320 Z" />
+          </svg>
+          
+          {/* Header Wave 2 */}
+          <svg 
+            className="absolute top-0 w-full h-full rotate-180" 
+            viewBox="0 0 1440 320" 
+            preserveAspectRatio="none"
+            style={{
+              fill: '#8B5CF6',
+              fillOpacity: 0.15,
+              filter: 'blur(4px)',
+              animation: 'wave-move-2 11s ease-in-out infinite',
+              willChange: 'transform',
+              transform: 'translateZ(0)',
+            }}
+          >
+            <path d="M0,224 C320,120 640,300 960,180 C1280,60 1440,240 1440,240 L1440,320 L0,320 Z" />
+          </svg>
+
+          {/* Header Wave 3 */}
+          <svg 
+            className="absolute top-0 w-full h-full rotate-180" 
+            viewBox="0 0 1440 320" 
+            preserveAspectRatio="none"
+            style={{
+              fill: '#A855F7',
+              fillOpacity: 0.12,
+              filter: 'blur(5px)',
+              animation: 'wave-move-3 13s ease-in-out infinite',
+              willChange: 'transform',
+              transform: 'translateZ(0)',
+            }}
+          >
+            <path d="M0,128 C480,240 960,40 1440,160 L1440,320 L0,320 Z" />
+          </svg>
+        </div>
+
+        {/* Bottom Wave Footer */}
+        <div className="absolute inset-x-0 bottom-0 w-[120%] left-[-10%] h-[180px] sm:h-[220px] overflow-hidden pointer-events-none z-0">
+          {/* Footer Wave 1 */}
+          <svg 
+            className="absolute bottom-0 w-full h-full" 
+            viewBox="0 0 1440 320" 
+            preserveAspectRatio="none"
+            style={{
+              fill: '#7C3AED',
+              fillOpacity: 0.18,
+              filter: 'blur(3px)',
+              animation: 'wave-move-1 8s ease-in-out infinite',
+              willChange: 'transform',
+              transform: 'translateZ(0)',
+            }}
+          >
+            <path d="M0,160 C320,300 480,80 800,240 C1120,400 1280,120 1440,200 L1440,320 L0,320 Z" />
+          </svg>
+
+          {/* Footer Wave 2 */}
+          <svg 
+            className="absolute bottom-0 w-full h-full" 
+            viewBox="0 0 1440 320" 
+            preserveAspectRatio="none"
+            style={{
+              fill: '#8B5CF6',
+              fillOpacity: 0.15,
+              filter: 'blur(3px)',
+              animation: 'wave-move-2 10s ease-in-out infinite',
+              willChange: 'transform',
+              transform: 'translateZ(0)',
+            }}
+          >
+            <path d="M0,224 C320,120 640,300 960,180 C1280,60 1440,240 1440,240 L1440,320 L0,320 Z" />
+          </svg>
+
+          {/* Footer Wave 3 */}
+          <svg 
+            className="absolute bottom-0 w-full h-full" 
+            viewBox="0 0 1440 320" 
+            preserveAspectRatio="none"
+            style={{
+              fill: '#A855F7',
+              fillOpacity: 0.12,
+              filter: 'blur(4px)',
+              animation: 'wave-move-3 12s ease-in-out infinite',
+              willChange: 'transform',
+              transform: 'translateZ(0)',
+            }}
+          >
+            <path d="M0,128 C480,240 960,40 1440,160 L1440,320 L0,320 Z" />
+          </svg>
+        </div>
         <div className="w-full max-w-md bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[2rem] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-10 relative">
           <div className="bg-app-surface border border-app-border/40 rounded-[26px] p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-6">
             
@@ -175,8 +422,10 @@ function App() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Mobile or Email</label>
                 <div className="relative">
-                  <span className="material-symbols-rounded absolute left-3.5 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
-                    account_circle
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-app-text-secondary select-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                      <path fillRule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clipRule="evenodd" />
+                    </svg>
                   </span>
                   <input
                     type="text"
@@ -211,8 +460,10 @@ function App() {
                   </div>
                 ) : (
                   <div className="relative">
-                    <span className="material-symbols-rounded absolute left-3.5 top-1/2 -translate-y-1/2 text-app-text-secondary select-none text-xl">
-                      lock
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-app-text-secondary select-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                        <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+                      </svg>
                     </span>
                     <input
                       type="password"
@@ -235,11 +486,17 @@ function App() {
             </form>
           </div>
         </div>
+        <PWAInstallPrompt />
       </div>
     );
   }
 
-  return <Layout />;
+  return (
+    <>
+      <Layout />
+      <PWAInstallPrompt />
+    </>
+  );
 }
 
 export default App;

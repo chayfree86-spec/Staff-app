@@ -233,10 +233,10 @@ export const Layout: React.FC = () => {
     .toUpperCase() || 'CS';
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: 'home' },
+    { id: 'dashboard', label: 'Home', icon: 'home' },
     { id: 'staff', label: 'Staff', icon: 'group' },
-    { id: 'attendance', label: 'Attendance', icon: 'event_available' },
-    { id: 'reports', label: 'Reports', icon: 'bar_chart' },
+    { id: 'attendance', label: 'Attendance', icon: 'done_all' },
+    { id: 'salary', label: 'Salary', icon: 'payments' },
     { id: 'more', label: 'More', icon: 'grid_view' },
   ];
 
@@ -244,8 +244,8 @@ export const Layout: React.FC = () => {
     if (tabId === 'dashboard') return currentScreen === 'dashboard';
     if (tabId === 'staff') return currentScreen === 'staff' || currentScreen === 'staff-profile';
     if (tabId === 'attendance') return currentScreen === 'attendance';
-    if (tabId === 'reports') return currentScreen === 'reports';
-    if (tabId === 'more') return ['more', 'advance', 'deduction', 'salary', 'business', 'settings'].includes(currentScreen);
+    if (tabId === 'salary') return currentScreen === 'salary';
+    if (tabId === 'more') return ['more', 'advance', 'deduction', 'reports', 'business', 'settings', 'create-business', 'businesses', 'advance-history', 'deduction-history'].includes(currentScreen);
     return false;
   };
 
@@ -346,63 +346,45 @@ export const Layout: React.FC = () => {
         {renderScreen()}
       </main>
 
-      {/* PWA Fixed Bottom Menu Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 h-[72px] bg-app-surface/95 backdrop-blur-md border-t border-app-border rounded-t-[24px] pb-safe pt-2 px-6 z-40 shadow-[0_-8px_30px_rgba(124,58,237,0.06)] select-none">
-        <div className="w-full h-full flex items-center justify-between gap-1 max-w-4xl mx-auto relative">
+      {/* PWA Fixed Bottom Menu Navigation - Attendance is always the raised center FAB */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-app-surface/95 backdrop-blur-md border-t border-app-border pb-safe pt-2.5 px-6 z-40 shadow-[0_-5px_20px_rgba(0,0,0,0.03)] select-none">
+        <div className="w-full flex items-end justify-between gap-1 max-w-4xl mx-auto">
           {navItems.map((item) => {
             const active = isTabActive(item.id);
-            
-            // Special styling for the center Attendance button
+
             if (item.id === 'attendance') {
               return (
-                <div key={item.id} className="relative flex flex-col items-center justify-end pb-1 flex-1 h-full">
-                  <button
-                    onClick={() => setScreen('attendance')}
-                    className={`absolute -top-7 w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-500 text-white flex items-center justify-center shadow-[0_10px_30px_rgba(124,58,237,0.35)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-105 active:scale-95 cursor-pointer border border-white/10 z-50 ${
-                      active ? 'ring-4 ring-primary/20 scale-105' : ''
-                    }`}
-                  >
-                    <span className="material-symbols-rounded select-none text-[28px] font-fill leading-none">
+                <button
+                  key={item.id}
+                  onClick={() => setScreen(item.id as any)}
+                  className="flex flex-col items-center gap-1 -mt-7 shrink-0 cursor-pointer active:scale-95 transition-transform duration-300"
+                >
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 border-[3px] border-app-surface">
+                    <span className="material-symbols-rounded select-none text-2xl leading-none">
                       {item.icon}
                     </span>
-                  </button>
-                  <span className={`text-[9px] font-black uppercase tracking-wider transition-colors duration-300 select-none pb-0.5 ${
-                    active ? 'text-primary' : 'text-app-text-secondary'
-                  }`}>
+                  </div>
+                  <span className={`text-[9px] font-black uppercase tracking-wider leading-none ${active ? 'text-primary' : 'text-app-text-secondary'}`}>
                     {item.label}
                   </span>
-                </div>
+                </button>
               );
             }
 
-            // Normal buttons for other tabs
-            if (active) {
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setScreen(item.id as any)}
-                  className="bg-primary/10 text-primary px-4 py-2 rounded-full flex items-center gap-2 justify-center transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96] cursor-pointer border border-primary/10 scale-105"
-                >
-                  <span className="material-symbols-rounded select-none text-xl font-fill leading-none">
-                    {item.icon}
-                  </span>
-                  <span className="text-[11px] font-black tracking-tight leading-none">{item.label}</span>
-                </button>
-              );
-            } else {
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setScreen(item.id as any)}
-                  className="flex flex-col items-center gap-1 py-1 text-app-text-secondary hover:text-primary transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96] flex-1 cursor-pointer"
-                >
-                  <span className="material-symbols-rounded select-none text-xl leading-none">
-                    {item.icon}
-                  </span>
-                  <span className="text-[9px] font-black uppercase tracking-wider leading-none">{item.label}</span>
-                </button>
-              );
-            }
+            return (
+              <button
+                key={item.id}
+                onClick={() => setScreen(item.id as any)}
+                className={`flex flex-col items-center gap-1 py-1 flex-1 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96] cursor-pointer ${
+                  active ? 'text-primary' : 'text-app-text-secondary hover:text-primary'
+                }`}
+              >
+                <span className="material-symbols-rounded select-none text-xl leading-none">
+                  {item.icon}
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-wider leading-none">{item.label}</span>
+              </button>
+            );
           })}
         </div>
       </nav>
