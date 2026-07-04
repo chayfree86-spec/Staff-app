@@ -230,7 +230,7 @@ export const ReportsScreen: React.FC = () => {
       </div>
 
       {/* Financial Summary Dashboard */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {/* Payouts Card */}
         <div className="bg-blue-500/5 dark:bg-blue-500/10 rounded-2xl p-4 border border-blue-500/10 dark:border-blue-500/20 flex flex-col gap-1">
           <span className="material-symbols-rounded text-blue-500 select-none text-lg">payments</span>
