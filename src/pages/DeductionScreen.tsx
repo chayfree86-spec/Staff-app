@@ -71,10 +71,12 @@ export const DeductionScreen: React.FC = () => {
     0
   );
 
-  // Filter staff list based on search
-  const filteredStaff = activeStaff.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filter staff list based on search and positive deductions (> 0)
+  const filteredStaff = activeStaff.filter(s => {
+    const totalDeds = getStaffDeductionsTotal(s.id);
+    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
+    return totalDeds > 0 && matchesSearch;
+  });
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
