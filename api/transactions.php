@@ -17,37 +17,35 @@ if (!in_array($type, ['advance', 'deduction'], true)) {
 
 // The frontend represents "advance returned" as a negative advance amount;
 // the DB stores a positive amount with kind = advance_returned instead.
-function transaction_kind_and_paise(string $type, float $amount): array
+function transaction_kind_and_amount(string $type, float $amount): array
 {
-    $paise = paise_from_rupees(abs($amount));
-    if ($paise <= 0) {
+    $whole = whole_rupees(abs($amount));
+    if ($whole <= 0) {
         respond(['ok' => false, 'message' => 'Amount must be greater than zero.'], 422);
     }
     if ($type === 'deduction') {
-        return ['deduction', $paise];
+        return ['deduction', $whole];
     }
-    return [$amount < 0 ? 'advance_returned' : 'advance_given', $paise];
+    return [$amount < 0 ? 'advance_returned' : 'advance_given', $whole];
 }
 
 if ($action === 'create') {
-    $staffId = trim((string) ($input['staffId'] ?? ''));
+    $staffId = require_int_id($input, 'staffId');
     $date = (string) ($input['date'] ?? '');
-    if ($staffId === '' || !valid_date($date)) {
-        respond(['ok' => false, 'message' => 'Staff id and valid date are required.'], 422);
+    if (!valid_date($date)) {
+        respond(['ok' => false, 'message' => 'Valid date is required.'], 422);
     }
 
-    [$kind, $paise] = transaction_kind_and_paise($type, (float) ($input['amount'] ?? 0));
-    $id = id_from_input($input);
+    [$kind, $amount] = transaction_kind_and_amount($type, (float) ($input['amount'] ?? 0));
 
     $stmt = $pdo->prepare(
-        'INSERT INTO staff_transactions (id, business_id, staff_id, kind, amount_paise, transaction_date, remarks, created_by)
-         SELECT ?, ?, id, ?, ?, ?, ?, ? FROM staff WHERE id = ? AND business_id = ?'
+        'INSERT INTO staff_transactions (business_id, staff_id, kind, amount, transaction_date, remarks, created_by)
+         SELECT ?, id, ?, ?, ?, ?, ? FROM staff WHERE id = ? AND business_id = ?'
     );
     $stmt->execute([
-        $id,
         $businessId,
         $kind,
-        $paise,
+        $amount,
         $date,
         str_or_null($input['remarks'] ?? null),
         $auth['user_id'],
@@ -59,43 +57,63 @@ if ($action === 'create') {
         respond(['ok' => false, 'message' => 'Staff member not found.'], 404);
     }
 
-    respond(['ok' => true, 'id' => $id]);
+    recompute_salary_slip_for_date($pdo, $businessId, $staffId, $date, (int) $auth['user_id']);
+
+    respond(['ok' => true, 'id' => (int) $pdo->lastInsertId()]);
 }
 
 if ($action === 'update') {
-    $id = trim((string) ($input['id'] ?? ''));
+    $id = require_int_id($input);
     $date = (string) ($input['date'] ?? '');
-    if ($id === '' || !valid_date($date)) {
-        respond(['ok' => false, 'message' => 'Transaction id and valid date are required.'], 422);
+    if (!valid_date($date)) {
+        respond(['ok' => false, 'message' => 'Valid date is required.'], 422);
     }
 
-    [$kind, $paise] = transaction_kind_and_paise($type, (float) ($input['amount'] ?? 0));
+    $stmt = $pdo->prepare('SELECT staff_id, transaction_date FROM staff_transactions WHERE id = ? AND business_id = ?');
+    $stmt->execute([$id, $businessId]);
+    $existing = $stmt->fetch();
+    if (!$existing) {
+        respond(['ok' => false, 'message' => 'Transaction not found.'], 404);
+    }
+
+    [$kind, $amount] = transaction_kind_and_amount($type, (float) ($input['amount'] ?? 0));
 
     $stmt = $pdo->prepare(
         'UPDATE staff_transactions
-         SET kind = ?, amount_paise = ?, transaction_date = ?, remarks = ?
+         SET kind = ?, amount = ?, transaction_date = ?, remarks = ?
          WHERE id = ? AND business_id = ?'
     );
     $stmt->execute([
         $kind,
-        $paise,
+        $amount,
         $date,
         str_or_null($input['remarks'] ?? null),
         $id,
         $businessId,
     ]);
 
+    $staffId = (int) $existing['staff_id'];
+    recompute_salary_slip_for_date($pdo, $businessId, $staffId, $existing['transaction_date'], (int) $auth['user_id']);
+    if (substr($existing['transaction_date'], 0, 7) !== substr($date, 0, 7)) {
+        recompute_salary_slip_for_date($pdo, $businessId, $staffId, $date, (int) $auth['user_id']);
+    }
+
     respond(['ok' => true, 'id' => $id]);
 }
 
 if ($action === 'delete') {
-    $id = trim((string) ($input['id'] ?? ''));
-    if ($id === '') {
-        respond(['ok' => false, 'message' => 'Transaction id is required.'], 422);
-    }
+    $id = require_int_id($input);
+
+    $stmt = $pdo->prepare('SELECT staff_id, transaction_date FROM staff_transactions WHERE id = ? AND business_id = ?');
+    $stmt->execute([$id, $businessId]);
+    $existing = $stmt->fetch();
 
     $stmt = $pdo->prepare('DELETE FROM staff_transactions WHERE id = ? AND business_id = ?');
     $stmt->execute([$id, $businessId]);
+
+    if ($existing) {
+        recompute_salary_slip_for_date($pdo, $businessId, (int) $existing['staff_id'], $existing['transaction_date'], (int) $auth['user_id']);
+    }
 
     respond(['ok' => true]);
 }

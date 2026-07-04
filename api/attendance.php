@@ -43,27 +43,29 @@ if ($entries === []) {
 }
 
 $stmt = $pdo->prepare(
-    'INSERT INTO attendance_records (id, business_id, staff_id, attendance_date, status, marked_at, marked_by)
-     SELECT ?, ?, id, ?, ?, NOW(), ? FROM staff WHERE id = ? AND business_id = ?
+    'INSERT INTO attendance_records (business_id, staff_id, attendance_date, status, marked_at, marked_by)
+     SELECT ?, id, ?, ?, NOW(), ? FROM staff WHERE id = ? AND business_id = ?
      ON DUPLICATE KEY UPDATE status = ?, marked_at = NOW(), marked_by = ?'
 );
 
 foreach ($entries as $entry) {
     $status = enum_from_title($entry['status']);
-    if ($entry['staffId'] === '' || !in_array($status, $allowedStatuses, true)) {
+    $staffId = (int) $entry['staffId'];
+    if ($staffId <= 0 || !in_array($status, $allowedStatuses, true)) {
         respond(['ok' => false, 'message' => 'Invalid staff or status in attendance entry.'], 422);
     }
     $stmt->execute([
-        uuid_v4(),
         $businessId,
         $date,
         $status,
         $auth['user_id'],
-        $entry['staffId'],
+        $staffId,
         $businessId,
         $status,
         $auth['user_id'],
     ]);
+
+    recompute_salary_slip_for_date($pdo, $businessId, $staffId, $date, (int) $auth['user_id']);
 }
 
 respond(['ok' => true]);

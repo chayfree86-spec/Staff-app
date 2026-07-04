@@ -19,12 +19,11 @@ Main tables:
 
 Conventions:
 
-- UUID primary keys.
-- Money is stored as paise in integer columns.
+- Simple INT AUTO_INCREMENT primary keys (1, 2, 3, ...); the server assigns ids on insert.
+- Money is stored as whole rupees in integer columns (no paise/decimal conversion).
 - `salary_month` is always the first day of the month, for example `2026-07-01`.
 - `staff_transactions.kind` distinguishes `advance_given`, `advance_returned`, and `deduction`.
 - `attendance_records` enforces one row per staff member per date.
-- IDs are `CHAR(36)` so the backend can create UUIDs before inserting rows.
 - `weekly_holidays` is JSON, for example `["Sunday"]`.
 - `weekly_holiday_paid` supports both `paid` and `unpaid`.
 - Date/time columns use `DATETIME`; the backend should set the MySQL session timezone to `+05:30` so values are saved in Indian local time.
@@ -34,19 +33,16 @@ Conventions:
 
 ## Migrations
 
-Run these in order:
-
-1. `database/migrations/001_create_staff_database.sql`
-2. `database/migrations/002_seed_default_staff_business.sql`
-3. `database/migrations/003_expand_image_columns.sql`
-
-For phpMyAdmin:
+Fresh install (phpMyAdmin):
 
 1. Open phpMyAdmin.
 2. Create/select the `staff` database.
-3. Import `001_create_staff_database.sql`.
+3. Import `001_create_staff_database.sql` (creates the full current schema — numeric ids, MEDIUMTEXT images, whole-rupee amounts).
 4. Import `002_seed_default_staff_business.sql`.
-5. Import `003_expand_image_columns.sql`.
+
+Existing installs that predate a schema change should run the newer numbered
+migration directly (e.g. `005_paise_to_rupees.sql`). `003_expand_image_columns.sql`
+and `004_simple_numeric_ids.sql` are kept for history only.
 
 The `schema_migrations` table records which migrations were applied.
 

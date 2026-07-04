@@ -38,7 +38,7 @@ $clamp = static function (mixed $value, int $min, int $max, int $fallback): int 
 
 $salaryCycleStart = $clamp($settings['salaryCycleStart'] ?? null, 1, 31, 1);
 $salaryCycleEnd = $clamp($settings['salaryCycleEnd'] ?? null, 1, 31, 30);
-$holdDays = $clamp($settings['newStaffSalaryHoldDays'] ?? null, 0, 31, 15);
+$holdDays = $clamp($settings['newStaffSalaryHoldDays'] ?? null, 0, 31, 10);
 
 $autoTime = (string) ($settings['autoAttendanceTime'] ?? '09:00');
 if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $autoTime)) {

@@ -7,53 +7,78 @@
 @theme {
   --font-sans: 'DM Sans', sans-serif;
   
-  --color-primary: #4F46E5;
+  --color-primary: #7C3AED;
+  --color-violet-custom: #8B5CF6;
+  --color-bright-purple: #A855F7;
   --color-accent: #10B981;
+  --color-soft-purple: #F3EEFF;
+  
   --color-app-bg: var(--bg-app);
   --color-app-surface: var(--bg-surface);
   --color-app-border: var(--border-app);
   --color-app-text-primary: var(--text-primary);
   --color-app-text-secondary: var(--text-secondary);
   
-  --color-present: #22C55E;
-  --color-absent: #EF4444;
+  --color-present: #10B981;
+  --color-absent: #F43F5E;
   --color-halfday: #F59E0B;
-  --color-info: #3B82F6;
+  --color-holiday: #8B5CF6;
+  --color-info: #8B5CF6;
   
   --radius-app-card: 20px;
-  --shadow-app-soft: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.025);
+  --radius-app-card-lg: 24px;
+  
+  --shadow-app-soft: 0 8px 24px rgba(124, 58, 237, 0.10);
+  --shadow-app-hover: 0 12px 32px rgba(124, 58, 237, 0.16);
+
+  /* Global Color overrides to adapt hardcoded tailwind classes */
+  --color-indigo-600: #7C3AED;
+  --color-indigo-500: #8B5CF6;
+  --color-purple-600: #8B5CF6;
+  --color-purple-500: #A855F7;
+  --color-pink-500: #A855F7;
+  --color-emerald-500: #10B981;
+  --color-emerald-600: #10B981;
+  --color-green-600: #10B981;
+  --color-rose-500: #F43F5E;
+  --color-rose-600: #F43F5E;
+  --color-red-600: #F43F5E;
+  --color-amber-400: #F59E0B;
+  --color-amber-500: #F59E0B;
+  --color-orange-500: #F59E0B;
 }
 
 :root {
-  --bg-app: #F8FAFC;
+  --bg-app: #FAF9FF;
   --bg-surface: #FFFFFF;
-  --border-app: #E2E8F0;
+  --border-app: #E9DFFF;
   --text-primary: #0F172A;
   --text-secondary: #64748B;
   
   --rdp-cell-size: 38px;
-  --rdp-accent-color: #4F46E5;
-  --rdp-background-color: rgba(79, 70, 229, 0.1);
+  --rdp-accent-color: #7C3AED;
+  --rdp-background-color: rgba(124, 58, 237, 0.1);
   
-  --summary-earned: #1E3A8A; /* dark blue */
-  --summary-paid: #064E3B; /* dark emerald */
-  --summary-due: #78350F; /* dark amber */
-  --color-net-pay: #1D4ED8; /* solid blue (blue-700) */
+  --summary-earned: #7C3AED;
+  --summary-paid: #10B981;
+  --summary-due: #F43F5E;
+  --color-net-pay: #7C3AED;
 }
 
 .dark {
-  --bg-app: #0B0F19;
-  --bg-surface: #151D30;
-  --border-app: #1E293B;
+  --bg-app: #0B0914;
+  --bg-surface: #130F22;
+  --border-app: #2A2142;
   --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
+  --text-secondary: #A78BFA;
   
-  --rdp-accent-color: #6366F1;
+  --rdp-accent-color: #A78BFA;
+  --rdp-background-color: rgba(167, 139, 250, 0.15);
   
-  --summary-earned: #93C5FD; /* light blue */
-  --summary-paid: #6EE7B7; /* light emerald */
-  --summary-due: #FCD34D; /* light amber */
-  --color-net-pay: #60A5FA; /* light solid blue */
+  --summary-earned: #A78BFA;
+  --summary-paid: #34D399;
+  --summary-due: #F87171;
+  --color-net-pay: #C084FC;
 }
 
 body {
@@ -106,8 +131,8 @@ button:active {
 /* DayPicker custom UI styling */
 .rdp {
   --rdp-cell-size: 38px;
-  --rdp-accent-color: #4F46E5;
-  --rdp-background-color: rgba(79, 70, 229, 0.1);
+  --rdp-accent-color: var(--rdp-accent-color);
+  --rdp-background-color: var(--rdp-background-color);
   margin: 0;
 }
 .rdp-day_selected, .rdp-day_selected:focus-visible, .rdp-day_selected:hover {
@@ -119,7 +144,7 @@ button:active {
   border-radius: 50%;
 }
 .rdp-day:hover {
-  background-color: rgba(79, 70, 229, 0.1);
+  background-color: var(--rdp-background-color);
 }
 .rdp-head_cell {
   font-size: 0.75rem;

@@ -36,14 +36,15 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
     $stmt = $pdo->prepare('SELECT * FROM staff WHERE business_id = ? ORDER BY created_at ASC, name ASC');
     $stmt->execute([$businessId]);
     $staffRows = $stmt->fetchAll();
+    // ids are ints in the DB; the frontend works with string ids everywhere.
     $staffList = array_map(static function (array $row): array {
         return [
-            'id' => $row['id'],
+            'id' => (string) $row['id'],
             'name' => $row['name'],
             'mobile' => $row['mobile'] ?? '',
             'avatar' => $row['avatar_initials'] ?: initials_for_name($row['name']),
-            'monthlySalary' => rupees_from_paise((int) $row['monthly_salary_paise']),
-            'perDaySalary' => rupees_from_paise((int) $row['per_day_salary_paise']),
+            'monthlySalary' => (int) $row['monthly_salary'],
+            'perDaySalary' => (int) $row['per_day_salary'],
             'salaryType' => title_from_enum($row['salary_type']),
             'calculationBasis' => title_from_enum($row['calculation_basis']),
             'joiningDate' => $row['joining_date'],
@@ -65,7 +66,7 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
         if (!isset($attendance[$date])) {
             $attendance[$date] = [];
         }
-        $attendance[$date][$row['staff_id']] = [
+        $attendance[$date][(string) $row['staff_id']] = [
             'status' => title_from_enum($row['status']),
             'timestamp' => $row['marked_at'],
         ];
@@ -76,11 +77,11 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
     $advanceList = [];
     $deductionList = [];
     foreach ($stmt->fetchAll() as $row) {
-        $amount = rupees_from_paise((int) $row['amount_paise']);
+        $amount = (int) $row['amount'];
         if ($row['kind'] === 'advance_given' || $row['kind'] === 'advance_returned') {
             $advanceList[] = [
-                'id' => $row['id'],
-                'staffId' => $row['staff_id'],
+                'id' => (string) $row['id'],
+                'staffId' => (string) $row['staff_id'],
                 'amount' => $row['kind'] === 'advance_returned' ? -$amount : $amount,
                 'date' => $row['transaction_date'],
                 'remarks' => $row['remarks'] ?? '',
@@ -89,8 +90,8 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
         }
 
         $deductionList[] = [
-            'id' => $row['id'],
-            'staffId' => $row['staff_id'],
+            'id' => (string) $row['id'],
+            'staffId' => (string) $row['staff_id'],
             'amount' => $amount,
             'date' => $row['transaction_date'],
             'remarks' => $row['remarks'] ?? '',
@@ -101,9 +102,9 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
     $stmt->execute([$businessId]);
     $payoutList = array_map(static function (array $row): array {
         return [
-            'id' => $row['id'],
-            'staffId' => $row['staff_id'],
-            'amount' => rupees_from_paise((int) $row['amount_paise']),
+            'id' => (string) $row['id'],
+            'staffId' => (string) $row['staff_id'],
+            'amount' => (int) $row['amount'],
             'date' => $row['payout_date'],
             'month' => date('F Y', strtotime($row['salary_month'])),
             'paymentMode' => $row['payment_mode'],
@@ -123,7 +124,7 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
             'weeklyHolidayPaid' => title_from_enum($settingsRow['weekly_holiday_paid'] ?? 'paid'),
             'salaryCycleStart' => (int) ($settingsRow['salary_cycle_start'] ?? 1),
             'salaryCycleEnd' => (int) ($settingsRow['salary_cycle_end'] ?? 30),
-            'newStaffSalaryHoldDays' => (int) ($settingsRow['new_staff_salary_hold_days'] ?? 15),
+            'newStaffSalaryHoldDays' => (int) ($settingsRow['new_staff_salary_hold_days'] ?? 10),
             'monthCalculation' => title_from_enum($settingsRow['month_calculation'] ?? 'actual_calendar_month'),
             'salaryCalculationBasis' => title_from_enum($settingsRow['default_salary_calculation_basis'] ?? 'attendance_based'),
             'theme' => $settingsRow['theme'] ?? 'light',
