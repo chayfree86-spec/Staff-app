@@ -24,7 +24,7 @@ const loadRememberedLogin = (): RememberedLogin | null => {
 };
 
 function App() {
-  const { isLoggedIn, isSessionRestoring, login, restoreSession, triggerAutoAttendance, currentDate, settings, businessInfo, currentUser } = useStore();
+  const { isLoggedIn, isSessionRestoring, login, restoreSession, triggerAutoAttendance, businessInfo } = useStore();
   const [identifierInput, setIdentifierInput] = useState(() => loadRememberedLogin()?.identifier ?? '');
   const [passwordInput, setPasswordInput] = useState(() => loadRememberedLogin()?.secret ?? '');
   const [loginMethod, setLoginMethod] = useState<'password' | 'pin'>(() => loadRememberedLogin()?.method ?? 'password');

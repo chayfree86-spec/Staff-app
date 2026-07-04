@@ -99,12 +99,12 @@ export const SalaryScreen: React.FC = () => {
       }
       const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
       return format(prevDateObj, 'yyyy-MM');
-    } catch (e) {
+    } catch {
       return currentDate.slice(0, 7);
     }
   };
 
-  const getPayoutMonths = (staffId: string) => {
+  const getPayoutMonths = () => {
     const curDateObj = parseISO(currentDate);
     const currentMonthLabelStr = format(curDateObj, 'MMMM yyyy');
     const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
@@ -219,10 +219,10 @@ export const SalaryScreen: React.FC = () => {
       ? staff.monthlySalary
       : Math.round(totalDaysCredited * perDayVal);
 
-    // 2. Outstanding Advance
+    // 2. Outstanding Advance (adjusted/returned advances)
     const totalAdv = advanceList
-      .filter(a => a.staffId === staffId && a.date.startsWith(targetYearMonth))
-      .reduce((sum, item) => sum + item.amount, 0);
+      .filter(a => a.staffId === staffId && a.date.startsWith(targetYearMonth) && a.amount < 0)
+      .reduce((sum, item) => sum + Math.abs(item.amount), 0);
       
     // 3. Deductions
     const deduction = deductionList
@@ -280,7 +280,7 @@ export const SalaryScreen: React.FC = () => {
   const handleOpenPayModal = (staffId: string, dueAmount: number) => {
     setPayoutStaffId(staffId);
     
-    const { defaultMonth } = getPayoutMonths(staffId);
+    const { defaultMonth } = getPayoutMonths();
     setPayoutMonth(defaultMonth);
     setPayoutDate(currentDate);
     setPayoutMode('Cash');
@@ -926,7 +926,7 @@ export const SalaryScreen: React.FC = () => {
                     <CustomSelect
                       value={payoutMonth}
                       onChange={handleMonthChange}
-                      options={getPayoutMonths(selectedStaff.id).options}
+                      options={getPayoutMonths().options}
                       className="w-full"
                     />
                   </div>

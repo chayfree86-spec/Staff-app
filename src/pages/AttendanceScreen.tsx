@@ -10,7 +10,6 @@ export const AttendanceScreen: React.FC = () => {
     staffList,
     attendance,
     markAttendance,
-    markAllPresent,
     setScreen,
     setActiveStaffProfileId,
     settings,

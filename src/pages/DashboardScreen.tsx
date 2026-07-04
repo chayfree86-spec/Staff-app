@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { CustomDialog } from '../components/ui/CustomDialog';
-import { CustomSelect } from '../components/ui/CustomSelect';
 import { format, parseISO } from 'date-fns';
 import { listBusinessesRequest } from '../api/client';
 
@@ -279,10 +277,10 @@ export const DashboardScreen: React.FC = () => {
               <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
                 <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>account_balance_wallet</span>
               </div>
-              <div className="overflow-hidden">
-                <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block">Total Base Salary</span>
-                <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight">₹{totalBaseSalary.toLocaleString('en-IN')}</span>
-                <span className="text-[8px] font-bold text-app-text-secondary/60 mt-0.5 block">(Full Month Potential)</span>
+              <div className="overflow-hidden min-w-0">
+                <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block truncate">Total Base Salary</span>
+                <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight truncate">₹{totalBaseSalary.toLocaleString('en-IN')}</span>
+                <span className="text-[8px] font-bold text-app-text-secondary/60 mt-0.5 block truncate">(Full Month Potential)</span>
               </div>
             </div>
 
@@ -291,10 +289,10 @@ export const DashboardScreen: React.FC = () => {
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>trending_up</span>
               </div>
-              <div className="overflow-hidden">
-                <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block">Earned So Far</span>
-                <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
-                <span className="text-[8px] font-bold text-emerald-500 mt-0.5 block">(Attendance Based)</span>
+              <div className="overflow-hidden min-w-0">
+                <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block truncate">Earned So Far</span>
+                <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight truncate">₹{summaries.totalEarned.toLocaleString('en-IN')}</span>
+                <span className="text-[8px] font-bold text-emerald-500 mt-0.5 block truncate">(Attendance Based)</span>
               </div>
             </div>
           </div>
@@ -305,14 +303,14 @@ export const DashboardScreen: React.FC = () => {
               onClick={() => setScreen('advance')}
               className="flex items-center justify-between p-4 bg-app-surface border border-app-border rounded-[1.5rem] shadow-sm hover:border-amber-500/30 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer text-left w-full group"
             >
-              <div className="flex items-center gap-3 overflow-hidden">
+              <div className="flex items-center gap-3 overflow-hidden min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>payments</span>
                 </div>
-                <div className="overflow-hidden">
-                  <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block">Total Advance</span>
-                  <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight">₹{summaries.totalAdvance.toLocaleString('en-IN')}</span>
-                  <span className="text-[8px] font-bold text-amber-500 mt-0.5 block">(Advance Given)</span>
+                <div className="overflow-hidden min-w-0">
+                  <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block truncate">Total Advance</span>
+                  <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight truncate">₹{summaries.totalAdvance.toLocaleString('en-IN')}</span>
+                  <span className="text-[8px] font-bold text-amber-500 mt-0.5 block truncate">(Advance Given)</span>
                 </div>
               </div>
               <span className="material-symbols-rounded text-app-text-secondary/40 group-hover:text-amber-500/70 transition-colors select-none shrink-0" style={{ fontSize: '18px' }}>chevron_right</span>
@@ -322,14 +320,14 @@ export const DashboardScreen: React.FC = () => {
               onClick={() => setScreen('deduction')}
               className="flex items-center justify-between p-4 bg-app-surface border border-app-border rounded-[1.5rem] shadow-sm hover:border-rose-500/30 hover:shadow-md transition-all active:scale-[0.98] cursor-pointer text-left w-full group"
             >
-              <div className="flex items-center gap-3 overflow-hidden">
+              <div className="flex items-center gap-3 overflow-hidden min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <span className="material-symbols-rounded select-none" style={{ fontSize: '20px' }}>content_cut</span>
                 </div>
-                <div className="overflow-hidden">
-                  <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block">Total Deduction</span>
-                  <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight">₹{summaries.totalDeduction.toLocaleString('en-IN')}</span>
-                  <span className="text-[8px] font-bold text-rose-500 mt-0.5 block">(Deductions Logged)</span>
+                <div className="overflow-hidden min-w-0">
+                  <span className="text-[9px] uppercase font-black text-app-text-secondary tracking-wider block truncate">Total Deduction</span>
+                  <span className="text-base font-black text-app-text-primary mt-0.5 block leading-tight truncate">₹{summaries.totalDeduction.toLocaleString('en-IN')}</span>
+                  <span className="text-[8px] font-bold text-rose-500 mt-0.5 block truncate">(Deductions Logged)</span>
                 </div>
               </div>
               <span className="material-symbols-rounded text-app-text-secondary/40 group-hover:text-rose-500/70 transition-colors select-none shrink-0" style={{ fontSize: '18px' }}>chevron_right</span>

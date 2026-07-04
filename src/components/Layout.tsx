@@ -16,7 +16,6 @@ import { BusinessesScreen } from '../pages/BusinessesScreen';
 import { AdvanceHistoryScreen } from '../pages/AdvanceHistoryScreen';
 import { DeductionHistoryScreen } from '../pages/DeductionHistoryScreen';
 import { CustomDialog } from './ui/CustomDialog';
-import { format, parseISO } from 'date-fns';
 import { InteractiveGridBackground } from './InteractiveGridBackground';
 
 export const Layout: React.FC = () => {
@@ -24,13 +23,7 @@ export const Layout: React.FC = () => {
     currentScreen,
     setScreen,
     businessInfo,
-    currentDate,
     settings,
-    staffList,
-    attendance,
-    advanceList,
-    deductionList,
-    payoutList,
     changePassword,
     logout
   } = useStore();
@@ -175,56 +168,6 @@ export const Layout: React.FC = () => {
         return 'Staff Attendance';
     }
   };
-
-  // Live Summary Stats for Header
-  const activeStaff = staffList.filter(s => s.status === 'Active');
-  const totalStaffCount = activeStaff.length;
-  const currentYearMonth = currentDate.slice(0, 7); // YYYY-MM
-  const currentMonthLabel = format(parseISO(currentDate), 'MMMM yyyy');
-
-  const getSalaryDetails = (staffId: string) => {
-    const staff = staffList.find(s => s.id === staffId);
-    if (!staff) return { due: 0 };
-
-    let daysPresent = 0;
-    let daysHalf = 0;
-    let daysHoliday = 0;
-
-    Object.entries(attendance).forEach(([dateStr, record]) => {
-      if (dateStr.startsWith(currentYearMonth) && record[staffId]) {
-        const status = record[staffId].status;
-        if (status === 'Present') daysPresent++;
-        if (status === 'Half Day') daysHalf++;
-        if (status === 'Holiday') daysHoliday++;
-      }
-    });
-
-    const perDayVal = staff.perDaySalary;
-    const totalDaysCredited = daysPresent + (daysHalf * 0.5) + daysHoliday;
-    const earned = Math.round(totalDaysCredited * perDayVal);
-
-    const totalAdv = advanceList
-      .filter(a => a.staffId === staffId && a.date.startsWith(currentYearMonth))
-      .reduce((sum, item) => sum + item.amount, 0);
-      
-    const deduction = deductionList
-      .filter(d => d.staffId === staffId && d.date.startsWith(currentYearMonth))
-      .reduce((sum, item) => sum + item.amount, 0);
-
-    const paid = payoutList
-      .filter(p => p.staffId === staffId && p.month === currentMonthLabel)
-      .reduce((sum, item) => sum + item.amount, 0);
-
-    const net = Math.max(0, earned - totalAdv - deduction);
-    const due = Math.max(0, net - paid);
-
-    return { due };
-  };
-
-  const totalDueSalary = activeStaff.reduce(
-    (sum, staff) => sum + getSalaryDetails(staff.id).due,
-    0
-  );
 
   const businessInitials = businessInfo.name
     .split(' ')

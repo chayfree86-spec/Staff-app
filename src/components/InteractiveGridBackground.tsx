@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export function InteractiveGridBackground() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -56,11 +56,9 @@ export function InteractiveGridBackground() {
       // Determine colors based on dark mode
       // Light Mode colors
       const dotColorBase = 'rgba(233, 223, 255, 0.7)'; // --border-app light mode
-      const dotColorActive = 'rgba(124, 58, 237, '; // --color-primary light mode
-      
+
       // Dark Mode colors
       const dotColorBaseDark = 'rgba(42, 33, 66, 0.7)'; // --border-app dark mode
-      const dotColorActiveDark = 'rgba(167, 139, 250, '; // purple-400 dark mode
 
       const cols = Math.ceil(width / spacing) + 1;
       const rows = Math.ceil(height / spacing) + 1;

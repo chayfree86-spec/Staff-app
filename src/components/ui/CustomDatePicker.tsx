@@ -7,7 +7,6 @@ interface CustomDatePickerProps {
   value: string; // YYYY-MM-DD
   onChange: (dateStr: string) => void;
   className?: string;
-  label?: string;
   onOpenChange?: (open: boolean) => void;
   inline?: boolean;
 }
@@ -16,7 +15,6 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   value,
   onChange,
   className = '',
-  label,
   onOpenChange,
   inline = false,
 }) => {

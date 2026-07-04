@@ -125,7 +125,6 @@ interface AppState {
   updateStaff: (id: string, updates: Partial<Staff>) => void;
   deleteStaff: (id: string) => void;
   markAttendance: (date: string, staffId: string, status: AttendanceRecord['status']) => void;
-  markAllPresent: (date: string) => void;
   addAdvance: (staffId: string, amount: number, date: string, remarks: string) => void;
   updateAdvance: (id: string, amount: number, date: string, remarks: string) => void;
   deleteAdvance: (id: string) => void;
@@ -187,6 +186,7 @@ const persistCreate = (task: Promise<string | undefined>, applyRealId: (realId: 
 
 export const useStore = create<AppState>((set, get) => ({
   currentScreen: 'attendance', // Default screen is Attendance
+  previousScreen: null,
   activeStaffProfileId: null,
   currentDate: new Date().toISOString().split('T')[0],
   searchQuery: '',
@@ -260,6 +260,7 @@ export const useStore = create<AppState>((set, get) => ({
         deductionList: [],
         payoutList: [],
         businessInfo: {
+          id: '',
           name: '',
           logo: '',
           mobile: '',
@@ -402,28 +403,6 @@ export const useStore = create<AppState>((set, get) => ({
       return { attendance: updatedAttendance };
     });
     persist(markAttendanceRequest(date, staffId, status));
-  },
-
-  markAllPresent: (date) => {
-    const entries = get()
-      .staffList.filter((staff) => staff.status === 'Active')
-      .map((staff) => ({ staffId: staff.id, status: 'Present' as const }));
-    if (entries.length === 0) return;
-
-    set((state) => {
-      const updatedAttendance = { ...state.attendance };
-      if (!updatedAttendance[date]) {
-        updatedAttendance[date] = {};
-      }
-      entries.forEach(({ staffId, status }) => {
-        updatedAttendance[date][staffId] = {
-          status,
-          timestamp: new Date().toISOString(),
-        };
-      });
-      return { attendance: updatedAttendance };
-    });
-    persist(markAttendanceBulkRequest(date, entries));
   },
 
   addAdvance: (staffId, amount, date, remarks) => {

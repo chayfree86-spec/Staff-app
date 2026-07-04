@@ -65,7 +65,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
       const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
       targetYearMonth = format(prevDateObj, 'yyyy-MM');
     }
-  } catch (e) {
+  } catch {
     targetYearMonth = format(new Date(), 'yyyy-MM');
   }
 

@@ -35,20 +35,10 @@ export const MoreScreen: React.FC = () => {
     0
   );
 
-  const staffWithOutstandingAdvance = staffList.filter(
-    s => getOutstandingAdvance(s.id) > 0
-  ).length;
-
   const currentYearMonth = currentDate.slice(0, 7); // YYYY-MM
   const totalDeductionsThisMonth = deductionList
     .filter(d => d.date.startsWith(currentYearMonth))
     .reduce((sum, item) => sum + item.amount, 0);
-
-  const staffWithDeductions = new Set(
-    deductionList
-      .filter(d => d.date.startsWith(currentYearMonth))
-      .map(d => d.staffId)
-  ).size;
 
   const currentMonthLabel = format(parseISO(currentDate), 'MMMM yyyy');
 

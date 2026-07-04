@@ -33,7 +33,6 @@ export const StaffProfileScreen: React.FC = () => {
 
   // Modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
   const [isAdvanceOpen, setIsAdvanceOpen] = useState(false);
   const [isDeductionOpen, setIsDeductionOpen] = useState(false);
   const [isEditTxOpen, setIsEditTxOpen] = useState(false);
@@ -127,12 +126,12 @@ export const StaffProfileScreen: React.FC = () => {
       }
       const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
       return format(prevDateObj, 'yyyy-MM');
-    } catch (e) {
+    } catch {
       return profileDate.slice(0, 7);
     }
   };
 
-  const getPayoutMonths = (staffId: string) => {
+  const getPayoutMonths = () => {
     const curDateObj = parseISO(profileDate);
     const currentMonthLabelStr = format(curDateObj, 'MMMM yyyy');
     const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
@@ -176,8 +175,8 @@ export const StaffProfileScreen: React.FC = () => {
       : Math.round(totalDaysCredited * perDayVal);
 
     const totalAdv = advanceList
-      .filter(a => a.staffId === staffId && a.date.startsWith(targetYearMonth))
-      .reduce((sum, item) => sum + item.amount, 0);
+      .filter(a => a.staffId === staffId && a.date.startsWith(targetYearMonth) && a.amount < 0)
+      .reduce((sum, item) => sum + Math.abs(item.amount), 0);
       
     const deduction = deductionList
       .filter(d => d.staffId === staffId && d.date.startsWith(targetYearMonth))
@@ -260,7 +259,7 @@ export const StaffProfileScreen: React.FC = () => {
 
   const handleOpenPayModal = () => {
     if (!staff) return;
-    const { defaultMonth } = getPayoutMonths(staff.id);
+    const { defaultMonth } = getPayoutMonths();
     setPayoutMonth(defaultMonth);
     setPayoutDate(currentDate);
     setPayoutMode('Cash');
@@ -416,7 +415,7 @@ export const StaffProfileScreen: React.FC = () => {
   const staffAdvances = advanceList.filter((a) => a.staffId === staff.id && a.date.startsWith(currentYearMonth));
   const staffDeductions = deductionList.filter((d) => d.staffId === staff.id && d.date.startsWith(currentYearMonth));
 
-  const totalAdvances = staffAdvances.reduce((sum, a) => sum + a.amount, 0);
+  const totalAdvances = staffAdvances.filter((a) => a.amount < 0).reduce((sum, a) => sum + Math.abs(a.amount), 0);
   const totalAdjusted = staffDeductions.reduce((sum, d) => sum + d.amount, 0);
   
   const monthGiven = staffAdvances.filter((a) => a.amount > 0).reduce((sum, a) => sum + a.amount, 0);
@@ -618,15 +617,6 @@ export const StaffProfileScreen: React.FC = () => {
     setIsDeductionOpen(false);
   };
 
-  const handleToggleStatus = () => {
-    const isDeactivating = staff.status === 'Active';
-    updateStaff(staff.id, {
-      status: isDeactivating ? 'Inactive' : 'Active',
-      deactivationDate: isDeactivating ? currentDate : undefined,
-    });
-    setIsStatusConfirmOpen(false);
-  };
-
   const handleOpenEditTx = (record: { id: string; amount: number; date: string; remarks: string }, type: 'Advance' | 'Deduction') => {
     setEditTxType(type);
     setEditTxId(record.id);
@@ -669,19 +659,6 @@ export const StaffProfileScreen: React.FC = () => {
   };
 
   const getStaffRole = () => `${staff.salaryType} • ${staff.calculationBasis}`;
-
-  const getAvatarBg = (name: string) => {
-    const colors = [
-      'bg-primary/10 text-primary border-primary/20',
-      'bg-violet-600/10 text-violet-600 border-violet-200',
-      'bg-indigo-600/10 text-indigo-600 border-indigo-200',
-      'bg-purple-600/10 text-purple-600 border-purple-200',
-      'bg-fuchsia-600/10 text-fuchsia-600 border-fuchsia-200',
-    ];
-    let sum = 0;
-    for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
-    return colors[sum % colors.length];
-  };
 
   const getProfileGradient = (name: string) => {
     const gradients = [
@@ -1004,9 +981,9 @@ export const StaffProfileScreen: React.FC = () => {
                     setTxError('');
                     setIsDeductionOpen(true);
                   }}
-                  className="px-2.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-[10px] font-bold flex items-center gap-1 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-sm shadow-rose-500/10 active:scale-95"
+                  className="px-3.5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-sm shadow-rose-500/10 active:scale-95"
                 >
-                  <span className="material-symbols-rounded select-none" style={{ fontSize: '12px' }}>add</span>
+                  <span className="material-symbols-rounded select-none" style={{ fontSize: '15px' }}>add</span>
                   <span>Deduction</span>
                 </button>
               </div>
@@ -1063,9 +1040,9 @@ export const StaffProfileScreen: React.FC = () => {
                     setAdvanceType('Give');
                     setIsAdvanceOpen(true);
                   }}
-                  className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-bold flex items-center gap-1 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-sm shadow-amber-500/10 active:scale-95"
+                  className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-sm shadow-amber-500/10 active:scale-95"
                 >
-                  <span className="material-symbols-rounded select-none" style={{ fontSize: '12px' }}>add</span>
+                  <span className="material-symbols-rounded select-none" style={{ fontSize: '15px' }}>add</span>
                   <span>Advance</span>
                 </button>
               </div>
@@ -2115,7 +2092,7 @@ export const StaffProfileScreen: React.FC = () => {
                     <CustomSelect
                       value={payoutMonth}
                       onChange={handleMonthChange}
-                      options={getPayoutMonths(staff.id).options}
+                      options={getPayoutMonths().options}
                       className="w-full"
                     />
                   </div>

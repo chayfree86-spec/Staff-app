@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { CustomDialog } from '../components/ui/CustomDialog';
 import { CustomSelect } from '../components/ui/CustomSelect';
-import { format, parseISO } from 'date-fns';
 import { useAlertConfirm } from '../components/ui/AlertConfirmProvider';
 import { CustomDatePicker } from '../components/ui/CustomDatePicker';
 
@@ -10,12 +9,7 @@ export const StaffScreen: React.FC = () => {
   const {
     staffList,
     attendance,
-    payoutList,
-    advanceList,
-    deductionList,
     addStaff,
-    updateStaff,
-    deleteStaff,
     setScreen,
     setActiveStaffProfileId,
     currentDate,
@@ -26,8 +20,6 @@ export const StaffScreen: React.FC = () => {
   const { alert } = useAlertConfirm();
 
   const [search, setSearch] = useState('');
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   // Form states - Add Staff
   const [name, setName] = useState('');
@@ -42,24 +34,7 @@ export const StaffScreen: React.FC = () => {
   const [basis, setBasis] = useState('Attendance Based');
   const [error, setError] = useState('');
 
-  // Form states - Edit Staff
-  const [editStaffId, setEditStaffId] = useState('');
-  const [editName, setEditName] = useState('');
-  const [editMobile, setEditMobile] = useState('');
-  const [editFatherName, setEditFatherName] = useState('');
-  const [editMobile2, setEditMobile2] = useState('');
-  const [editJoiningDate, setEditJoiningDate] = useState('');
-  const [editAddress, setEditAddress] = useState('');
-  const [editProfileImage, setEditProfileImage] = useState('');
-  const [editSalary, setEditSalary] = useState('');
-  const [editSalaryType, setEditSalaryType] = useState('Monthly');
-  const [editBasis, setEditBasis] = useState('Attendance Based');
-  const [editError, setEditError] = useState('');
-
-  const [staffToDelete, setStaffToDelete] = useState<{ id: string; name: string } | null>(null);
-
   const currentYearMonth = currentDate.slice(0, 7); // YYYY-MM
-  const currentMonthLabel = format(parseISO(currentDate), 'MMMM yyyy');
 
   const filteredStaff = staffList.filter((staff) =>
     staff.name.toLowerCase().includes(search.toLowerCase())
@@ -137,77 +112,6 @@ export const StaffScreen: React.FC = () => {
     setProfileImage('');
     setSalary('');
     setIsAddStaffModalOpen(false);
-  };
-
-  const handleOpenEdit = (staff: any) => {
-    setEditStaffId(staff.id);
-    setEditName(staff.name);
-    setEditMobile(staff.mobile);
-    setEditFatherName(staff.fatherName || '');
-    setEditMobile2(staff.mobile2 || '');
-    setEditJoiningDate(staff.joiningDate || '');
-    setEditAddress(staff.address || '');
-    setEditProfileImage(staff.profileImage || '');
-    setEditSalary(String(staff.monthlySalary));
-    setEditSalaryType(staff.salaryType);
-    setEditBasis(staff.calculationBasis);
-    setEditError('');
-    setIsEditModalOpen(true);
-  };
-
-  const handleEditStaff = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editName.trim()) {
-      await alert('Please enter the employee\'s Full Name.', {
-        title: 'Validation Failed',
-        type: 'warning',
-        confirmText: 'OK'
-      });
-      return;
-    }
-    if (!editSalary.trim()) {
-      await alert('Please enter the Monthly / Daily Salary Base.', {
-        title: 'Validation Failed',
-        type: 'warning',
-        confirmText: 'OK'
-      });
-      return;
-    }
-    if (editMobile.trim() && editMobile.length < 10) {
-      await alert('Mobile number must be at least 10 digits.', {
-        title: 'Validation Failed',
-        type: 'warning',
-        confirmText: 'OK'
-      });
-      return;
-    }
-    setEditError('');
-    updateStaff(editStaffId, {
-      name: editName,
-      mobile: editMobile,
-      monthlySalary: Number(editSalary),
-      salaryType: editSalaryType as 'Monthly' | 'Daily',
-      calculationBasis: editBasis as 'Attendance Based' | 'Fixed Salary',
-      fatherName: editFatherName.trim() || undefined,
-      mobile2: editMobile2.trim() || undefined,
-      joiningDate: editJoiningDate || undefined,
-      address: editAddress.trim() || undefined,
-      profileImage: editProfileImage || undefined,
-    });
-    setIsEditModalOpen(false);
-  };
-
-  const handleOpenDeleteConfirm = (staff: any) => {
-    setStaffToDelete({ id: staff.id, name: staff.name });
-    setIsDeleteConfirmOpen(true);
-  };
-
-  const handleDeleteStaff = () => {
-    if (staffToDelete) {
-      deleteStaff(staffToDelete.id);
-      setIsDeleteConfirmOpen(false);
-      setStaffToDelete(null);
-    }
   };
 
   const getStaffRole = (staff: { salaryType: string; calculationBasis: string }) =>
@@ -560,201 +464,6 @@ export const StaffScreen: React.FC = () => {
         </CustomDialog>
       )}
 
-      {/* Edit Staff Dialog */}
-      {isEditModalOpen && (
-        <CustomDialog
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          title="Edit Staff Member details"
-          actions={
-            <>
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditStaff}
-                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-500 text-white rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-sm shadow-primary/10"
-              >
-                Save Changes
-              </button>
-            </>
-          }
-        >
-          <form onSubmit={handleEditStaff} className="flex flex-col gap-4">
-            {editError && (
-              <div className="p-2.5 bg-red-50 dark:bg-red-950/20 text-red-500 rounded-app-card text-xs border border-red-200">
-                {editError}
-              </div>
-            )}
-            {/* Profile Photo */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Profile Photo</label>
-              <div className="flex items-center gap-3">
-                {editProfileImage ? (
-                  <div className="relative w-12 h-12 rounded-full overflow-hidden border border-app-border">
-                    <img src={editProfileImage} alt="Profile Preview" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => setEditProfileImage('')}
-                      className="absolute inset-0 bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-all text-[10px] font-bold"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <label className="w-12 h-12 rounded-full bg-app-bg border border-dashed border-app-border flex items-center justify-center cursor-pointer hover:border-primary hover:text-primary transition-all text-app-text-secondary">
-                    <span className="material-symbols-rounded text-lg">add_a_photo</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setEditProfileImage(reader.result as string);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-                <span className="text-[10px] text-app-text-secondary font-medium">Upload employee photo (JPEG, PNG)</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Full Name</label>
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary font-bold focus:outline-none focus:border-primary transition-all"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Father's Name</label>
-              <input
-                type="text"
-                placeholder="Enter staff full name"
-                value={editFatherName}
-                onChange={(e) => setEditFatherName(e.target.value)}
-                className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary font-bold focus:outline-none focus:border-primary transition-all"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Primary Mobile</label>
-                <input
-                  type="tel"
-                  value={editMobile}
-                  onChange={(e) => setEditMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary font-bold focus:outline-none focus:border-primary transition-all"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Secondary Mobile</label>
-                <input
-                  type="tel"
-                  placeholder="Optional 10-digit number"
-                  value={editMobile2}
-                  onChange={(e) => setEditMobile2(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary font-bold focus:outline-none focus:border-primary transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Joining Date</label>
-              <CustomDatePicker
-                value={editJoiningDate}
-                onChange={(val) => setEditJoiningDate(val)}
-                className="w-full"
-                inline
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Address</label>
-              <textarea
-                placeholder="Residential Address"
-                value={editAddress}
-                onChange={(e) => setEditAddress(e.target.value)}
-                rows={2}
-                className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary font-bold placeholder:text-app-text-secondary focus:outline-none focus:border-primary resize-none transition-all"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <CustomSelect
-                label="Salary Type"
-                value={editSalaryType}
-                onChange={setEditSalaryType}
-                options={[
-                  { value: 'Monthly', label: 'Monthly' },
-                  { value: 'Daily', label: 'Daily' },
-                ]}
-              />
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">Monthly / Daily Base</label>
-                <input
-                  type="number"
-                  value={editSalary}
-                  onChange={(e) => setEditSalary(e.target.value)}
-                  className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary font-bold focus:outline-none focus:border-primary no-spinners transition-all"
-                />
-              </div>
-            </div>
-
-            <CustomSelect
-              label="Salary Calculation Basis"
-              value={editBasis}
-              onChange={setEditBasis}
-              options={[
-                { value: 'Attendance Based', label: 'Attendance Based' },
-                { value: 'Fixed Salary', label: 'Fixed Salary' },
-              ]}
-            />
-          </form>
-        </CustomDialog>
-      )}
-
-      {/* Delete Staff Dialog */}
-      {isDeleteConfirmOpen && (
-        <CustomDialog
-          isOpen={isDeleteConfirmOpen}
-          onClose={() => setIsDeleteConfirmOpen(false)}
-          title="Delete Staff Member"
-          actions={
-            <>
-              <button
-                onClick={() => setIsDeleteConfirmOpen(false)}
-                className="px-4 py-2 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteStaff}
-                className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-sm shadow-rose-500/10"
-              >
-                Delete Staff
-              </button>
-            </>
-          }
-        >
-          <p className="text-sm text-app-text-secondary leading-relaxed">
-            Are you sure you want to permanently delete <strong>{staffToDelete?.name}</strong> from the system?
-            This action cannot be undone and will delete all their historical records.
-          </p>
-        </CustomDialog>
-      )}
     </div>
   );
 };

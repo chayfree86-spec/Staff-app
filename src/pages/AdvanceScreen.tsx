@@ -143,7 +143,7 @@ export const AdvanceScreen: React.FC = () => {
     staffAdvances.map(a => {
       try {
         return format(parseISO(a.date), 'MMMM yyyy');
-      } catch (err) {
+      } catch {
         return '';
       }
     }).filter(Boolean)
@@ -160,7 +160,7 @@ export const AdvanceScreen: React.FC = () => {
       try {
         const mLabel = format(parseISO(a.date), 'MMMM yyyy');
         return mLabel === historyMonthFilter;
-      } catch (err) {
+      } catch {
         return false;
       }
     })

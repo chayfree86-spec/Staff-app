@@ -255,3 +255,12 @@ button:active {
   padding-top: env(safe-area-inset-top);
 }
 
+/* Dialog Actions Buttons - Premium Sizing */
+div.flex.items-center.justify-end.gap-3.px-6.py-4.bg-app-surface.border-t.border-app-border button,
+div.flex.items-center.justify-end.gap-3.px-6.py-4.bg-app-surface.border-t.border-app-border a {
+  padding: 0.625rem 1.65rem !important;
+  font-size: 0.775rem !important; /* text-xs equivalent but slightly fuller */
+  line-height: 1.1rem !important;
+  border-radius: 0.75rem !important; /* rounded-xl */
+}
+
