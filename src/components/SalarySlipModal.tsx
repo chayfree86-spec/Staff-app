@@ -12,11 +12,11 @@ interface SalarySlipModalProps {
 const numberToWords = (num: number): string => {
   const a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
   const b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
-  
+
   if (num === 0) return 'zero';
-  
+
   let words = '';
-  
+
   if (num >= 100000) {
     words += numberToWords(Math.floor(num / 100000)) + 'lakh ';
     num %= 100000;
@@ -148,7 +148,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
   // 5. Share Handler
   const handleShare = () => {
     const shareText = `Salary Slip - ${monthLabel}\n-------------------------\nBusiness: ${businessInfo.name}\nEmployee: ${staff.name}\nRole: ${staff.calculationBasis === 'Fixed Salary' ? 'Fixed Salary' : 'Attendance Based'}\nEarned: ₹${earned.toLocaleString('en-IN')}\nHeld: ₹${holdAmount.toLocaleString('en-IN')}\nReleased: ₹${releasedAmount.toLocaleString('en-IN')}\nDeductions/Advances: ₹${(advanceAdjusted + deduction).toLocaleString('en-IN')}\nNet Paid: ₹${paid.toLocaleString('en-IN')}\nStatus: ${paid >= netPayable ? 'Fully Paid' : paid > 0 ? 'Partially Paid' : 'Unpaid'}\n-------------------------`;
-    
+
     if (navigator.share) {
       navigator.share({
         title: `Salary Slip - ${staff.name}`,
@@ -167,7 +167,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 dark:bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 select-none">
       <div className="bg-app-surface border border-app-border/85 rounded-3xl shadow-xl w-full max-w-2xl max-h-[98vh] flex flex-col justify-between overflow-hidden animate-in zoom-in-95 duration-200">
-        
+
         {/* Modal Header */}
         <div className="flex justify-between items-center px-6 py-3.5 border-b border-app-border/60 shrink-0">
           <h2 className="text-xs font-black text-app-text-primary uppercase tracking-wider flex items-center gap-2">

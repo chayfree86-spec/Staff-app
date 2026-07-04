@@ -100,7 +100,10 @@ if ($action === 'create') {
         $auth['user_id'],
     ]);
 
-    respond(['ok' => true, 'id' => (int) $pdo->lastInsertId()]);
+    $newStaffId = (int) $pdo->lastInsertId();
+    recompute_salary_slip_all_months($pdo, $businessId, $newStaffId, (int) $auth['user_id']);
+
+    respond(['ok' => true, 'id' => $newStaffId]);
 }
 
 if ($action === 'update') {
@@ -135,6 +138,8 @@ if ($action === 'update') {
         $id,
         $businessId,
     ]);
+
+    recompute_salary_slip_all_months($pdo, $businessId, $id, (int) $auth['user_id']);
 
     respond(['ok' => true, 'id' => $id]);
 }

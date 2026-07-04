@@ -11,6 +11,10 @@ import { DeductionScreen } from '../pages/DeductionScreen';
 import { ReportsScreen } from '../pages/ReportsScreen';
 import { BusinessScreen } from '../pages/BusinessScreen';
 import { SettingsScreen } from '../pages/SettingsScreen';
+import { CreateBusinessScreen } from '../pages/CreateBusinessScreen';
+import { BusinessesScreen } from '../pages/BusinessesScreen';
+import { AdvanceHistoryScreen } from '../pages/AdvanceHistoryScreen';
+import { DeductionHistoryScreen } from '../pages/DeductionHistoryScreen';
 import { CustomDialog } from './ui/CustomDialog';
 import { format, parseISO } from 'date-fns';
 
@@ -121,6 +125,14 @@ export const Layout: React.FC = () => {
         return <BusinessScreen />;
       case 'settings':
         return <SettingsScreen />;
+      case 'create-business':
+        return <CreateBusinessScreen />;
+      case 'businesses':
+        return <BusinessesScreen />;
+      case 'advance-history':
+        return <AdvanceHistoryScreen />;
+      case 'deduction-history':
+        return <DeductionHistoryScreen />;
       default:
         return <AttendanceScreen />;
     }
@@ -150,6 +162,14 @@ export const Layout: React.FC = () => {
         return 'Business Details';
       case 'settings':
         return 'Settings';
+      case 'create-business':
+        return 'New Business';
+      case 'businesses':
+        return 'Businesses & Users';
+      case 'advance-history':
+        return 'Advance History';
+      case 'deduction-history':
+        return 'Deduction History';
       default:
         return 'Staff Attendance';
     }
@@ -225,7 +245,7 @@ export const Layout: React.FC = () => {
     if (tabId === 'staff') return currentScreen === 'staff' || currentScreen === 'staff-profile';
     if (tabId === 'attendance') return currentScreen === 'attendance';
     if (tabId === 'salary') return currentScreen === 'salary';
-    if (tabId === 'more') return ['more', 'advance', 'deduction', 'reports', 'business', 'settings'].includes(currentScreen);
+    if (tabId === 'more') return ['more', 'advance', 'deduction', 'reports', 'business', 'settings', 'create-business', 'businesses', 'advance-history', 'deduction-history'].includes(currentScreen);
     return false;
   };
 
@@ -237,9 +257,17 @@ export const Layout: React.FC = () => {
         <div className="w-full px-6 py-3 flex items-center justify-between">
           {/* Logo + Business Name + Screen Subtitle */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-500 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-500/20">
-              {businessInitials}
-            </div>
+            {businessInfo.logo ? (
+              <img
+                src={businessInfo.logo}
+                alt="Business Logo"
+                className="w-10 h-10 rounded-full object-cover shadow-md border border-app-border"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-500 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-500/20">
+                {businessInitials}
+              </div>
+            )}
             <div>
               <h1 className="text-sm font-black text-app-text-primary tracking-tight leading-none">
                 {businessInfo.name}

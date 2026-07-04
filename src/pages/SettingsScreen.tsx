@@ -171,27 +171,56 @@ export const SettingsScreen: React.FC = () => {
                     label: `Day ${i + 1}`,
                   }))}
                 />
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-black text-app-text-secondary uppercase tracking-[0.1em]">
-                    New Staff Payout Hold (Days)
-                  </label>
-                  <div className="relative mt-1">
-                    <input
-                      type="number"
-                      min={0}
-                      max={90}
-                      placeholder="e.g. 10"
-                      value={settings.newStaffSalaryHoldDays || ''}
-                      onChange={(e) => {
-                        const val = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value));
-                        handleSelectChange('newStaffSalaryHoldDays', val);
-                      }}
-                      className="w-full px-4 py-2.5 bg-app-bg border border-app-border rounded-xl text-xs text-app-text-primary font-bold focus:outline-none focus:border-primary no-spinners transition-all"
-                    />
-                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-app-text-secondary uppercase tracking-wider">
-                      {settings.newStaffSalaryHoldDays === 0 ? 'No Hold' : 'Days'}
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center bg-app-bg px-4 py-2.5 rounded-xl border border-app-border">
+                    <div className="flex flex-col gap-0.5 text-left">
+                      <span className="text-xs font-bold text-app-text-primary">Staff Payout Hold</span>
+                      <span className="text-[9px] text-app-text-secondary leading-none font-semibold">Hold salary payouts for new staff</span>
                     </div>
+                    
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const isEnabled = settings.newStaffSalaryHoldDays > 0;
+                        updateSettings({ newStaffSalaryHoldDays: isEnabled ? 0 : 10 });
+                        triggerSaveAlert();
+                      }}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        settings.newStaffSalaryHoldDays > 0 ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-800'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          settings.newStaffSalaryHoldDays > 0 ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
                   </div>
+
+                  {settings.newStaffSalaryHoldDays > 0 && (
+                    <div className="flex flex-col gap-1 text-left animate-in fade-in slide-in-from-top-1 duration-200">
+                      <label className="text-[10px] font-black text-app-text-secondary uppercase tracking-[0.1em]">
+                        Hold Duration (Days)
+                      </label>
+                      <div className="relative mt-0.5">
+                        <input
+                          type="number"
+                          min={1}
+                          max={31}
+                          placeholder="e.g. 10"
+                          value={settings.newStaffSalaryHoldDays || ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 10 : Math.max(1, Math.min(31, Number(e.target.value)));
+                            handleSelectChange('newStaffSalaryHoldDays', val);
+                          }}
+                          className="w-full px-4 py-2.5 bg-app-bg border border-app-border rounded-xl text-xs text-app-text-primary font-bold focus:outline-none focus:border-primary no-spinners transition-all"
+                        />
+                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-app-text-secondary uppercase tracking-wider">
+                          Days
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

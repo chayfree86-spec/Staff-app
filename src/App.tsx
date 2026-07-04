@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from './components/Layout';
-import { InteractiveGridBackground } from './components/InteractiveGridBackground';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import { useStore } from './store/useStore';
 
@@ -93,11 +92,10 @@ function App() {
       triggerAutoAttendance();
       const interval = setInterval(() => {
         triggerAutoAttendance();
-      }, 30000);
+      }, 60000);
       return () => clearInterval(interval);
     }
-  }, [isLoggedIn, currentDate, settings.autoAttendanceEnabled, settings.autoAttendanceTime, triggerAutoAttendance]);
-
+  }, [isLoggedIn, triggerAutoAttendance]);
   // Auto-detect login method based on input value (digits/mobile -> PIN, email/text -> Password)
   useEffect(() => {
     const trimmed = identifierInput.trim();
@@ -121,6 +119,7 @@ function App() {
       return detectedMethod;
     });
   }, [identifierInput]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -394,7 +393,6 @@ function App() {
             <path d="M0,128 C480,240 960,40 1440,160 L1440,320 L0,320 Z" />
           </svg>
         </div>
-
         <div className="w-full max-w-md bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[2rem] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-10 relative">
           <div className="bg-app-surface border border-app-border/40 rounded-[26px] p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-6">
             
@@ -419,7 +417,6 @@ function App() {
                 {error}
               </div>
             )}
-
             {/* Form */}
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
@@ -444,7 +441,6 @@ function App() {
                 <label className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">
                   {loginMethod === 'pin' ? 'PIN' : 'Password'}
                 </label>
-                
                 {loginMethod === 'pin' ? (
                   <div className="flex justify-center gap-3 max-w-xs mx-auto w-full py-1">
                     {[0, 1, 2, 3].map((index) => (

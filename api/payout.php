@@ -50,4 +50,6 @@ if ($stmt->rowCount() === 0) {
     respond(['ok' => false, 'message' => 'Staff member not found.'], 404);
 }
 
+recompute_salary_slip_snapshot($pdo, $businessId, $staffId, $salaryMonth, (int) $auth['user_id']);
+
 respond(['ok' => true, 'id' => (int) $pdo->lastInsertId()]);

@@ -57,6 +57,8 @@ if ($action === 'create') {
         respond(['ok' => false, 'message' => 'Staff member not found.'], 404);
     }
 
+    recompute_salary_slip_for_date($pdo, $businessId, $staffId, $date, (int) $auth['user_id']);
+
     respond(['ok' => true, 'id' => (int) $pdo->lastInsertId()]);
 }
 
@@ -65,6 +67,13 @@ if ($action === 'update') {
     $date = (string) ($input['date'] ?? '');
     if (!valid_date($date)) {
         respond(['ok' => false, 'message' => 'Valid date is required.'], 422);
+    }
+
+    $stmt = $pdo->prepare('SELECT staff_id, transaction_date FROM staff_transactions WHERE id = ? AND business_id = ?');
+    $stmt->execute([$id, $businessId]);
+    $existing = $stmt->fetch();
+    if (!$existing) {
+        respond(['ok' => false, 'message' => 'Transaction not found.'], 404);
     }
 
     [$kind, $amount] = transaction_kind_and_amount($type, (float) ($input['amount'] ?? 0));
@@ -83,14 +92,28 @@ if ($action === 'update') {
         $businessId,
     ]);
 
+    $staffId = (int) $existing['staff_id'];
+    recompute_salary_slip_for_date($pdo, $businessId, $staffId, $existing['transaction_date'], (int) $auth['user_id']);
+    if (substr($existing['transaction_date'], 0, 7) !== substr($date, 0, 7)) {
+        recompute_salary_slip_for_date($pdo, $businessId, $staffId, $date, (int) $auth['user_id']);
+    }
+
     respond(['ok' => true, 'id' => $id]);
 }
 
 if ($action === 'delete') {
     $id = require_int_id($input);
 
+    $stmt = $pdo->prepare('SELECT staff_id, transaction_date FROM staff_transactions WHERE id = ? AND business_id = ?');
+    $stmt->execute([$id, $businessId]);
+    $existing = $stmt->fetch();
+
     $stmt = $pdo->prepare('DELETE FROM staff_transactions WHERE id = ? AND business_id = ?');
     $stmt->execute([$id, $businessId]);
+
+    if ($existing) {
+        recompute_salary_slip_for_date($pdo, $businessId, (int) $existing['staff_id'], $existing['transaction_date'], (int) $auth['user_id']);
+    }
 
     respond(['ok' => true]);
 }

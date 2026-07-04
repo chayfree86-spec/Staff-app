@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, eachDayOfInterval } from 'date-fns';
 import {
   changePasswordRequest,
   createPayoutRequest,
@@ -91,7 +91,7 @@ export interface Settings {
 }
 
 interface AppState {
-  currentScreen: 'attendance' | 'dashboard' | 'staff' | 'salary' | 'more' | 'staff-profile' | 'advance' | 'deduction' | 'reports' | 'business' | 'settings' | 'create-business' | 'businesses';
+  currentScreen: 'attendance' | 'dashboard' | 'staff' | 'salary' | 'more' | 'staff-profile' | 'advance' | 'deduction' | 'reports' | 'business' | 'settings' | 'create-business' | 'businesses' | 'advance-history' | 'deduction-history';
   activeStaffProfileId: string | null;
   currentDate: string; // YYYY-MM-DD
   searchQuery: string;
@@ -133,14 +133,24 @@ interface AppState {
   triggerAutoAttendance: () => void;
 }
 
-// The DB assigns simple numeric ids; new records get a temporary local id for
-// the optimistic update, replaced by the real id once the server responds.
+// The DB assigns simple numeric ids (1, 2, 3, ...). New records get a
+// temporary local id for the optimistic update, replaced by the real id
+// as soon as the server responds.
 const createTempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+// Images saved while the DB column was VARCHAR(500) were truncated and can
+// never render; drop them so the initials avatar shows instead.
+const isBrokenImage = (img?: string) =>
+  !!img && img.startsWith('data:') && img.length <= 500;
+
 const applyBootstrapData = (data: ApiBootstrapData) => ({
-  businessInfo: data.businessInfo,
+  businessInfo: isBrokenImage(data.businessInfo.logo)
+    ? { ...data.businessInfo, logo: '' }
+    : data.businessInfo,
   settings: data.settings,
-  staffList: data.staffList,
+  staffList: data.staffList.map((staff) =>
+    isBrokenImage(staff.profileImage) ? { ...staff, profileImage: undefined } : staff
+  ),
   attendance: data.attendance,
   advanceList: data.advanceList,
   deductionList: data.deductionList,
@@ -268,12 +278,66 @@ export const useStore = create<AppState>((set, get) => ({
       avatar: initials,
       perDaySalary: Math.round(staff.salaryType === 'Monthly' ? staff.monthlySalary / 30 : staff.monthlySalary),
     };
-    set((state) => ({ staffList: [...state.staffList, newStaff] }));
+    // Auto-mark attendance from joiningDate to currentDate (inclusive)
+    const start = parseISO(staff.joiningDate);
+    const end = parseISO(get().currentDate);
+    const weeklyHolidays = get().settings.weeklyHoliday || [];
+    
+    let datesList: Date[] = [];
+    if (start <= end) {
+      try {
+        datesList = eachDayOfInterval({ start, end });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    set((state) => {
+      const updatedAttendance = { ...state.attendance };
+      datesList.forEach((d) => {
+        const dateStr = format(d, 'yyyy-MM-dd');
+        const dayName = format(d, 'EEEE');
+        const isHoliday = weeklyHolidays.includes(dayName);
+        const status = isHoliday ? ('Holiday' as const) : ('Present' as const);
+        
+        if (!updatedAttendance[dateStr]) {
+          updatedAttendance[dateStr] = {};
+        }
+        updatedAttendance[dateStr][tempId] = {
+          status,
+          timestamp: new Date().toISOString(),
+        };
+      });
+      return { 
+        staffList: [...state.staffList, newStaff],
+        attendance: updatedAttendance
+      };
+    });
+    
     persistCreate(createStaffRequest(newStaff), (realId) => {
-      set((state) => ({
-        staffList: state.staffList.map((s) => (s.id === tempId ? { ...s, id: realId } : s)),
-        activeStaffProfileId: state.activeStaffProfileId === tempId ? realId : state.activeStaffProfileId,
-      }));
+      set((state) => {
+        const updatedAttendance = { ...state.attendance };
+        Object.keys(updatedAttendance).forEach((dateStr) => {
+          if (updatedAttendance[dateStr][tempId]) {
+            updatedAttendance[dateStr][realId] = updatedAttendance[dateStr][tempId];
+            delete updatedAttendance[dateStr][tempId];
+          }
+        });
+        return {
+          staffList: state.staffList.map((s) => (s.id === tempId ? { ...s, id: realId } : s)),
+          activeStaffProfileId: state.activeStaffProfileId === tempId ? realId : state.activeStaffProfileId,
+          attendance: updatedAttendance,
+        };
+      });
+      
+      // Persist marked attendance to server
+      datesList.forEach((d) => {
+        const dateStr = format(d, 'yyyy-MM-dd');
+        const dayName = format(d, 'EEEE');
+        const isHoliday = weeklyHolidays.includes(dayName);
+        const status = isHoliday ? ('Holiday' as const) : ('Present' as const);
+        persist(markAttendanceRequest(dateStr, realId, status));
+      });
     });
   },
 
