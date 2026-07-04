@@ -566,20 +566,20 @@ export const SalaryScreen: React.FC = () => {
           onClose={() => setPayoutStaffId(null)}
           title={`Pay Salary`}
           actions={
-            <>
+            <div className="flex gap-3 w-full">
               <button
                 onClick={() => setPayoutStaffId(null)}
-                className="px-4 py-2 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
+                className="flex-1 py-3 px-4 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-sm font-bold active:scale-95 transition-all cursor-pointer text-center"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePayoutSubmit}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer shadow-sm shadow-primary/10"
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-black active:scale-95 shadow-md shadow-indigo-600/10 transition-all cursor-pointer text-center"
               >
                 Confirm Payment
               </button>
-            </>
+            </div>
           }
         >
           {(() => {
