@@ -324,7 +324,7 @@ export const useStore = create<AppState>((set, get) => ({
       };
     });
     
-    persistCreate(createStaffRequest(newStaff), (realId) => {
+    persistCreate(createStaffRequest(newStaff, get().currentDate), (realId) => {
       set((state) => {
         const updatedAttendance = { ...state.attendance };
         Object.keys(updatedAttendance).forEach((dateStr) => {

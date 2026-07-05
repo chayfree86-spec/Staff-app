@@ -117,7 +117,10 @@ if ($action === 'create') {
         }
 
         // Auto-mark attendance from joining date to current date (inclusive)
-        $currentDateStr = date('Y-m-d');
+        $currentDateStr = (string) ($input['currentDate'] ?? date('Y-m-d'));
+        if (!valid_date($currentDateStr)) {
+            $currentDateStr = date('Y-m-d');
+        }
         $joiningDateStr = $payload['joining_date'];
 
         if (strtotime($joiningDateStr) <= strtotime($currentDateStr)) {
