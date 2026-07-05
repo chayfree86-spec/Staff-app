@@ -6,6 +6,7 @@ import { CustomDatePicker } from '../components/ui/CustomDatePicker';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { useAlertConfirm } from '../components/ui/AlertConfirmProvider';
 import { SalarySlipModal } from '../components/SalarySlipModal';
+import { getProfileGradientStyle } from '../utils/gradient';
 
 export const StaffProfileScreen: React.FC = () => {
   const { confirm, alert } = useAlertConfirm();
@@ -660,19 +661,7 @@ export const StaffProfileScreen: React.FC = () => {
 
   const getStaffRole = () => `${staff.salaryType} • ${staff.calculationBasis}`;
 
-  const getProfileGradient = (name: string) => {
-    const gradients = [
-      'from-primary to-purple-500',
-      'from-violet-600 to-fuchsia-600',
-      'from-indigo-600 to-purple-600',
-      'from-primary to-indigo-600',
-      'from-violet-500 via-primary to-purple-500',
-      'from-purple-600 to-fuchsia-500',
-    ];
-    let sum = 0;
-    for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
-    return gradients[sum % gradients.length];
-  };
+
 
   const currentMonthName = format(selectedDate, 'MMMM yyyy');
 
@@ -756,7 +745,10 @@ export const StaffProfileScreen: React.FC = () => {
       </div>
 
       {/* 1. TOP PROFILE BANNER CARD */}
-      <div className={`w-full bg-gradient-to-r ${getProfileGradient(staff.name)} rounded-app-card p-6 text-white flex items-center gap-6 shadow-md`}>
+      <div
+        style={getProfileGradientStyle(staff.id, staffList)}
+        className="w-full rounded-app-card p-6 text-white flex items-center gap-6 shadow-md"
+      >
         
         {/* Left Side: Avatar with upload indicator, Text info */}
         <div className="flex items-center gap-4">
@@ -1966,7 +1958,10 @@ export const StaffProfileScreen: React.FC = () => {
               <div className="flex flex-col gap-4 text-left">
                 {/* Staff Info Card */}
                 <div className="flex items-center gap-3 bg-app-bg p-3.5 rounded-xl border border-app-border">
-                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0`}>
+                  <div
+                    style={getProfileGradientStyle(staff.id, staffList)}
+                    className="w-10 h-10 rounded-full text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0"
+                  >
                     {staff.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                   </div>
                   <div>
