@@ -162,7 +162,7 @@ if ($action === 'create') {
     } catch (Throwable $e) {
         $pdo->rollBack();
         error_log('create staff failed: ' . $e->getMessage());
-        respond(['ok' => false, 'message' => 'Could not create staff. Please try again.'], 500);
+        respond(['ok' => false, 'message' => 'Could not create staff: ' . $e->getMessage()], 500);
     }
 }
 
