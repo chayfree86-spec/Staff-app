@@ -6,6 +6,7 @@ import { CustomDatePicker } from '../components/ui/CustomDatePicker';
 import { format, parseISO } from 'date-fns';
 import { useAlertConfirm } from '../components/ui/AlertConfirmProvider';
 import { SalarySlipModal } from '../components/SalarySlipModal';
+import { getProfileGradientStyle } from '../utils/gradient';
 
 export const SalaryScreen: React.FC = () => {
   const { confirm } = useAlertConfirm();
@@ -299,19 +300,7 @@ export const SalaryScreen: React.FC = () => {
     }
   };
 
-  const getProfileGradient = (name: string) => {
-    const gradients = [
-      'from-indigo-600 to-purple-600',
-      'from-emerald-600 to-teal-600',
-      'from-rose-600 to-orange-500',
-      'from-blue-600 to-indigo-600',
-      'from-amber-500 to-rose-600',
-      'from-violet-600 to-fuchsia-600',
-    ];
-    let sum = 0;
-    for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
-    return gradients[sum % gradients.length];
-  };
+
 
   const handlePayoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -446,7 +435,10 @@ export const SalaryScreen: React.FC = () => {
                         className="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-app-border/80"
                       />
                     ) : (
-                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0`}>
+                      <div
+                        style={getProfileGradientStyle(staff.id, staffList)}
+                        className="w-10 h-10 rounded-full text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0"
+                      >
                         {initials}
                       </div>
                     )}
@@ -626,7 +618,10 @@ export const SalaryScreen: React.FC = () => {
                                 className="w-9 h-9 rounded-full object-cover shadow-sm shrink-0 border border-app-border/80"
                               />
                             ) : (
-                              <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-[10px] flex items-center justify-center shadow-sm shrink-0 border-0`}>
+                              <div
+                                style={getProfileGradientStyle(staff.id, staffList)}
+                                className="w-9 h-9 rounded-full text-white font-black text-[10px] flex items-center justify-center shadow-sm shrink-0 border-0"
+                              >
                                 {initials}
                               </div>
                             )}
@@ -800,7 +795,10 @@ export const SalaryScreen: React.FC = () => {
               <div className="flex flex-col gap-4 text-left">
                 {/* Staff Info Card */}
                 <div className="flex items-center gap-3 bg-app-bg p-3.5 rounded-xl border border-app-border">
-                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getProfileGradient(selectedStaff.name)} text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0`}>
+                  <div
+                    style={getProfileGradientStyle(selectedStaff.id, staffList)}
+                    className="w-10 h-10 rounded-full text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0"
+                  >
                     {selectedStaff.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                   </div>
                   <div>

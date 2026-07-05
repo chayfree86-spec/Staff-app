@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { SalarySlipModal } from '../components/SalarySlipModal';
 import { format, parseISO } from 'date-fns';
+import { getProfileGradientStyle } from '../utils/gradient';
 
 export const ReportsScreen: React.FC = () => {
   const {
@@ -166,18 +167,7 @@ export const ReportsScreen: React.FC = () => {
     { totalEarned: 0, totalPaid: 0, totalDeductions: 0, totalOutstandingAdvance: 0 }
   );
 
-  const getProfileGradient = (name: string) => {
-    const hash = name.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
-    const gradients = [
-      'from-blue-500 to-indigo-600',
-      'from-emerald-400 to-teal-600',
-      'from-violet-500 to-purple-600',
-      'from-amber-400 to-orange-500',
-      'from-rose-500 to-pink-600',
-      'from-cyan-400 to-blue-600'
-    ];
-    return gradients[hash % gradients.length];
-  };
+
 
   const getStaffRoleText = (staff: { salaryType: string; calculationBasis: string }) =>
     `${staff.salaryType} • ${staff.calculationBasis}`;
@@ -293,7 +283,10 @@ export const ReportsScreen: React.FC = () => {
               >
                 <div className="bg-app-surface border border-app-border/40 rounded-[calc(1rem-0.125rem)] p-4 flex flex-col gap-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
                   <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-xs flex items-center justify-center shadow-sm select-none`}>
+                    <div
+                      style={getProfileGradientStyle(staff.id, staffList)}
+                      className="w-9 h-9 rounded-xl text-white font-black text-xs flex items-center justify-center shadow-sm select-none"
+                    >
                       {initials}
                     </div>
                     <div>
@@ -414,7 +407,10 @@ export const ReportsScreen: React.FC = () => {
                       <tr key={staff.id} className="hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors">
                         {/* Staff profile */}
                         <td className="px-5 py-4 flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-[10px] flex items-center justify-center shadow-sm select-none`}>
+                          <div
+                            style={getProfileGradientStyle(staff.id, staffList)}
+                            className="w-8 h-8 rounded-full text-white font-black text-[10px] flex items-center justify-center shadow-sm select-none"
+                          >
                             {initials}
                           </div>
                           <div>

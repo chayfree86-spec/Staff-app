@@ -4,6 +4,7 @@ import { CustomDialog } from '../components/ui/CustomDialog';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { CustomDatePicker } from '../components/ui/CustomDatePicker';
 import { format, parseISO } from 'date-fns';
+import { getProfileGradientStyle } from '../utils/gradient';
 
 export const AdvanceScreen: React.FC = () => {
   const {
@@ -117,19 +118,7 @@ export const AdvanceScreen: React.FC = () => {
     }
   };
 
-  const getProfileGradient = (name: string) => {
-    const gradients = [
-      'from-indigo-600 to-purple-600',
-      'from-emerald-600 to-teal-600',
-      'from-rose-600 to-orange-500',
-      'from-blue-600 to-indigo-600',
-      'from-amber-500 to-rose-600',
-      'from-violet-600 to-fuchsia-600',
-    ];
-    let sum = 0;
-    for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
-    return gradients[sum % gradients.length];
-  };
+
 
   // Get details for history sub-view
   const selectedStaff = staffList.find(s => s.id === selectedStaffIdForHistory);
@@ -496,7 +485,6 @@ export const AdvanceScreen: React.FC = () => {
             {filteredStaff.map((s) => {
               const outstanding = getOutstandingAdvance(s.id);
               const initials = s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-              const profileGradient = getProfileGradient(s.name);
               
               return (
                 <div
@@ -516,7 +504,10 @@ export const AdvanceScreen: React.FC = () => {
                           className="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-app-border/40"
                         />
                       ) : (
-                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${profileGradient} text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0`}>
+                        <div
+                          style={getProfileGradientStyle(s.id, staffList)}
+                          className="w-10 h-10 rounded-full text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0"
+                        >
                           {initials}
                         </div>
                       )}
@@ -557,9 +548,8 @@ export const AdvanceScreen: React.FC = () => {
             {filteredStaff.map((s) => {
               const outstanding = getOutstandingAdvance(s.id);
               const initials = s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-              const profileGradient = getProfileGradient(s.name);
               const outstandingColor = outstanding > 0 
-                ? `bg-gradient-to-r ${profileGradient} bg-clip-text text-transparent` 
+                ? 'text-amber-500 font-extrabold' 
                 : 'text-app-text-secondary';
 
               return (
@@ -580,7 +570,10 @@ export const AdvanceScreen: React.FC = () => {
                         className="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-app-border/40"
                       />
                     ) : (
-                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getProfileGradient(s.name)} text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0`}>
+                      <div
+                        style={getProfileGradientStyle(s.id, staffList)}
+                        className="w-10 h-10 rounded-full text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0"
+                      >
                         {initials}
                       </div>
                     )}

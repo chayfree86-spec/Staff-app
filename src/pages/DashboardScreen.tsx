@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
+import { getProfileGradientStyle } from '../utils/gradient';
 import { listBusinessesRequest } from '../api/client';
 
 export const DashboardScreen: React.FC = () => {
@@ -144,19 +145,7 @@ export const DashboardScreen: React.FC = () => {
     .sort((a, b) => b.record.timestamp.localeCompare(a.record.timestamp))
     .slice(0, 5);
 
-  const getProfileGradient = (name: string) => {
-    const gradients = [
-      'from-indigo-600 to-purple-600',
-      'from-emerald-600 to-teal-600',
-      'from-rose-600 to-orange-500',
-      'from-blue-600 to-indigo-600',
-      'from-amber-500 to-rose-600',
-      'from-violet-600 to-fuchsia-600',
-    ];
-    let sum = 0;
-    for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
-    return gradients[sum % gradients.length];
-  };
+
 
   const greeting = (() => {
     const hour = new Date().getHours();
@@ -405,7 +394,10 @@ export const DashboardScreen: React.FC = () => {
                     className="flex items-center justify-between gap-3 p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-xs flex items-center justify-center shrink-0`}>
+                      <div
+                        style={getProfileGradientStyle(staff.id, staffList)}
+                        className="w-9 h-9 rounded-full text-white font-black text-xs flex items-center justify-center shrink-0"
+                      >
                         {initials}
                       </div>
                       <div className="overflow-hidden">
@@ -457,7 +449,10 @@ export const DashboardScreen: React.FC = () => {
                       className="flex items-center justify-between gap-3 p-3 bg-app-bg border border-app-border/40 rounded-2xl hover:border-amber-500/30 transition-all cursor-pointer group"
                     >
                       <div className="flex items-center gap-3 overflow-hidden">
-                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-[10px] flex items-center justify-center shrink-0`}>
+                        <div
+                          style={getProfileGradientStyle(staff.id, staffList)}
+                          className="w-8 h-8 rounded-full text-white font-black text-[10px] flex items-center justify-center shrink-0"
+                        >
                           {initials}
                         </div>
                         <div className="overflow-hidden">
@@ -509,7 +504,10 @@ export const DashboardScreen: React.FC = () => {
                       className="flex items-center justify-between gap-3 p-3 bg-app-bg border border-app-border/40 rounded-2xl hover:border-emerald-500/30 transition-all cursor-pointer group"
                     >
                       <div className="flex items-center gap-3 overflow-hidden">
-                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getProfileGradient(staffName)} text-white font-black text-[10px] flex items-center justify-center shrink-0`}>
+                        <div
+                          style={getProfileGradientStyle(payout.staffId || '', staffList)}
+                          className="w-8 h-8 rounded-full text-white font-black text-[10px] flex items-center justify-center shrink-0"
+                        >
                           {initials}
                         </div>
                         <div className="overflow-hidden">
@@ -575,7 +573,7 @@ export const DashboardScreen: React.FC = () => {
                             className="w-8 h-8 rounded-full object-cover shrink-0"
                           />
                         ) : (
-                          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getProfileGradient(biz.name)} text-white font-black text-[10px] flex items-center justify-center shrink-0`}>
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-650 to-purple-650 text-white font-black text-[10px] flex items-center justify-center shrink-0">
                             {initials}
                           </div>
                         )}
