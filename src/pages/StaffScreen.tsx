@@ -4,6 +4,7 @@ import { CustomDialog } from '../components/ui/CustomDialog';
 import { CustomSelect } from '../components/ui/CustomSelect';
 import { useAlertConfirm } from '../components/ui/AlertConfirmProvider';
 import { CustomDatePicker } from '../components/ui/CustomDatePicker';
+import { getProfileGradientStyle } from '../utils/gradient';
 
 export const StaffScreen: React.FC = () => {
   const {
@@ -116,31 +117,7 @@ export const StaffScreen: React.FC = () => {
 
   const getStaffRole = (staff: { salaryType: string; calculationBasis: string }) =>
     `${staff.salaryType} • ${staff.calculationBasis}`;
-  const getProfileGradientStyle = (id: string) => {
-    const gradients = [
-      'linear-gradient(135deg, #1e3a8a, #4f46e5)', // Deep Blue to Indigo
-      'linear-gradient(135deg, #be123c, #881337)', // Deep Rose to Dark Crimson
-      'linear-gradient(135deg, #064e3b, #047857)', // Forest Green to Dark Teal
-      'linear-gradient(135deg, #7e22ce, #5b21b6)', // Deep Purple to Violet
-      'linear-gradient(135deg, #c2410c, #7c2d12)', // Deep Orange to Rust
-      'linear-gradient(135deg, #0369a1, #075985)', // Deep Sky Blue
-      'linear-gradient(135deg, #9d174d, #701a75)', // Deep Pink to Dark Violet
-      'linear-gradient(135deg, #0f766e, #0e7490)', // Dark Teal to Cyan
-      'linear-gradient(135deg, #b45309, #78350f)', // Amber to Dark Bronze
-      'linear-gradient(135deg, #701a75, #4c1d95)', // Deep Plum to Purple
-      'linear-gradient(135deg, #b91c1c, #7f1d1d)', // Deep Red to Burgundy
-      'linear-gradient(135deg, #3730a3, #1e1b4b)', // Deep Indigo to Navy Blue
-      'linear-gradient(135deg, #15803d, #14532d)', // Green to Dark Green
-      'linear-gradient(135deg, #c2410c, #9d174d)', // Dark Sunset (Orange to Pink)
-      'linear-gradient(135deg, #4c1d95, #1e1b4b)', // Midnight Violet to Navy
-    ];
 
-    const index = staffList.findIndex(s => s.id === id);
-    const gradient = gradients[Math.max(0, index) % gradients.length];
-    return {
-      backgroundImage: gradient,
-    };
-  };
   return (
     <div className="flex flex-col gap-5 pb-44 animate-in fade-in duration-200">
       
@@ -186,7 +163,7 @@ export const StaffScreen: React.FC = () => {
                       />
                     ) : (
                       <div
-                        style={getProfileGradientStyle(staff.id)}
+                        style={getProfileGradientStyle(staff.id, staffList)}
                         className="w-10 h-10 rounded-full text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0"
                       >
                         {initials}
@@ -219,7 +196,7 @@ export const StaffScreen: React.FC = () => {
 
                 {/* Bottom part: Monthly, Per day rate columns, circle icon */}
                 <div
-                  style={getProfileGradientStyle(staff.id)}
+                  style={getProfileGradientStyle(staff.id, staffList)}
                   className="border-t border-app-border grid grid-cols-3 items-center p-3 px-4 text-white"
                 >
                   <div>
