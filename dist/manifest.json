@@ -1,0 +1,24 @@
+{
+  "name": "Staff App",
+  "short_name": "Staff App",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF9FF",
+  "theme_color": "#4f46e5",
+  "description": "Premium Staff management and tracking application",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/pwa-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

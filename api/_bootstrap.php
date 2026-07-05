@@ -2,6 +2,29 @@
 
 declare(strict_types=1);
 
+// Load environment variables from .env
+$envPath = __DIR__ . '/../.env';
+if (file_exists($envPath)) {
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (empty($line) || strpos($line, '#') === 0) {
+            continue;
+        }
+        $parts = explode('=', $line, 2);
+        if (count($parts) === 2) {
+            $key = trim($parts[0]);
+            $val = trim($parts[1]);
+            if (preg_match('/^([\'"])(.*)\1$/', $val, $matches)) {
+                $val = $matches[2];
+            }
+            $_SERVER[$key] = $val;
+            $_ENV[$key] = $val;
+            putenv("$key=$val");
+        }
+    }
+}
+
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 $allowedOrigins = [
     'http://127.0.0.1:5173',
