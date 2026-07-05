@@ -339,15 +339,6 @@ export const useStore = create<AppState>((set, get) => ({
           attendance: updatedAttendance,
         };
       });
-      
-      // Persist marked attendance to server
-      datesList.forEach((d) => {
-        const dateStr = format(d, 'yyyy-MM-dd');
-        const dayName = format(d, 'EEEE');
-        const isHoliday = weeklyHolidays.includes(dayName);
-        const status = isHoliday ? ('Holiday' as const) : ('Present' as const);
-        persist(markAttendanceRequest(dateStr, realId, status));
-      });
     });
   },
 

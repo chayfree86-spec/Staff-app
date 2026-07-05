@@ -72,38 +72,95 @@ function staff_payload_from_input(array $input): array
 if ($action === 'create') {
     $payload = staff_payload_from_input($input);
 
-    $stmt = $pdo->prepare(
-        'INSERT INTO staff (
-            business_id, name, father_name, mobile, mobile2, address,
-            avatar_initials, profile_image_url, monthly_salary, per_day_salary,
-            salary_type, calculation_basis, joining_date, status, deactivation_date,
-            released_salary_hold, owner_user_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    );
-    $stmt->execute([
-        $businessId,
-        $payload['name'],
-        $payload['father_name'],
-        $payload['mobile'],
-        $payload['mobile2'],
-        $payload['address'],
-        $payload['avatar_initials'],
-        $payload['profile_image_url'],
-        $payload['monthly_salary'],
-        $payload['per_day_salary'],
-        $payload['salary_type'],
-        $payload['calculation_basis'],
-        $payload['joining_date'],
-        $payload['status'],
-        $payload['deactivation_date'],
-        $payload['released_salary_hold'],
-        $auth['user_id'],
-    ]);
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare(
+            'INSERT INTO staff (
+                business_id, name, father_name, mobile, mobile2, address,
+                avatar_initials, profile_image_url, monthly_salary, per_day_salary,
+                salary_type, calculation_basis, joining_date, status, deactivation_date,
+                released_salary_hold, owner_user_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([
+            $businessId,
+            $payload['name'],
+            $payload['father_name'],
+            $payload['mobile'],
+            $payload['mobile2'],
+            $payload['address'],
+            $payload['avatar_initials'],
+            $payload['profile_image_url'],
+            $payload['monthly_salary'],
+            $payload['per_day_salary'],
+            $payload['salary_type'],
+            $payload['calculation_basis'],
+            $payload['joining_date'],
+            $payload['status'],
+            $payload['deactivation_date'],
+            $payload['released_salary_hold'],
+            $auth['user_id'],
+        ]);
 
-    $newStaffId = (int) $pdo->lastInsertId();
-    recompute_salary_slip_all_months($pdo, $businessId, $newStaffId, (int) $auth['user_id']);
+        $newStaffId = (int) $pdo->lastInsertId();
 
-    respond(['ok' => true, 'id' => $newStaffId]);
+        // Get weekly holidays from settings
+        $stmtSettings = $pdo->prepare('SELECT weekly_holidays FROM business_settings WHERE business_id = ? LIMIT 1');
+        $stmtSettings->execute([$businessId]);
+        $settingsRow = $stmtSettings->fetch();
+        $weeklyHolidays = [];
+        if ($settingsRow && !empty($settingsRow['weekly_holidays'])) {
+            $weeklyHolidays = json_decode($settingsRow['weekly_holidays'], true);
+            if (!is_array($weeklyHolidays)) {
+                $weeklyHolidays = [];
+            }
+        }
+
+        // Auto-mark attendance from joining date to current date (inclusive)
+        $currentDateStr = date('Y-m-d');
+        $joiningDateStr = $payload['joining_date'];
+
+        if (strtotime($joiningDateStr) <= strtotime($currentDateStr)) {
+            $joinDateObj = new DateTime($joiningDateStr);
+            $currentDateObj = new DateTime($currentDateStr);
+            $currentDateObj->modify('+1 day'); // to include current date in period
+
+            $interval = new DateInterval('P1D');
+            $period = new DatePeriod($joinDateObj, $interval, $currentDateObj);
+
+            $stmtAtt = $pdo->prepare(
+                'INSERT INTO attendance_records (business_id, staff_id, attendance_date, status, marked_at, marked_by)
+                 VALUES (?, ?, ?, ?, NOW(), ?)
+                 ON DUPLICATE KEY UPDATE status = ?, marked_at = NOW(), marked_by = ?'
+            );
+
+            foreach ($period as $dt) {
+                $dateStr = $dt->format('Y-m-d');
+                $dayName = $dt->format('l'); // Full representation of the day of the week, e.g. Sunday
+                $isHoliday = in_array($dayName, $weeklyHolidays, true);
+                $status = $isHoliday ? 'holiday' : 'present';
+
+                $stmtAtt->execute([
+                    $businessId,
+                    $newStaffId,
+                    $dateStr,
+                    $status,
+                    $auth['user_id'],
+                    $status,
+                    $auth['user_id'],
+                ]);
+            }
+        }
+
+        recompute_salary_slip_all_months($pdo, $businessId, $newStaffId, (int) $auth['user_id']);
+
+        $pdo->commit();
+        respond(['ok' => true, 'id' => $newStaffId]);
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log('create staff failed: ' . $e->getMessage());
+        respond(['ok' => false, 'message' => 'Could not create staff. Please try again.'], 500);
+    }
 }
 
 if ($action === 'update') {

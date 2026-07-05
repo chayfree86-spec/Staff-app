@@ -116,35 +116,23 @@ export const StaffScreen: React.FC = () => {
 
   const getStaffRole = (staff: { salaryType: string; calculationBasis: string }) =>
     `${staff.salaryType} • ${staff.calculationBasis}`;
-
-  const getProfileGradient = (name: string) => {
-    const gradients = [
-      'from-indigo-600 to-purple-600',
-      'from-emerald-600 to-teal-600',
-      'from-rose-600 to-orange-500',
-      'from-blue-600 to-indigo-600',
-      'from-amber-500 to-rose-600',
-      'from-violet-600 to-fuchsia-600',
-    ];
-    let sum = 0;
-    for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
-    return gradients[sum % gradients.length];
+  const getProfileGradientStyle = (name: string) => {
+    let hash = 0;
+    const cleanName = name || '';
+    for (let i = 0; i < cleanName.length; i++) {
+      hash = cleanName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    const hue1 = Math.abs(hash) % 360;
+    const hue2 = (hue1 + 35) % 360;
+    
+    const color1 = `hsl(${hue1}, 75%, 52%)`;
+    const color2 = `hsl(${hue2}, 80%, 42%)`;
+    
+    return {
+      backgroundImage: `linear-gradient(135deg, ${color1}, ${color2})`,
+    };
   };
-
-  const getStripGradient = (name: string) => {
-    const gradients = [
-      'from-indigo-600 to-purple-600 text-white',
-      'from-emerald-600 to-teal-600 text-white',
-      'from-rose-600 to-orange-500 text-white',
-      'from-blue-600 to-indigo-600 text-white',
-      'from-amber-500 to-rose-600 text-white',
-      'from-violet-600 to-fuchsia-600 text-white',
-    ];
-    let sum = 0;
-    for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
-    return gradients[sum % gradients.length];
-  };
-
   return (
     <div className="flex flex-col gap-5 pb-44 animate-in fade-in duration-200">
       
@@ -189,7 +177,10 @@ export const StaffScreen: React.FC = () => {
                         className="w-10 h-10 rounded-full object-cover shadow-sm shrink-0 border border-app-border/40"
                       />
                     ) : (
-                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getProfileGradient(staff.name)} text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0`}>
+                      <div
+                        style={getProfileGradientStyle(staff.name)}
+                        className="w-10 h-10 rounded-full text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0"
+                      >
                         {initials}
                       </div>
                     )}
@@ -219,7 +210,10 @@ export const StaffScreen: React.FC = () => {
                 </div>
 
                 {/* Bottom part: Monthly, Per day rate columns, circle icon */}
-                <div className={`border-t border-app-border grid grid-cols-3 items-center p-3 px-4 bg-gradient-to-r ${getStripGradient(staff.name)}`}>
+                <div
+                  style={getProfileGradientStyle(staff.name)}
+                  className="border-t border-app-border grid grid-cols-3 items-center p-3 px-4 text-white"
+                >
                   <div>
                     <div className="text-[8px] text-white/75 font-bold uppercase tracking-wider leading-none">Monthly</div>
                     <div className="text-xs font-bold text-white mt-1.5 leading-none">
