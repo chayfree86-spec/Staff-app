@@ -33,7 +33,7 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
         $weeklyHolidays = [];
     }
 
-    $stmt = $pdo->prepare('SELECT * FROM staff WHERE business_id = ? ORDER BY created_at ASC, name ASC');
+    $stmt = $pdo->prepare('SELECT * FROM staff WHERE business_id = ? ORDER BY name ASC');
     $stmt->execute([$businessId]);
     $staffRows = $stmt->fetchAll();
     // ids are ints in the DB; the frontend works with string ids everywhere.

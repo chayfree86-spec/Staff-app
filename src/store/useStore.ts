@@ -153,9 +153,9 @@ const applyBootstrapData = (data: ApiBootstrapData) => ({
     ? { ...data.businessInfo, logo: '' }
     : data.businessInfo,
   settings: data.settings,
-  staffList: data.staffList.map((staff) =>
-    isBrokenImage(staff.profileImage) ? { ...staff, profileImage: undefined } : staff
-  ),
+  staffList: [...data.staffList]
+    .map((staff) => isBrokenImage(staff.profileImage) ? { ...staff, profileImage: undefined } : staff)
+    .sort((a, b) => a.name.localeCompare(b.name)),
   attendance: data.attendance,
   advanceList: data.advanceList,
   deductionList: data.deductionList,
@@ -319,7 +319,7 @@ export const useStore = create<AppState>((set, get) => ({
         };
       });
       return { 
-        staffList: [...state.staffList, newStaff],
+        staffList: [...state.staffList, newStaff].sort((a, b) => a.name.localeCompare(b.name)),
         attendance: updatedAttendance
       };
     });
@@ -344,8 +344,8 @@ export const useStore = create<AppState>((set, get) => ({
 
   updateStaff: (id, updates) => {
     let updatedStaff: Staff | undefined;
-    set((state) => ({
-      staffList: state.staffList.map((s) => {
+    set((state) => {
+      const newList = state.staffList.map((s) => {
         if (s.id === id) {
           const merged = { ...s, ...updates };
           merged.perDaySalary = Math.round(
@@ -355,8 +355,10 @@ export const useStore = create<AppState>((set, get) => ({
           return merged;
         }
         return s;
-      }),
-    }));
+      });
+      newList.sort((a, b) => a.name.localeCompare(b.name));
+      return { staffList: newList };
+    });
     if (updatedStaff) {
       persist(updateStaffRequest(updatedStaff));
     }
