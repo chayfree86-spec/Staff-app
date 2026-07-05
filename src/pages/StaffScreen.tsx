@@ -118,30 +118,21 @@ export const StaffScreen: React.FC = () => {
     `${staff.salaryType} • ${staff.calculationBasis}`;
   const getProfileGradientStyle = (id: string) => {
     const gradients = [
-      'linear-gradient(135deg, #6366f1, #8b5cf6)',
-      'linear-gradient(135deg, #10b981, #0d9488)',
-      'linear-gradient(135deg, #f43f5e, #ec4899)',
-      'linear-gradient(135deg, #3b82f6, #06b6d4)',
-      'linear-gradient(135deg, #f59e0b, #f97316)',
-      'linear-gradient(135deg, #8b5cf6, #d946ef)',
-      'linear-gradient(135deg, #06b6d4, #3b82f6)',
-      'linear-gradient(135deg, #22c55e, #84cc16)',
-      'linear-gradient(135deg, #ef4444, #f43f5e)',
-      'linear-gradient(135deg, #14b8a6, #10b981)',
-      'linear-gradient(135deg, #a855f7, #7c3aed)',
-      'linear-gradient(135deg, #f97316, #ef4444)',
-      'linear-gradient(135deg, #0ea5e9, #4f46e5)',
-      'linear-gradient(135deg, #d946ef, #ec4899)',
-      'linear-gradient(135deg, #eab308, #f59e0b)',
-      'linear-gradient(135deg, #10b981, #84cc16)',
-      'linear-gradient(135deg, #4f46e5, #3b82f6)',
-      'linear-gradient(135deg, #ec4899, #f43f5e)',
-      'linear-gradient(135deg, #f59e0b, #ef4444)',
-      'linear-gradient(135deg, #7c3aed, #a855f7)',
-      'linear-gradient(135deg, #06b6d4, #14b8a6)',
-      'linear-gradient(135deg, #3b82f6, #4f46e5)',
-      'linear-gradient(135deg, #f97316, #f59e0b)',
-      'linear-gradient(135deg, #22c55e, #10b981)',
+      'linear-gradient(135deg, #F7941E, #72C6EF, #00A651)', // Radioactive Heat (Orange, Blue, Green)
+      'linear-gradient(135deg, #5433FF, #20BDFF, #A5FECB)', // Lunada (Purple, Blue, Green)
+      'linear-gradient(135deg, #77A1D3, #79CBCA, #E684AE)', // Hazel (Blue, Teal, Pink)
+      'linear-gradient(135deg, #ec008c, #fc6767)',          // DIMIGO (Pink, Orange)
+      'linear-gradient(135deg, #e65c00, #F9D423)',          // Blooker20 (Orange, Yellow)
+      'linear-gradient(135deg, #16A085, #F4D03F)',          // Harmonic Energy (Teal, Yellow)
+      'linear-gradient(135deg, #DA22FF, #9733EE)',          // Intuitive Purple (Purple)
+      'linear-gradient(135deg, #02AAB0, #00CDAC)',          // Green Beach (Teal, Green)
+      'linear-gradient(135deg, #ff6e7f, #bfe9ff)',          // Noon to Dusk (Pink, Blue)
+      'linear-gradient(135deg, #EDE574, #E1F5C4)',          // Sunny Days (Yellow, Green)
+      'linear-gradient(135deg, #9400D3, #4B0082)',          // Farhan (Deep Purple)
+      'linear-gradient(135deg, #FD8112, #0085CA)',          // Blue Orange (Orange, Blue)
+      'linear-gradient(135deg, #091E3A, #2F80ED, #2D9EE0)', // Omolon (Deep Blue)
+      'linear-gradient(135deg, #603813, #b29f94)',          // Cool Brown (Brown, Grey)
+      'linear-gradient(135deg, #9796f0, #fbc7d4)',          // Anamnisar (Pastel Lavender, Pink)
     ];
 
     const index = staffList.findIndex(s => s.id === id);
