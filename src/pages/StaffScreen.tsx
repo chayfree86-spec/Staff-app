@@ -116,21 +116,38 @@ export const StaffScreen: React.FC = () => {
 
   const getStaffRole = (staff: { salaryType: string; calculationBasis: string }) =>
     `${staff.salaryType} • ${staff.calculationBasis}`;
-  const getProfileGradientStyle = (name: string) => {
-    let hash = 0;
-    const cleanName = name || '';
-    for (let i = 0; i < cleanName.length; i++) {
-      hash = cleanName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    
-    const hue1 = Math.abs(hash) % 360;
-    const hue2 = (hue1 + 35) % 360;
-    
-    const color1 = `hsl(${hue1}, 75%, 52%)`;
-    const color2 = `hsl(${hue2}, 80%, 42%)`;
-    
+  const getProfileGradientStyle = (id: string) => {
+    const gradients = [
+      'linear-gradient(135deg, #6366f1, #8b5cf6)',
+      'linear-gradient(135deg, #10b981, #0d9488)',
+      'linear-gradient(135deg, #f43f5e, #ec4899)',
+      'linear-gradient(135deg, #3b82f6, #06b6d4)',
+      'linear-gradient(135deg, #f59e0b, #f97316)',
+      'linear-gradient(135deg, #8b5cf6, #d946ef)',
+      'linear-gradient(135deg, #06b6d4, #3b82f6)',
+      'linear-gradient(135deg, #22c55e, #84cc16)',
+      'linear-gradient(135deg, #ef4444, #f43f5e)',
+      'linear-gradient(135deg, #14b8a6, #10b981)',
+      'linear-gradient(135deg, #a855f7, #7c3aed)',
+      'linear-gradient(135deg, #f97316, #ef4444)',
+      'linear-gradient(135deg, #0ea5e9, #4f46e5)',
+      'linear-gradient(135deg, #d946ef, #ec4899)',
+      'linear-gradient(135deg, #eab308, #f59e0b)',
+      'linear-gradient(135deg, #10b981, #84cc16)',
+      'linear-gradient(135deg, #4f46e5, #3b82f6)',
+      'linear-gradient(135deg, #ec4899, #f43f5e)',
+      'linear-gradient(135deg, #f59e0b, #ef4444)',
+      'linear-gradient(135deg, #7c3aed, #a855f7)',
+      'linear-gradient(135deg, #06b6d4, #14b8a6)',
+      'linear-gradient(135deg, #3b82f6, #4f46e5)',
+      'linear-gradient(135deg, #f97316, #f59e0b)',
+      'linear-gradient(135deg, #22c55e, #10b981)',
+    ];
+
+    const index = staffList.findIndex(s => s.id === id);
+    const gradient = gradients[Math.max(0, index) % gradients.length];
     return {
-      backgroundImage: `linear-gradient(135deg, ${color1}, ${color2})`,
+      backgroundImage: gradient,
     };
   };
   return (
@@ -178,7 +195,7 @@ export const StaffScreen: React.FC = () => {
                       />
                     ) : (
                       <div
-                        style={getProfileGradientStyle(staff.name)}
+                        style={getProfileGradientStyle(staff.id)}
                         className="w-10 h-10 rounded-full text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0 border-0"
                       >
                         {initials}
@@ -211,7 +228,7 @@ export const StaffScreen: React.FC = () => {
 
                 {/* Bottom part: Monthly, Per day rate columns, circle icon */}
                 <div
-                  style={getProfileGradientStyle(staff.name)}
+                  style={getProfileGradientStyle(staff.id)}
                   className="border-t border-app-border grid grid-cols-3 items-center p-3 px-4 text-white"
                 >
                   <div>
