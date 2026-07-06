@@ -4,7 +4,7 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FAF9FF",
-  "theme_color": "#4f46e5",
+  "theme_color": "#FAF9FF",
   "description": "Premium Staff management and tracking application",
   "orientation": "portrait",
   "icons": [

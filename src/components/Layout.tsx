@@ -73,13 +73,26 @@ export const Layout: React.FC = () => {
   // Handle Theme application
   useEffect(() => {
     const root = window.document.documentElement;
+    // Keeps the phone's status bar / notification area in sync with the
+    // active theme (matches --bg-app in src/index.css for each mode), so it
+    // never shows a mismatched color against the app's own background.
+    const applyStatusBarColor = (resolvedTheme: 'light' | 'dark') => {
+      const color = resolvedTheme === 'dark' ? '#0B0914' : '#FAF9FF';
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute('content', color);
+      }
+    };
+
     const applyTheme = (themeMode: 'light' | 'dark' | 'system') => {
       root.classList.remove('light', 'dark');
       if (themeMode === 'system') {
         const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         root.classList.add(systemTheme);
+        applyStatusBarColor(systemTheme);
       } else {
         root.classList.add(themeMode);
+        applyStatusBarColor(themeMode);
       }
     };
 
