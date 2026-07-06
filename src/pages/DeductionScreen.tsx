@@ -5,6 +5,7 @@ import { CustomSelect } from '../components/ui/CustomSelect';
 import { CustomDatePicker } from '../components/ui/CustomDatePicker';
 import { format, parseISO } from 'date-fns';
 import { getProfileGradientStyle } from '../utils/gradient';
+import { getSalaryCycleForDate } from '../utils/salary';
 
 export const DeductionScreen: React.FC = () => {
   const {
@@ -15,6 +16,7 @@ export const DeductionScreen: React.FC = () => {
     deleteDeduction,
     setScreen,
     currentDate,
+    settings,
   } = useStore();
 
   const [search, setSearch] = useState('');
@@ -30,7 +32,9 @@ export const DeductionScreen: React.FC = () => {
 
   // History Sub-page States
   const [selectedStaffIdForHistory, setSelectedStaffIdForHistory] = useState<string | null>(null);
-  const [historyMonthFilter, setHistoryMonthFilter] = useState(currentDate.slice(0, 7));
+  const [historyMonthFilter, setHistoryMonthFilter] = useState(
+    getSalaryCycleForDate(currentDate, useStore.getState().settings.salaryCycleStart).label
+  );
 
   // Edit Deduction States
   const [editingDeduction, setEditingDeduction] = useState<any | null>(null);
@@ -120,27 +124,22 @@ export const DeductionScreen: React.FC = () => {
       // Calculations for metrics
       const totalAllTime = getStaffDeductionsTotal(selectedStaff.id);
       
+      const currentCycle = getSalaryCycleForDate(currentDate, settings.salaryCycleStart);
       const thisMonthDeds = deductionList.filter(d => {
         if (d.staffId !== selectedStaff.id) return false;
-        const dDate = parseISO(d.date);
-        const cDate = parseISO(currentDate);
-        return dDate.getMonth() === cDate.getMonth() && dDate.getFullYear() === cDate.getFullYear();
+        return d.date >= currentCycle.start && d.date <= currentCycle.end;
       });
       const totalThisMonth = thisMonthDeds.reduce((sum, d) => sum + d.amount, 0);
       const totalCount = staffDeductions.length;
 
-      // Extract unique months for filter options
+      // Extract unique salary cycles for filter options
       const uniqueMonths = Array.from(
         new Set(
-          staffDeductions.map(d => {
-            const date = parseISO(d.date);
-            return format(date, 'yyyy-MM');
-          })
+          staffDeductions.map(d => getSalaryCycleForDate(d.date, settings.salaryCycleStart).label)
         )
       ).sort((a, b) => b.localeCompare(a));
 
-      const currentMonthVal = currentDate.slice(0, 7);
-      const allFilterMonths = Array.from(new Set([currentMonthVal, ...uniqueMonths])).sort((a, b) => b.localeCompare(a));
+      const allFilterMonths = Array.from(new Set([currentCycle.label, ...uniqueMonths])).sort((a, b) => b.localeCompare(a));
 
       const historyMonthOptions = [
         { value: 'All', label: 'All Months' },
@@ -150,10 +149,11 @@ export const DeductionScreen: React.FC = () => {
         })
       ];
 
-      // Filter deductions list based on selected month
+      // Filter deductions list based on selected salary cycle
       const filteredStaffDeductions = staffDeductions.filter(d => {
         if (historyMonthFilter === 'All') return true;
-        return d.date.startsWith(historyMonthFilter);
+        const cycle = getSalaryCycleForDate(d.date, settings.salaryCycleStart);
+        return cycle.label === historyMonthFilter;
       }).sort((a, b) => b.date.localeCompare(a.date));
 
       return (
@@ -470,7 +470,7 @@ export const DeductionScreen: React.FC = () => {
                 key={s.id}
                 onClick={() => {
                   setSelectedStaffIdForHistory(s.id);
-                  setHistoryMonthFilter(currentDate.slice(0, 7));
+                  setHistoryMonthFilter(getSalaryCycleForDate(currentDate, settings.salaryCycleStart).label);
                 }}
                 className="bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-xl p-1 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
               >
@@ -536,7 +536,7 @@ export const DeductionScreen: React.FC = () => {
                 key={s.id}
                 onClick={() => {
                   setSelectedStaffIdForHistory(s.id);
-                  setHistoryMonthFilter(currentDate.slice(0, 7));
+                  setHistoryMonthFilter(getSalaryCycleForDate(currentDate, settings.salaryCycleStart).label);
                 }}
                 className="group bg-black/[0.015] dark:bg-white/[0.015] border border-app-border rounded-[20px] p-1 shadow-sm transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 active:scale-[0.97] cursor-pointer"
               >

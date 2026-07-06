@@ -3,13 +3,15 @@
 declare(strict_types=1);
 
 // Recomputes and upserts the salary_slip_snapshots row for one staff member and
-// one salary month (Y-m-01), mirroring the calculation used by the frontend
-// (SalaryScreen/StaffProfileScreen/ReportsScreen/SalarySlipModal getSalaryDetails).
-// Called after any change that could affect a month's numbers, so the table
+// one salary cycle (identified by salaryMonth, 'Y-m-01' — the calendar month
+// the cycle's LAST day falls in; see helpers.php::salary_cycle_for_label),
+// mirroring the calculation used by the frontend (SalaryScreen/
+// StaffProfileScreen/ReportsScreen/SalarySlipModal getSalaryDetails).
+// Called after any change that could affect a cycle's numbers, so the table
 // always reflects the current attendance/salary/advance/deduction/payout state.
 function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staffId, string $salaryMonth, ?int $generatedBy = null): void
 {
-    $monthPrefix = substr($salaryMonth, 0, 7); // 'YYYY-MM'
+    $monthLabel = substr($salaryMonth, 0, 7); // 'YYYY-MM'
 
     $stmt = $pdo->prepare('SELECT * FROM staff WHERE id = ? AND business_id = ? LIMIT 1');
     $stmt->execute([$staffId, $businessId]);
@@ -18,17 +20,26 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
         return;
     }
 
-    $stmt = $pdo->prepare('SELECT new_staff_salary_hold_days FROM business_settings WHERE business_id = ? LIMIT 1');
+    $stmt = $pdo->prepare(
+        'SELECT new_staff_salary_hold_days, weekly_holiday_paid, month_calculation, salary_cycle_start
+         FROM business_settings WHERE business_id = ? LIMIT 1'
+    );
     $stmt->execute([$businessId]);
-    $holdDays = (int) ($stmt->fetchColumn() ?: 0);
+    $businessSettings = $stmt->fetch() ?: [];
+    $holdDays = (int) ($businessSettings['new_staff_salary_hold_days'] ?? 0);
+    $isHolidayPaid = ($businessSettings['weekly_holiday_paid'] ?? 'paid') !== 'unpaid';
+    $monthCalculation = (string) ($businessSettings['month_calculation'] ?? 'actual_calendar_month');
+    $cycleStartDay = (int) ($businessSettings['salary_cycle_start'] ?? 1);
+
+    $cycle = salary_cycle_for_label($monthLabel, $cycleStartDay);
 
     $stmt = $pdo->prepare(
         "SELECT status, COUNT(*) AS cnt FROM attendance_records
-         WHERE business_id = ? AND staff_id = ? AND DATE_FORMAT(attendance_date, '%Y-%m') = ?
+         WHERE business_id = ? AND staff_id = ? AND attendance_date BETWEEN ? AND ?
            AND attendance_date <= CURRENT_DATE()
          GROUP BY status"
     );
-    $stmt->execute([$businessId, $staffId, $monthPrefix]);
+    $stmt->execute([$businessId, $staffId, $cycle['start'], $cycle['end']]);
     $counts = ['present' => 0, 'absent' => 0, 'half_day' => 0, 'holiday' => 0];
     foreach ($stmt->fetchAll() as $row) {
         if (isset($counts[$row['status']])) {
@@ -39,9 +50,10 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
     $absentDays = $counts['absent'];
     $halfDays = $counts['half_day'];
     $holidayDays = $counts['holiday'];
-    $totalDaysCredited = $presentDays + ($halfDays * 0.5) + $holidayDays;
+    $creditedHolidayDays = $isHolidayPaid ? $holidayDays : 0;
+    $totalDaysCredited = $presentDays + ($halfDays * 0.5) + $creditedHolidayDays;
 
-    $perDayVal = (int) $staff['per_day_salary'];
+    $perDayVal = effective_per_day_rate($staff, $cycle, $monthCalculation);
     $monthlySalary = (int) $staff['monthly_salary'];
 
     $earned = ($staff['calculation_basis'] === 'fixed_salary' && $staff['salary_type'] === 'monthly')
@@ -50,23 +62,23 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
 
     $stmt = $pdo->prepare(
         "SELECT COALESCE(SUM(amount), 0) FROM staff_transactions
-         WHERE staff_id = ? AND kind = 'advance_returned' AND DATE_FORMAT(transaction_date, '%Y-%m') = ?"
+         WHERE staff_id = ? AND kind = 'advance_returned' AND transaction_date BETWEEN ? AND ?"
     );
-    $stmt->execute([$staffId, $monthPrefix]);
+    $stmt->execute([$staffId, $cycle['start'], $cycle['end']]);
     $advanceAdjusted = (int) $stmt->fetchColumn();
 
     $stmt = $pdo->prepare(
         "SELECT COALESCE(SUM(amount), 0) FROM staff_transactions
-         WHERE staff_id = ? AND kind = 'deduction' AND DATE_FORMAT(transaction_date, '%Y-%m') = ?"
+         WHERE staff_id = ? AND kind = 'deduction' AND transaction_date BETWEEN ? AND ?"
     );
-    $stmt->execute([$staffId, $monthPrefix]);
+    $stmt->execute([$staffId, $cycle['start'], $cycle['end']]);
     $deduction = (int) $stmt->fetchColumn();
 
     $holdAmount = 0;
     $releasedAmount = 0;
     if ($holdDays > 0) {
-        $joiningMonth = substr((string) $staff['joining_date'], 0, 7);
-        if ($joiningMonth === $monthPrefix) {
+        $joiningCycle = salary_cycle_for_date((string) $staff['joining_date'], $cycleStartDay);
+        if ($joiningCycle['label'] === $cycle['label']) {
             if ((bool) $staff['released_salary_hold']) {
                 $releasedAmount = (int) round($holdDays * $perDayVal);
             } else {
@@ -76,7 +88,8 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
         if (
             $staff['status'] === 'inactive'
             && $staff['deactivation_date']
-            && substr((string) $staff['deactivation_date'], 0, 7) === $monthPrefix
+            && (string) $staff['deactivation_date'] >= $cycle['start']
+            && (string) $staff['deactivation_date'] <= $cycle['end']
             && !(bool) $staff['released_salary_hold']
         ) {
             $releasedAmount = (int) round($holdDays * $perDayVal);
@@ -152,32 +165,47 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
     ]);
 }
 
-// Recomputes the snapshot for whichever month a given date falls in.
+// Recomputes the snapshot for whichever salary cycle a given date falls into.
 function recompute_salary_slip_for_date(PDO $pdo, string $businessId, int $staffId, string $date, ?int $generatedBy = null): void
 {
-    $salaryMonth = date('Y-m-01', strtotime($date));
-    recompute_salary_slip_snapshot($pdo, $businessId, $staffId, $salaryMonth, $generatedBy);
+    $stmt = $pdo->prepare('SELECT salary_cycle_start FROM business_settings WHERE business_id = ? LIMIT 1');
+    $stmt->execute([$businessId]);
+    $cycleStartDay = (int) ($stmt->fetchColumn() ?: 1);
+
+    $cycle = salary_cycle_for_date($date, $cycleStartDay);
+    recompute_salary_slip_snapshot($pdo, $businessId, $staffId, $cycle['label'] . '-01', $generatedBy);
 }
 
-// Recomputes every month that has any recorded attendance/transaction/payout/
-// snapshot data for this staff member, plus the current month. Used after a
-// staff record edit (salary/basis/status), since that can affect several
-// months' figures at once.
+// Recomputes every salary cycle that has any recorded attendance/transaction/
+// payout/snapshot data for this staff member, plus the current cycle. Used
+// after a staff record edit (salary/basis/status), since that can affect
+// several cycles' figures at once.
 function recompute_salary_slip_all_months(PDO $pdo, string $businessId, int $staffId, ?int $generatedBy = null): void
 {
+    $stmt = $pdo->prepare('SELECT salary_cycle_start FROM business_settings WHERE business_id = ? LIMIT 1');
+    $stmt->execute([$businessId]);
+    $cycleStartDay = (int) ($stmt->fetchColumn() ?: 1);
+
     $stmt = $pdo->prepare(
-        "SELECT DISTINCT DATE_FORMAT(attendance_date, '%Y-%m-01') AS m FROM attendance_records WHERE business_id = ? AND staff_id = ?
-         UNION SELECT DISTINCT DATE_FORMAT(transaction_date, '%Y-%m-01') FROM staff_transactions WHERE business_id = ? AND staff_id = ?
+        "SELECT DISTINCT attendance_date AS d FROM attendance_records WHERE business_id = ? AND staff_id = ?
+         UNION SELECT DISTINCT transaction_date FROM staff_transactions WHERE business_id = ? AND staff_id = ?
          UNION SELECT DISTINCT salary_month FROM salary_payouts WHERE business_id = ? AND staff_id = ?
          UNION SELECT DISTINCT salary_month FROM salary_slip_snapshots WHERE business_id = ? AND staff_id = ?
-         UNION SELECT DATE_FORMAT(CURDATE(), '%Y-%m-01')"
+         UNION SELECT CURDATE()"
     );
     $stmt->execute([$businessId, $staffId, $businessId, $staffId, $businessId, $staffId, $businessId, $staffId]);
-    $months = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $dates = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    foreach ($months as $month) {
-        if ($month) {
-            recompute_salary_slip_snapshot($pdo, $businessId, $staffId, (string) $month, $generatedBy);
+    $labels = [];
+    foreach ($dates as $d) {
+        if (!$d) {
+            continue;
         }
+        $cycle = salary_cycle_for_date((string) $d, $cycleStartDay);
+        $labels[$cycle['label']] = true;
+    }
+
+    foreach (array_keys($labels) as $label) {
+        recompute_salary_slip_snapshot($pdo, $businessId, $staffId, $label . '-01', $generatedBy);
     }
 }

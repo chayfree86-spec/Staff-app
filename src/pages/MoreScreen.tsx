@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
+import { getSalaryCycleForDate } from '../utils/salary';
 
 export const MoreScreen: React.FC = () => {
   const {
@@ -35,12 +36,12 @@ export const MoreScreen: React.FC = () => {
     0
   );
 
-  const currentYearMonth = currentDate.slice(0, 7); // YYYY-MM
+  const currentCycle = getSalaryCycleForDate(currentDate, settings.salaryCycleStart);
   const totalDeductionsThisMonth = deductionList
-    .filter(d => d.date.startsWith(currentYearMonth))
+    .filter(d => d.date >= currentCycle.start && d.date <= currentCycle.end)
     .reduce((sum, item) => sum + item.amount, 0);
 
-  const currentMonthLabel = format(parseISO(currentDate), 'MMMM yyyy');
+  const currentMonthLabel = format(parseISO(currentCycle.label + '-01'), 'MMMM yyyy');
 
   const businessInitials = businessInfo.name
     .split(' ')

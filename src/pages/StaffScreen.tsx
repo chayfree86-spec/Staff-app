@@ -5,6 +5,7 @@ import { CustomSelect } from '../components/ui/CustomSelect';
 import { useAlertConfirm } from '../components/ui/AlertConfirmProvider';
 import { CustomDatePicker } from '../components/ui/CustomDatePicker';
 import { getProfileGradientStyle } from '../utils/gradient';
+import { getEffectivePerDayRate, getSalaryCycleForDate } from '../utils/salary';
 
 export const StaffScreen: React.FC = () => {
   const {
@@ -16,6 +17,7 @@ export const StaffScreen: React.FC = () => {
     currentDate,
     isAddStaffModalOpen,
     setIsAddStaffModalOpen,
+    settings,
   } = useStore();
 
   const { alert } = useAlertConfirm();
@@ -35,7 +37,7 @@ export const StaffScreen: React.FC = () => {
   const [basis, setBasis] = useState('Attendance Based');
   const [error, setError] = useState('');
 
-  const currentYearMonth = currentDate.slice(0, 7); // YYYY-MM
+  const currentCycle = getSalaryCycleForDate(currentDate, settings.salaryCycleStart);
 
   const filteredStaff = staffList.filter((staff) =>
     staff.name.toLowerCase().includes(search.toLowerCase())
@@ -50,7 +52,7 @@ export const StaffScreen: React.FC = () => {
     let daysHoliday = 0;
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
-      if (dateStr.startsWith(currentYearMonth) && record[staffId]) {
+      if (dateStr >= currentCycle.start && dateStr <= currentCycle.end && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;
         if (status === 'Half Day') daysHalf++;
@@ -58,8 +60,9 @@ export const StaffScreen: React.FC = () => {
       }
     });
 
-    const perDayVal = staff.perDaySalary;
-    const totalDaysCredited = daysPresent + (daysHalf * 0.5) + daysHoliday;
+    const perDayVal = getEffectivePerDayRate(staff, currentCycle, settings.monthCalculation);
+    const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
+    const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
     return Math.round(totalDaysCredited * perDayVal);
   };
 

@@ -4,6 +4,7 @@ import { CustomDialog } from '../components/ui/CustomDialog';
 import { CustomDatePicker } from '../components/ui/CustomDatePicker';
 import { useAlertConfirm } from '../components/ui/AlertConfirmProvider';
 import { format, parseISO } from 'date-fns';
+import { getSalaryCycleForDate } from '../utils/salary';
 
 export const DeductionHistoryScreen: React.FC = () => {
   const { confirm } = useAlertConfirm();
@@ -17,6 +18,7 @@ export const DeductionHistoryScreen: React.FC = () => {
     deleteDeduction,
     currentDate,
     setScreen,
+    settings,
   } = useStore();
 
   const staff = staffList.find((s) => s.id === activeStaffProfileId);
@@ -57,9 +59,9 @@ export const DeductionHistoryScreen: React.FC = () => {
     .sort((a, b) => b.date.localeCompare(a.date));
   const allTimeTotal = allStaffDeductions.reduce((sum, d) => sum + d.amount, 0);
 
-  const currentYearMonth = currentDate.slice(0, 7);
+  const currentCycle = getSalaryCycleForDate(currentDate, settings.salaryCycleStart);
   const monthTotal = allStaffDeductions
-    .filter((d) => d.date.startsWith(currentYearMonth))
+    .filter((d) => d.date >= currentCycle.start && d.date <= currentCycle.end)
     .reduce((sum, d) => sum + d.amount, 0);
 
   const handleOpenAdd = () => {

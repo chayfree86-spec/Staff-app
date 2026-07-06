@@ -104,8 +104,8 @@ type CreateResponse = { ok: boolean; id?: number | string };
 
 // Create endpoints return the DB-assigned numeric id; callers swap it in place
 // of the temporary local id.
-export async function createStaffRequest(staff: Staff, currentDate: string): Promise<string | undefined> {
-  const res = await apiPost<CreateResponse>('/staff.php', { action: 'create', staff, currentDate });
+export async function createStaffRequest(staff: Staff): Promise<string | undefined> {
+  const res = await apiPost<CreateResponse>('/staff.php', { action: 'create', staff });
   return res.id != null ? String(res.id) : undefined;
 }
 

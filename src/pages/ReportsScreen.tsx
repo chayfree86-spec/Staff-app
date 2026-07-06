@@ -4,6 +4,7 @@ import { CustomSelect } from '../components/ui/CustomSelect';
 import { SalarySlipModal } from '../components/SalarySlipModal';
 import { format, parseISO } from 'date-fns';
 import { getProfileGradientStyle } from '../utils/gradient';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel } from '../utils/salary';
 
 export const ReportsScreen: React.FC = () => {
   const {
@@ -17,15 +18,15 @@ export const ReportsScreen: React.FC = () => {
     settings,
   } = useStore();
 
-  // 1. Generate last 12 months dynamically
+  // 1. Generate last 12 salary cycles dynamically
   const getMonthsList = () => {
     const list = [];
-    const curDate = parseISO(currentDate);
+    let cursor = currentDate;
     for (let i = 0; i < 12; i++) {
-      const d = new Date(curDate.getFullYear(), curDate.getMonth() - i, 1);
-      const label = format(d, 'MMMM yyyy');
-      const val = format(d, 'yyyy-MM');
-      list.push({ value: val, label: label });
+      const cycle = getSalaryCycleForDate(cursor, settings.salaryCycleStart);
+      const label = format(parseISO(cycle.label + '-01'), 'MMMM yyyy');
+      list.push({ value: cycle.label, label });
+      cursor = format(new Date(parseISO(cycle.start).getTime() - 86400000), 'yyyy-MM-dd');
     }
     return list;
   };
@@ -70,6 +71,8 @@ export const ReportsScreen: React.FC = () => {
       totalDaysCredited: 0
     };
 
+    const targetCycle = getSalaryCycleForLabel(targetYearMonth, settings.salaryCycleStart);
+
     let daysPresent = 0;
     let daysHalf = 0;
     let daysHoliday = 0;
@@ -77,7 +80,7 @@ export const ReportsScreen: React.FC = () => {
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
       if (dateStr > currentDate) return;
-      if (dateStr.startsWith(targetYearMonth) && record[staffId]) {
+      if (dateStr >= targetCycle.start && dateStr <= targetCycle.end && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;
         if (status === 'Absent') daysAbsent++;
@@ -86,21 +89,22 @@ export const ReportsScreen: React.FC = () => {
       }
     });
 
-    const perDayVal = staff.perDaySalary;
-    const totalDaysCredited = daysPresent + (daysHalf * 0.5) + daysHoliday;
-    
+    const perDayVal = getEffectivePerDayRate(staff, targetCycle, settings.monthCalculation);
+    const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
+    const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
+
     const earned = staff.calculationBasis === 'Fixed Salary' && staff.salaryType === 'Monthly'
       ? staff.monthlySalary
       : Math.round(totalDaysCredited * perDayVal);
 
     const advanceAdjusted = Math.abs(
       advanceList
-        .filter((a) => a.staffId === staffId && a.amount < 0 && a.date.startsWith(targetYearMonth))
+        .filter((a) => a.staffId === staffId && a.amount < 0 && a.date >= targetCycle.start && a.date <= targetCycle.end)
         .reduce((sum, item) => sum + item.amount, 0)
     );
 
     const deduction = deductionList
-      .filter((d) => d.staffId === staffId && d.date.startsWith(targetYearMonth))
+      .filter((d) => d.staffId === staffId && d.date >= targetCycle.start && d.date <= targetCycle.end)
       .reduce((sum, item) => sum + item.amount, 0);
 
     const paid = payoutList
@@ -110,11 +114,11 @@ export const ReportsScreen: React.FC = () => {
     let holdAmount = 0;
     let releasedAmount = 0;
 
-    const joiningMonth = staff.joiningDate.slice(0, 7);
+    const joiningCycle = getSalaryCycleForDate(staff.joiningDate, settings.salaryCycleStart);
     const holdDays = settings.newStaffSalaryHoldDays || 0;
 
     if (holdDays > 0) {
-      if (joiningMonth === targetYearMonth) {
+      if (joiningCycle.label === targetCycle.label) {
         if (staff.releasedSalaryHold) {
           holdAmount = 0;
           releasedAmount = Math.round(holdDays * perDayVal);
@@ -122,7 +126,12 @@ export const ReportsScreen: React.FC = () => {
           holdAmount = Math.min(earned, Math.round(holdDays * perDayVal));
         }
       }
-      if (staff.status === 'Inactive' && staff.deactivationDate && staff.deactivationDate.slice(0, 7) === targetYearMonth) {
+      if (
+        staff.status === 'Inactive' &&
+        staff.deactivationDate &&
+        staff.deactivationDate >= targetCycle.start &&
+        staff.deactivationDate <= targetCycle.end
+      ) {
         if (!staff.releasedSalaryHold) {
           releasedAmount = Math.round(holdDays * perDayVal);
         }

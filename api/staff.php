@@ -116,11 +116,11 @@ if ($action === 'create') {
             }
         }
 
-        // Auto-mark attendance from joining date to current date (inclusive)
-        $currentDateStr = (string) ($input['currentDate'] ?? date('Y-m-d'));
-        if (!valid_date($currentDateStr)) {
-            $currentDateStr = date('Y-m-d');
-        }
+        // Auto-mark attendance from joining date to today (inclusive). Always
+        // use the server's own date here — the client's "currentDate" is
+        // whatever day the Attendance calendar happens to be viewing, not
+        // necessarily today, so it cannot be trusted for this boundary.
+        $currentDateStr = date('Y-m-d');
         $joiningDateStr = $payload['joining_date'];
 
         if (strtotime($joiningDateStr) <= strtotime($currentDateStr)) {

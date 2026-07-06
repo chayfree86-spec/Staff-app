@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel } from '../utils/salary';
 
 interface SalarySlipModalProps {
   isOpen: boolean;
@@ -54,22 +55,16 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
   const staff = staffList.find((s) => s.id === staffId);
   if (!staff || !isOpen) return null;
 
-  // 1. Calculate targetYearMonth from monthLabel
+  // 1. Derive the salary cycle straight from monthLabel (e.g. "July 2026").
   let targetYearMonth = '';
   try {
-    const curDateObj = new Date();
-    const currentMonthLabelStr = format(curDateObj, 'MMMM yyyy');
-    if (monthLabel === currentMonthLabelStr) {
-      targetYearMonth = format(curDateObj, 'yyyy-MM');
-    } else {
-      const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
-      targetYearMonth = format(prevDateObj, 'yyyy-MM');
-    }
+    targetYearMonth = format(new Date(monthLabel), 'yyyy-MM');
   } catch {
     targetYearMonth = format(new Date(), 'yyyy-MM');
   }
+  const targetCycle = getSalaryCycleForLabel(targetYearMonth, settings.salaryCycleStart);
 
-  // 2. Compute attendance metrics for selected month
+  // 2. Compute attendance metrics for the cycle
   let presentDays = 0;
   let absentDays = 0;
   let halfDays = 0;
@@ -77,7 +72,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
 
   Object.entries(attendance).forEach(([dateStr, record]) => {
     if (dateStr > currentDate) return;
-    if (dateStr.startsWith(targetYearMonth) && record[staffId]) {
+    if (dateStr >= targetCycle.start && dateStr <= targetCycle.end && record[staffId]) {
       const status = record[staffId].status;
       if (status === 'Present') presentDays++;
       if (status === 'Absent') absentDays++;
@@ -86,8 +81,9 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
     }
   });
 
-  const totalDaysCredited = presentDays + (halfDays * 0.5) + holidayDays;
-  const perDayVal = staff.perDaySalary;
+  const creditedHolidayDays = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : holidayDays;
+  const totalDaysCredited = presentDays + (halfDays * 0.5) + creditedHolidayDays;
+  const perDayVal = getEffectivePerDayRate(staff, targetCycle, settings.monthCalculation);
 
   const getStaffOutstandingAdvance = (sId: string) => {
     const staffAdvances = advanceList.filter((a) => a.staffId === sId);
@@ -104,12 +100,12 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
 
   const advanceAdjusted = Math.abs(
     advanceList
-      .filter((a) => a.staffId === staffId && a.amount < 0 && a.date.startsWith(targetYearMonth))
+      .filter((a) => a.staffId === staffId && a.amount < 0 && a.date >= targetCycle.start && a.date <= targetCycle.end)
       .reduce((sum, item) => sum + item.amount, 0)
   );
 
   const deduction = deductionList
-    .filter((d) => d.staffId === staffId && d.date.startsWith(targetYearMonth))
+    .filter((d) => d.staffId === staffId && d.date >= targetCycle.start && d.date <= targetCycle.end)
     .reduce((sum, item) => sum + item.amount, 0);
 
   const paid = payoutList
@@ -120,11 +116,11 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
   let holdAmount = 0;
   let releasedAmount = 0;
 
-  const joiningMonth = staff.joiningDate.slice(0, 7);
+  const joiningCycle = getSalaryCycleForDate(staff.joiningDate, settings.salaryCycleStart);
   const holdDays = settings.newStaffSalaryHoldDays || 0;
 
   if (holdDays > 0) {
-    if (joiningMonth === targetYearMonth) {
+    if (joiningCycle.label === targetCycle.label) {
       if (staff.releasedSalaryHold) {
         holdAmount = 0;
         releasedAmount = Math.round(holdDays * perDayVal);
@@ -132,7 +128,12 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
         holdAmount = Math.min(earned, Math.round(holdDays * perDayVal));
       }
     }
-    if (staff.status === 'Inactive' && staff.deactivationDate && staff.deactivationDate.slice(0, 7) === targetYearMonth) {
+    if (
+      staff.status === 'Inactive' &&
+      staff.deactivationDate &&
+      staff.deactivationDate >= targetCycle.start &&
+      staff.deactivationDate <= targetCycle.end
+    ) {
       if (!staff.releasedSalaryHold) {
         releasedAmount = Math.round(holdDays * perDayVal);
       }

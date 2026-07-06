@@ -288,9 +288,12 @@ export const useStore = create<AppState>((set, get) => ({
       avatar: initials,
       perDaySalary: Math.round(staff.salaryType === 'Monthly' ? staff.monthlySalary / 30 : staff.monthlySalary),
     };
-    // Auto-mark attendance from joiningDate to currentDate (inclusive)
+    // Auto-mark attendance from joiningDate to today (inclusive). Uses the
+    // real device date, not the store's currentDate — that reflects whatever
+    // day the Attendance calendar happens to be viewing, not "today".
+    const today = new Date().toISOString().split('T')[0];
     const start = parseISO(staff.joiningDate);
-    const end = parseISO(get().currentDate);
+    const end = parseISO(today);
     const weeklyHolidays = get().settings.weeklyHoliday || [];
     
     let datesList: Date[] = [];
@@ -324,7 +327,7 @@ export const useStore = create<AppState>((set, get) => ({
       };
     });
     
-    persistCreate(createStaffRequest(newStaff, get().currentDate), (realId) => {
+    persistCreate(createStaffRequest(newStaff), (realId) => {
       set((state) => {
         const updatedAttendance = { ...state.attendance };
         Object.keys(updatedAttendance).forEach((dateStr) => {
@@ -484,7 +487,9 @@ export const useStore = create<AppState>((set, get) => ({
     const state = get();
     if (!state.settings.autoAttendanceEnabled) return;
 
-    const dateStr = state.currentDate;
+    // Always today's real date — state.currentDate is whatever day the
+    // Attendance calendar happens to be viewing, not necessarily today.
+    const dateStr = new Date().toISOString().split('T')[0];
     const dayAttendance = state.attendance[dateStr] || {};
 
     // If attendance is already marked for this date, do not overwrite it

@@ -7,6 +7,7 @@ import { format, parseISO } from 'date-fns';
 import { useAlertConfirm } from '../components/ui/AlertConfirmProvider';
 import { SalarySlipModal } from '../components/SalarySlipModal';
 import { getProfileGradientStyle } from '../utils/gradient';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel } from '../utils/salary';
 
 export const SalaryScreen: React.FC = () => {
   const { confirm } = useAlertConfirm();
@@ -49,7 +50,14 @@ export const SalaryScreen: React.FC = () => {
     setIsSlipOpen(true);
   };
 
-  const currentMonthLabel = format(parseISO(currentDate), 'MMMM yyyy');
+  const thisCycle = getSalaryCycleForDate(currentDate, settings.salaryCycleStart);
+  const currentMonthLabel = format(parseISO(thisCycle.label + '-01'), 'MMMM yyyy');
+  // The cycle immediately before thisCycle: probe the day right before it starts.
+  const previousCycle = getSalaryCycleForDate(
+    format(new Date(parseISO(thisCycle.start).getTime() - 86400000), 'yyyy-MM-dd'),
+    settings.salaryCycleStart
+  );
+  const previousMonthLabel = format(parseISO(previousCycle.label + '-01'), 'MMMM yyyy');
 
   const getStaffOutstandingAdvance = (staffId: string) => {
     const staffAdvances = advanceList.filter((a) => a.staffId === staffId);
@@ -61,19 +69,19 @@ export const SalaryScreen: React.FC = () => {
   const getStaffOutstandingHold = (staffId: string) => {
     const staff = staffList.find(s => s.id === staffId);
     if (!staff || staff.releasedSalaryHold) return 0;
-    
+
     const holdDays = settings.newStaffSalaryHoldDays || 0;
     if (holdDays <= 0) return 0;
 
-    const joiningYearMonth = staff.joiningDate.slice(0, 7);
-    
+    const joiningCycle = getSalaryCycleForDate(staff.joiningDate, settings.salaryCycleStart);
+
     let daysPresent = 0;
     let daysHalf = 0;
     let daysHoliday = 0;
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
       if (dateStr > currentDate) return;
-      if (dateStr.startsWith(joiningYearMonth) && record[staffId]) {
+      if (dateStr >= joiningCycle.start && dateStr <= joiningCycle.end && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;
         if (status === 'Half Day') daysHalf++;
@@ -81,9 +89,10 @@ export const SalaryScreen: React.FC = () => {
       }
     });
 
-    const perDayVal = staff.perDaySalary;
-    const totalDaysCredited = daysPresent + (daysHalf * 0.5) + daysHoliday;
-    
+    const perDayVal = getEffectivePerDayRate(staff, joiningCycle, settings.monthCalculation);
+    const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
+    const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
+
     const earned = staff.calculationBasis === 'Fixed Salary' && staff.salaryType === 'Monthly'
       ? staff.monthlySalary
       : Math.round(totalDaysCredited * perDayVal);
@@ -92,33 +101,16 @@ export const SalaryScreen: React.FC = () => {
   };
 
   const getYearMonthFromLabel = (label: string) => {
-    try {
-      const curDateObj = parseISO(currentDate);
-      const currentMonthLabelStr = format(curDateObj, 'MMMM yyyy');
-      if (label === currentMonthLabelStr) {
-        return currentDate.slice(0, 7);
-      }
-      const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
-      return format(prevDateObj, 'yyyy-MM');
-    } catch {
-      return currentDate.slice(0, 7);
-    }
+    return label === currentMonthLabel ? thisCycle.label : previousCycle.label;
   };
 
   const getPayoutMonths = () => {
-    const curDateObj = parseISO(currentDate);
-    const currentMonthLabelStr = format(curDateObj, 'MMMM yyyy');
-    const prevDateObj = new Date(curDateObj.getFullYear(), curDateObj.getMonth() - 1, 1);
-    const prevMonthLabelStr = format(prevDateObj, 'MMMM yyyy');
-
-    const defaultMonth = currentMonthLabelStr;
-
     return {
       options: [
-        { value: currentMonthLabelStr, label: currentMonthLabelStr },
-        { value: prevMonthLabelStr, label: prevMonthLabelStr },
+        { value: currentMonthLabel, label: currentMonthLabel },
+        { value: previousMonthLabel, label: previousMonthLabel },
       ],
-      defaultMonth
+      defaultMonth: currentMonthLabel,
     };
   };
 
@@ -172,22 +164,18 @@ export const SalaryScreen: React.FC = () => {
     }
   };
 
-  // Determine current selected year-month target cycle
-  const selectedYearMonth = selectedCycle === 'Current Month'
-    ? currentDate.slice(0, 7)
-    : format(new Date(parseISO(currentDate).getFullYear(), parseISO(currentDate).getMonth() - 1, 1), 'yyyy-MM');
+  // Determine current selected salary cycle
+  const selectedSalaryCycle = selectedCycle === 'Current Month' ? thisCycle : previousCycle;
+  const selectedYearMonth = selectedSalaryCycle.label;
+  const selectedMonthLabel = selectedCycle === 'Current Month' ? currentMonthLabel : previousMonthLabel;
 
-  const selectedMonthLabel = selectedCycle === 'Current Month'
-    ? currentMonthLabel
-    : format(new Date(parseISO(currentDate).getFullYear(), parseISO(currentDate).getMonth() - 1, 1), 'MMMM yyyy');
-
-  // Filter staff to include active staff and inactive staff deactivated in the selected cycle month
+  // Filter staff to include active staff and inactive staff deactivated in the selected cycle
   const visibleStaff = staffList.filter(s => {
     if (s.status === 'Active') return true;
-    
-    // Include inactive staff if they were deactivated in the selected month
+
+    // Include inactive staff if they were deactivated within the selected cycle
     if (s.status === 'Inactive' && s.deactivationDate) {
-      return s.deactivationDate.startsWith(selectedYearMonth);
+      return s.deactivationDate >= selectedSalaryCycle.start && s.deactivationDate <= selectedSalaryCycle.end;
     }
     return false;
   });
@@ -197,6 +185,8 @@ export const SalaryScreen: React.FC = () => {
     const staff = staffList.find(s => s.id === staffId);
     if (!staff) return { earned: 0, advance: 0, deduction: 0, net: 0, paid: 0, due: 0, holdAmount: 0, releasedAmount: 0 };
 
+    const targetCycle = getSalaryCycleForLabel(targetYearMonth, settings.salaryCycleStart);
+
     // 1. Earned Salary (Days * perDay)
     let daysPresent = 0;
     let daysHalf = 0;
@@ -204,7 +194,7 @@ export const SalaryScreen: React.FC = () => {
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
       if (dateStr > currentDate) return;
-      if (dateStr.startsWith(targetYearMonth) && record[staffId]) {
+      if (dateStr >= targetCycle.start && dateStr <= targetCycle.end && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;
         if (status === 'Half Day') daysHalf++;
@@ -212,9 +202,10 @@ export const SalaryScreen: React.FC = () => {
       }
     });
 
-    const perDayVal = staff.perDaySalary;
-    const totalDaysCredited = daysPresent + (daysHalf * 0.5) + daysHoliday;
-    
+    const perDayVal = getEffectivePerDayRate(staff, targetCycle, settings.monthCalculation);
+    const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
+    const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
+
     // Earned salary based on calculation basis
     const earned = staff.calculationBasis === 'Fixed Salary' && staff.salaryType === 'Monthly'
       ? staff.monthlySalary
@@ -222,12 +213,12 @@ export const SalaryScreen: React.FC = () => {
 
     // 2. Outstanding Advance (adjusted/returned advances)
     const totalAdv = advanceList
-      .filter(a => a.staffId === staffId && a.date.startsWith(targetYearMonth) && a.amount < 0)
+      .filter(a => a.staffId === staffId && a.date >= targetCycle.start && a.date <= targetCycle.end && a.amount < 0)
       .reduce((sum, item) => sum + Math.abs(item.amount), 0);
-      
+
     // 3. Deductions
     const deduction = deductionList
-      .filter(d => d.staffId === staffId && d.date.startsWith(targetYearMonth))
+      .filter(d => d.staffId === staffId && d.date >= targetCycle.start && d.date <= targetCycle.end)
       .reduce((sum, item) => sum + item.amount, 0);
 
     // 4. Payouts
@@ -239,12 +230,12 @@ export const SalaryScreen: React.FC = () => {
     let holdAmount = 0;
     let releasedAmount = 0;
 
-    const joiningMonth = staff.joiningDate.slice(0, 7);
+    const joiningCycle = getSalaryCycleForDate(staff.joiningDate, settings.salaryCycleStart);
     const holdDays = settings.newStaffSalaryHoldDays || 0;
 
     if (holdDays > 0) {
-      // If it is the staff member's 1st month (joining month), we hold the configured salary amount
-      if (joiningMonth === targetYearMonth) {
+      // If this is the staff member's 1st salary cycle (joining cycle), hold the configured amount
+      if (joiningCycle.label === targetCycle.label) {
         if (staff.releasedSalaryHold) {
           holdAmount = 0;
           releasedAmount = Math.round(holdDays * perDayVal);
@@ -253,8 +244,13 @@ export const SalaryScreen: React.FC = () => {
         }
       }
 
-      // If the staff member is inactive and their deactivation month matches targetYearMonth, we release the hold
-      if (staff.status === 'Inactive' && staff.deactivationDate && staff.deactivationDate.slice(0, 7) === targetYearMonth) {
+      // If the staff member is inactive and their deactivation falls in the target cycle, release the hold
+      if (
+        staff.status === 'Inactive' &&
+        staff.deactivationDate &&
+        staff.deactivationDate >= targetCycle.start &&
+        staff.deactivationDate <= targetCycle.end
+      ) {
         if (!staff.releasedSalaryHold) {
           releasedAmount = Math.round(holdDays * perDayVal);
         }

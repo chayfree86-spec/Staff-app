@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
 import { getProfileGradientStyle } from '../utils/gradient';
+import { getEffectivePerDayRate, getSalaryCycleForDate } from '../utils/salary';
 import { listBusinessesRequest } from '../api/client';
 
 export const DashboardScreen: React.FC = () => {
@@ -17,6 +18,7 @@ export const DashboardScreen: React.FC = () => {
     currentUser,
     setIsAddStaffModalOpen,
     businessInfo,
+    settings,
   } = useStore();
 
   // 1. Today's attendance counts
@@ -38,8 +40,8 @@ export const DashboardScreen: React.FC = () => {
   const pct = (count: number) => (totalStaffCount > 0 ? Math.round((count / totalStaffCount) * 100) : 0);
 
   // 2. This month's salary summary
-  const currentYearMonth = currentDate.slice(0, 7); // YYYY-MM
-  const currentMonthLabel = format(parseISO(currentDate), 'MMMM yyyy');
+  const currentCycle = getSalaryCycleForDate(currentDate, settings.salaryCycleStart);
+  const currentMonthLabel = format(parseISO(currentCycle.label + '-01'), 'MMMM yyyy');
 
   const getSalaryDetails = (staffId: string) => {
     const staff = staffList.find((s) => s.id === staffId);
@@ -51,7 +53,7 @@ export const DashboardScreen: React.FC = () => {
 
     Object.entries(attendance).forEach(([dateStr, record]) => {
       if (dateStr > currentDate) return;
-      if (dateStr.startsWith(currentYearMonth) && record[staffId]) {
+      if (dateStr >= currentCycle.start && dateStr <= currentCycle.end && record[staffId]) {
         const status = record[staffId].status;
         if (status === 'Present') daysPresent++;
         if (status === 'Half Day') daysHalf++;
@@ -59,15 +61,17 @@ export const DashboardScreen: React.FC = () => {
       }
     });
 
-    const totalDaysCredited = daysPresent + daysHalf * 0.5 + daysHoliday;
-    const earned = Math.round(totalDaysCredited * staff.perDaySalary);
+    const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
+    const totalDaysCredited = daysPresent + daysHalf * 0.5 + creditedHoliday;
+    const perDayVal = getEffectivePerDayRate(staff, currentCycle, settings.monthCalculation);
+    const earned = Math.round(totalDaysCredited * perDayVal);
 
     const totalAdv = advanceList
-      .filter((a) => a.staffId === staffId && a.date.startsWith(currentYearMonth))
+      .filter((a) => a.staffId === staffId && a.date >= currentCycle.start && a.date <= currentCycle.end)
       .reduce((sum, item) => sum + item.amount, 0);
 
     const deduction = deductionList
-      .filter((d) => d.staffId === staffId && d.date.startsWith(currentYearMonth))
+      .filter((d) => d.staffId === staffId && d.date >= currentCycle.start && d.date <= currentCycle.end)
       .reduce((sum, item) => sum + item.amount, 0);
 
     const paid = payoutList
@@ -86,13 +90,13 @@ export const DashboardScreen: React.FC = () => {
       acc.totalEarned += details.earned;
       acc.totalPaid += details.paid;
       acc.totalDue += details.due;
-      
+
       const totalAdv = advanceList
-        .filter((a) => a.staffId === staff.id && a.date.startsWith(currentYearMonth))
+        .filter((a) => a.staffId === staff.id && a.date >= currentCycle.start && a.date <= currentCycle.end)
         .reduce((sum, item) => sum + item.amount, 0);
 
       const totalDed = deductionList
-        .filter((d) => d.staffId === staff.id && d.date.startsWith(currentYearMonth))
+        .filter((d) => d.staffId === staff.id && d.date >= currentCycle.start && d.date <= currentCycle.end)
         .reduce((sum, item) => sum + item.amount, 0);
 
       acc.totalAdvance += totalAdv;
