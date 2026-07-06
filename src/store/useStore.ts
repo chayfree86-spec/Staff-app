@@ -117,6 +117,10 @@ interface AppState {
 
   // Actions
   setScreen: (screen: AppState['currentScreen']) => void;
+  // Applies a screen change that originated from the browser/PWA back button
+  // (a popstate event) — must NOT push a new history entry, or back would
+  // immediately re-push the screen it just navigated away from.
+  syncScreenFromHistory: (screen: AppState['currentScreen']) => void;
   setActiveStaffProfileId: (id: string | null) => void;
   setCurrentDate: (date: string) => void;
   setSearchQuery: (query: string) => void;
@@ -254,6 +258,8 @@ export const useStore = create<AppState>((set, get) => ({
       set({
         isLoggedIn: false,
         currentUser: null,
+        currentScreen: 'attendance',
+        previousScreen: null,
         staffList: [],
         attendance: {},
         advanceList: [],
@@ -267,13 +273,31 @@ export const useStore = create<AppState>((set, get) => ({
           address: '',
         },
       });
+      // Drop any in-app screen history from the session that just ended, so
+      // back-navigation on the login screen doesn't replay stale screens.
+      if (typeof window !== 'undefined') {
+        window.history.replaceState(null, '');
+      }
     }
   },
   changePassword: async (oldPass, newPass) => {
     await changePasswordRequest(oldPass, newPass);
   },
 
-  setScreen: (screen) => set((state) => ({ previousScreen: state.currentScreen, currentScreen: screen })),
+  setScreen: (screen) => {
+    const state = get();
+    if (state.currentScreen === screen) return;
+    set({ previousScreen: state.currentScreen, currentScreen: screen });
+    // Push a browser history entry per screen so the PWA's back
+    // button/gesture steps back through in-app screens one at a time,
+    // instead of exiting the app immediately (there's nothing else in the
+    // history stack for it to fall back to otherwise).
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ screen }, '');
+    }
+  },
+  syncScreenFromHistory: (screen) =>
+    set((state) => ({ previousScreen: state.currentScreen, currentScreen: screen })),
   setActiveStaffProfileId: (id) => set({ activeStaffProfileId: id }),
   setCurrentDate: (date) => set({ currentDate: date }),
   setSearchQuery: (query) => set({ searchQuery: query }),
@@ -535,5 +559,11 @@ export const useStore = create<AppState>((set, get) => ({
       ...applyBootstrapData(data),
       currentScreen: 'dashboard',
     });
+    // Switching business is a fresh navigation root, same as logging in —
+    // reset the history entry so back-navigation doesn't land on a screen
+    // that belonged to the previous business's context.
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({ screen: 'dashboard' }, '');
+    }
   },
 }));

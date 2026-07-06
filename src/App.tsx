@@ -110,6 +110,32 @@ function App() {
     }
   }, [isLoggedIn, triggerAutoAttendance]);
 
+  // PWA/mobile back button support: without this, the Android back button
+  // (or an edge-swipe gesture) has no in-app history to step through and
+  // exits the app straight away instead of navigating back one screen at a
+  // time. setScreen() pushes a history entry per screen; this listens for
+  // the corresponding back navigation and mirrors it into the store without
+  // pushing a new entry (that would just re-trigger this same event).
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const screen = event.state?.screen;
+      if (typeof screen === 'string') {
+        useStore.getState().syncScreenFromHistory(screen as never);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Anchor the current screen onto the history entry that's already active
+  // when the user lands in the logged-in app, so the very first back-press
+  // has a matching state to compare against.
+  useEffect(() => {
+    if (isLoggedIn && typeof window !== 'undefined') {
+      window.history.replaceState({ screen: useStore.getState().currentScreen }, '');
+    }
+  }, [isLoggedIn]);
+
   // Load saved credentials on logout
   useEffect(() => {
     if (!isLoggedIn) {
