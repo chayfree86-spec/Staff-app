@@ -176,6 +176,9 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
         const cx = pad + colW * i + colW / 2;
         txt(col.label, cx, y + 4.2,  5.5, col.color, true,  'center');
         txt(col.val,   cx, y + 9.5, 8.5, col.color, true,  'center');
+        if (i < colW) {
+          // empty spacer
+        }
         if (i < attCols.length - 1) ln(pad + colW * (i + 1), y + 1.5, pad + colW * (i + 1), y + barH - 1.5, BORDER, 0.2);
       });
       y += barH + 5;
@@ -642,7 +645,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
           <button
             onClick={handleDownloadPDF}
             disabled={isDownloading || isSharing}
-            className="w-full sm:w-auto px-4 py-3 bg-primary text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] disabled:pointer-events-none"
+            className="w-full sm:w-[145px] px-4 py-3 bg-primary text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] disabled:pointer-events-none"
           >
             {isDownloading ? (
               <>
@@ -662,7 +665,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
           <button
             onClick={handleSharePDF}
             disabled={isDownloading || isSharing}
-            className="w-full sm:w-auto px-4 py-3 bg-app-surface border border-app-border hover:bg-slate-50 dark:hover:bg-slate-800 disabled:pointer-events-none text-app-text-primary rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
+            className="w-full sm:w-[145px] px-4 py-3 bg-app-surface border border-app-border hover:bg-slate-50 dark:hover:bg-slate-800 disabled:pointer-events-none text-app-text-primary rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
           >
             {isSharing ? (
               <>
@@ -682,7 +685,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
           <button
             onClick={onClose}
             disabled={isDownloading || isSharing}
-            className="w-full sm:w-auto px-4 py-3 bg-app-surface border border-app-border text-app-text-secondary hover:text-app-text-primary disabled:pointer-events-none rounded-xl text-xs font-bold transition-all flex items-center justify-center cursor-pointer active:scale-[0.98]"
+            className="w-full sm:w-[85px] px-4 py-3 bg-app-surface border border-app-border text-app-text-secondary hover:text-app-text-primary disabled:pointer-events-none rounded-xl text-xs font-bold transition-all flex items-center justify-center cursor-pointer active:scale-[0.98]"
           >
             Close
           </button>
