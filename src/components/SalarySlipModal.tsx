@@ -2,6 +2,8 @@ import React from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
 import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel } from '../utils/salary';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface SalarySlipModalProps {
   isOpen: boolean;
@@ -142,23 +144,99 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
 
   const netPayable = Math.max(0, earned - advanceAdjusted - deduction - holdAmount + releasedAmount);
 
-  // 4. Print / Download Handler
-  const handlePrint = () => {
-    window.print();
+  const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
+
+  // 4. PDF Generation Helper
+  const generatePDFBlob = async (): Promise<{ blob: Blob; filename: string } | null> => {
+    const element = document.getElementById('print-payslip');
+    if (!element) return null;
+
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2.5, // High resolution capture
+        useCORS: true,
+        backgroundColor: null, // Keep the same view background color (as seen on screen)
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 210; // A4 standard width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      const pdf = new jsPDF({
+        orientation: imgHeight > imgWidth ? 'portrait' : 'landscape',
+        unit: 'mm',
+        format: [imgWidth, imgHeight],
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      const filename = `Salary_Slip_${staff.name.replace(/\s+/g, '_')}_${monthLabel.replace(/\s+/g, '_')}.pdf`;
+      return { blob: pdf.output('blob'), filename };
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      return null;
+    }
   };
 
-  // 5. Share Handler
-  const handleShare = () => {
-    const shareText = `Salary Slip - ${monthLabel}\n-------------------------\nBusiness: ${businessInfo.name}\nEmployee: ${staff.name}\nRole: ${staff.calculationBasis === 'Fixed Salary' ? 'Fixed Salary' : 'Attendance Based'}\nEarned: ₹${earned.toLocaleString('en-IN')}\nHeld: ₹${holdAmount.toLocaleString('en-IN')}\nReleased: ₹${releasedAmount.toLocaleString('en-IN')}\nDeductions/Advances: ₹${(advanceAdjusted + deduction).toLocaleString('en-IN')}\nNet Paid: ₹${paid.toLocaleString('en-IN')}\nStatus: ${paid >= netPayable ? 'Fully Paid' : paid > 0 ? 'Partially Paid' : 'Unpaid'}\n-------------------------`;
+  // 5. Download Handler
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      const pdfData = await generatePDFBlob();
+      if (!pdfData) {
+        alert('Failed to generate PDF. Please try again.');
+        return;
+      }
+      const { blob, filename } = pdfData;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
-    if (navigator.share) {
-      navigator.share({
-        title: `Salary Slip - ${staff.name}`,
-        text: shareText,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(shareText);
-      alert('Salary slip text copied to clipboard! You can now paste and share it.');
+  // 6. Share Handler
+  const handleSharePDF = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      const pdfData = await generatePDFBlob();
+      if (!pdfData) {
+        alert('Failed to generate PDF. Please try again.');
+        return;
+      }
+      const { blob, filename } = pdfData;
+      const file = new File([blob], filename, { type: 'application/pdf' });
+
+      const shareText = `Salary Slip - ${monthLabel}\n-------------------------\nBusiness: ${businessInfo.name}\nEmployee: ${staff.name}\nNet Paid: ₹${(paid > 0 ? paid : netPayable).toLocaleString('en-IN')}\n-------------------------`;
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Salary Slip - ${staff.name}`,
+          text: shareText,
+        });
+      } else {
+        // Fallback: Download file and copy text summary
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        await navigator.clipboard.writeText(shareText);
+        alert('PDF downloaded! Sharing files is not supported on this browser/device, but the salary slip text summary has been copied to your clipboard so you can paste it along with the PDF.');
+      }
+    } catch (error) {
+      console.error('Error sharing PDF:', error);
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -387,22 +465,49 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
         {/* Modal Footer Actions */}
         <div className="px-6 py-4 bg-app-bg border-t border-app-border/60 flex flex-col sm:flex-row sm:justify-end gap-2 shrink-0 w-full">
           <button
-            onClick={handlePrint}
-            className="w-full sm:w-auto px-4 py-3 bg-primary text-white hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-[0.98]"
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPdf}
+            className="w-full sm:w-auto px-4 py-3 bg-primary text-white hover:bg-primary/90 disabled:opacity-50 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-[0.98]"
           >
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '15px' }}>download</span>
-            <span>Download PDF / Print</span>
+            {isGeneratingPdf ? (
+              <>
+                <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Generating...</span>
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '15px' }}>download</span>
+                <span>Download PDF</span>
+              </>
+            )}
           </button>
           <button
-            onClick={handleShare}
-            className="w-full sm:w-auto px-4 py-3 bg-app-surface border border-app-border hover:bg-slate-50 dark:hover:bg-slate-800 text-app-text-primary rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
+            onClick={handleSharePDF}
+            disabled={isGeneratingPdf}
+            className="w-full sm:w-auto px-4 py-3 bg-app-surface border border-app-border hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 text-app-text-primary rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
           >
-            <span className="material-symbols-rounded select-none" style={{ fontSize: '15px' }}>share</span>
-            <span>Share Slip</span>
+            {isGeneratingPdf ? (
+              <>
+                <svg className="animate-spin h-3.5 w-3.5 text-app-text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Preparing...</span>
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-rounded select-none" style={{ fontSize: '15px' }}>share</span>
+                <span>Share PDF</span>
+              </>
+            )}
           </button>
           <button
             onClick={onClose}
-            className="w-full sm:w-auto px-4 py-3 bg-app-surface border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all flex items-center justify-center cursor-pointer active:scale-[0.98]"
+            disabled={isGeneratingPdf}
+            className="w-full sm:w-auto px-4 py-3 bg-app-surface border border-app-border text-app-text-secondary hover:text-app-text-primary disabled:opacity-50 rounded-xl text-xs font-bold transition-all flex items-center justify-center cursor-pointer active:scale-[0.98]"
           >
             Close
           </button>
