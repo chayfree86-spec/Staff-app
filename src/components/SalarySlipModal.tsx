@@ -2,7 +2,6 @@ import React from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
 import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel } from '../utils/salary';
-import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
 interface SalarySlipModalProps {
@@ -146,100 +145,248 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
 
   const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
 
-  // 4. PDF Generation Helper
-  const generatePDFBlob = async (): Promise<{ blob: Blob; filename: string } | null> => {
-    const element = document.getElementById('print-payslip');
-    if (!element) return null;
-
-    // Save original fonts.ready promise and temporarily mock it to prevent hanging
-    const originalFonts = document.fonts;
-    let originalReady: Promise<any> | null = null;
-    if (originalFonts) {
-      originalReady = originalFonts.ready;
-      try {
-        Object.defineProperty(originalFonts, 'ready', {
-          get() {
-            return Promise.resolve();
-          },
-          configurable: true
-        });
-      } catch (e) {
-        console.warn('Could not mock document.fonts.ready:', e);
-      }
-    }
-
-    // Create a timeout promise to prevent infinite hanging
-    const timeoutPromise = new Promise<null>((_, reject) =>
-      setTimeout(() => {
-        reject(new Error('PDF generation timed out (stuck on canvas generation)'));
-      }, 7000) // 7 seconds timeout
-    );
-
+  // 4. PDF Generation Helper — builds PDF directly with jsPDF (no html2canvas, no font hanging)
+  const generatePDFBlob = (): { blob: Blob; filename: string } | null => {
     try {
-      // Ensure DM Sans font is loaded before rendering
-      if (document.fonts && document.fonts.load) {
-        try {
-          await document.fonts.load('1em "DM Sans"');
-        } catch (e) {
-          console.warn('Failed to pre-load DM Sans font:', e);
+      // ── Colors (theme: always use light/white theme for clean professional PDF)
+      const WHITE       = '#FFFFFF';
+      const BG          = '#FAF9FF';
+      const PRIMARY     = '#7C3AED';
+      const BORDER      = '#E9DFFF';
+      const TEXT_DARK   = '#0F172A';
+      const TEXT_LIGHT  = '#64748B';
+      const GREEN       = '#10B981';
+      const RED         = '#F43F5E';
+      const AMBER       = '#F59E0B';
+
+      const pageW = 210; // A4 width mm
+      const pad   = 12;  // page padding
+      const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      let y = pad; // current vertical cursor
+
+      // ── Helper: set fill/draw + draw rounded rect
+      const roundRect = (x: number, yy: number, w: number, h: number, r: number, fill?: string, stroke?: string) => {
+        if (fill)   { pdf.setFillColor(fill);   }
+        if (stroke) { pdf.setDrawColor(stroke);  }
+        if (fill && stroke) pdf.roundedRect(x, yy, w, h, r, r, 'FD');
+        else if (fill)      pdf.roundedRect(x, yy, w, h, r, r, 'F');
+        else if (stroke)    pdf.roundedRect(x, yy, w, h, r, r, 'D');
+      };
+
+      const rect = (x: number, yy: number, w: number, h: number, fill?: string, stroke?: string) => {
+        if (fill)   pdf.setFillColor(fill);
+        if (stroke) pdf.setDrawColor(stroke);
+        if (fill && stroke) pdf.rect(x, yy, w, h, 'FD');
+        else if (fill)      pdf.rect(x, yy, w, h, 'F');
+        else if (stroke)    pdf.rect(x, yy, w, h, 'D');
+      };
+
+      const text = (t: string, x: number, yy: number, size: number, color: string, style: 'normal'|'bold' = 'normal', align: 'left'|'right'|'center' = 'left') => {
+        pdf.setFontSize(size);
+        pdf.setTextColor(color);
+        pdf.setFont('helvetica', style);
+        pdf.text(t, x, yy, { align });
+      };
+
+      const line = (x1: number, y1: number, x2: number, y2: number, color: string, lw = 0.2) => {
+        pdf.setDrawColor(color);
+        pdf.setLineWidth(lw);
+        pdf.line(x1, y1, x2, y2);
+      };
+
+      const inr = (n: number) => '\u20b9' + n.toLocaleString('en-IN');
+
+      // ═══════════════════════════════════════════
+      // 1. PAGE BACKGROUND
+      // ═══════════════════════════════════════════
+      rect(0, 0, pageW, 297, BG);
+
+      // ═══════════════════════════════════════════
+      // 2. HEADER — business name + "SALARY PAYSLIP"
+      // ═══════════════════════════════════════════
+      y = pad + 4;
+      // Purple accent bar at top
+      rect(0, 0, pageW, 2, PRIMARY);
+
+      text(businessInfo.name.toUpperCase(), pad, y + 5, 13, TEXT_DARK, 'bold');
+      if (businessInfo.address) text(businessInfo.address, pad, y + 10, 7, TEXT_LIGHT);
+      if (businessInfo.mobile)  text('Phone: ' + businessInfo.mobile, pad, y + 14, 7, TEXT_LIGHT);
+
+      text('SALARY PAYSLIP', pageW - pad, y + 5, 11, PRIMARY, 'bold', 'right');
+      text('Month: ' + monthLabel.toUpperCase(), pageW - pad, y + 10, 7, TEXT_LIGHT, 'normal', 'right');
+
+      y += 20;
+      line(pad, y, pageW - pad, y, PRIMARY, 0.5);
+      y += 6;
+
+      // ═══════════════════════════════════════════
+      // 3. EMPLOYEE DETAILS TABLE
+      // ═══════════════════════════════════════════
+      const col1x = pad;
+      const col2x = pageW / 2 + 2;
+      const rowH  = 6;
+
+      const detailRows: [string, string, string, string][] = [
+        ['Employee Name:', staff.name, 'Joining Date:', format(parseISO(staff.joiningDate), 'dd MMM yyyy')],
+        ['Designation:', `${staff.salaryType}`, 'Salary Basis:', staff.calculationBasis],
+        ['Mobile:', staff.mobile || '—', 'Salary Type:', `${staff.salaryType} (${inr(staff.monthlySalary)}/mo)`],
+      ];
+
+      detailRows.forEach(([l1, v1, l2, v2]) => {
+        text(l1, col1x, y, 7.5, TEXT_LIGHT);
+        text(v1, pageW / 2 - 2, y, 7.5, TEXT_DARK, 'bold', 'right');
+        text(l2, col2x, y, 7.5, TEXT_LIGHT);
+        text(v2, pageW - pad, y, 7.5, TEXT_DARK, 'bold', 'right');
+        y += rowH;
+        line(col1x, y - 1, pageW / 2 - 2, y - 1, BORDER, 0.1);
+        line(col2x, y - 1, pageW - pad, y - 1, BORDER, 0.1);
+      });
+
+      y += 4;
+      line(pad, y, pageW - pad, y, BORDER, 0.2);
+      y += 5;
+
+      // ═══════════════════════════════════════════
+      // 4. ATTENDANCE SUMMARY BAR
+      // ═══════════════════════════════════════════
+      text('ATTENDANCE SUMMARY', pad, y, 7, TEXT_LIGHT, 'bold');
+      y += 4;
+
+      const attCols = [
+        { label: 'PRESENT',  val: String(presentDays),         color: GREEN  },
+        { label: 'HALF DAY', val: String(halfDays),            color: AMBER  },
+        { label: 'HOLIDAY',  val: String(holidayDays),         color: '#8B5CF6' },
+        { label: 'ABSENT',   val: String(absentDays),          color: RED    },
+        { label: 'PAID DAYS',val: String(totalDaysCredited),   color: PRIMARY },
+      ];
+
+      const barH  = 14;
+      const colW  = (pageW - pad * 2) / attCols.length;
+      roundRect(pad, y, pageW - pad * 2, barH, 2, WHITE, BORDER);
+
+      attCols.forEach((col, i) => {
+        const cx = pad + colW * i + colW / 2;
+        text(col.label, cx, y + 5, 6, col.color, 'bold', 'center');
+        text(col.val,   cx, y + 11, 9, col.color, 'bold', 'center');
+        if (i < attCols.length - 1) line(pad + colW * (i + 1), y + 2, pad + colW * (i + 1), y + barH - 2, BORDER, 0.2);
+      });
+
+      y += barH + 5;
+
+      // ═══════════════════════════════════════════
+      // 5. EARNINGS & DEDUCTIONS TABLE
+      // ═══════════════════════════════════════════
+      const tblW  = (pageW - pad * 2) / 2 - 1;
+      const tblX2 = pad + tblW + 2;
+
+      // Earnings
+      roundRect(pad, y, tblW, 7, 2, '#F3EEFF');
+      text('EARNINGS', pad + 3, y + 4.5, 7.5, PRIMARY, 'bold');
+
+      roundRect(tblX2, y, tblW, 7, 2, '#F3EEFF');
+      text('DEDUCTIONS', tblX2 + 3, y + 4.5, 7.5, PRIMARY, 'bold');
+      y += 9;
+
+      // Earnings rows
+      const earningRows: [string, number][] = [['Basic Salary', earned]];
+      if (releasedAmount > 0) earningRows.push(['Released Hold', releasedAmount]);
+
+      // Deduction rows
+      const deductionRows: [string, number, string][] = [
+        ['Advance Adjusted', advanceAdjusted, RED],
+        ['Other Deductions', deduction, RED],
+      ];
+      if (holdAmount > 0)        deductionRows.push(['Salary Hold', holdAmount, AMBER]);
+      if (outstandingAdvance > 0) deductionRows.push(['Outstanding Advance', outstandingAdvance, AMBER]);
+
+      const maxRows = Math.max(earningRows.length, deductionRows.length);
+      const cellH   = 6;
+
+      for (let i = 0; i < maxRows; i++) {
+        const rowY = y + i * cellH;
+        if (earningRows[i]) {
+          const [lbl, val] = earningRows[i];
+          text(lbl, pad + 3, rowY + 4, 7.5, TEXT_LIGHT);
+          text(inr(val), pad + tblW - 3, rowY + 4, 7.5, TEXT_DARK, 'bold', 'right');
+        }
+        if (deductionRows[i]) {
+          const [lbl, val, col] = deductionRows[i];
+          text(lbl, tblX2 + 3, rowY + 4, 7.5, TEXT_LIGHT);
+          text(inr(val), tblX2 + tblW - 3, rowY + 4, 7.5, col, 'bold', 'right');
         }
       }
 
-      const styles = window.getComputedStyle(element);
-      const bgColor = styles.backgroundColor || '#FAF9FF';
+      y += maxRows * cellH + 2;
 
-      const canvasPromise = html2canvas(element, {
-        scale: 2, // Use 2x scale for sharp text and faster generation
-        useCORS: true,
-        backgroundColor: bgColor,
-        logging: true,
-      });
+      // Totals
+      rect(pad, y, tblW, 7, '#EDE9FE');
+      text('Total Earnings', pad + 3, y + 4.5, 7.5, TEXT_DARK, 'bold');
+      text(inr(earned + releasedAmount), pad + tblW - 3, y + 4.5, 7.5, PRIMARY, 'bold', 'right');
 
-      // Race the html2canvas promise against the timeout
-      const canvas = await Promise.race([canvasPromise, timeoutPromise]);
-      if (!canvas) {
-        throw new Error('Canvas rendering returned null');
+      rect(tblX2, y, tblW, 7, '#EDE9FE');
+      text('Total Deductions', tblX2 + 3, y + 4.5, 7.5, TEXT_DARK, 'bold');
+      text(inr(advanceAdjusted + deduction + holdAmount), tblX2 + tblW - 3, y + 4.5, 7.5, RED, 'bold', 'right');
+
+      y += 10;
+
+      // ═══════════════════════════════════════════
+      // 6. NET PAY BOX
+      // ═══════════════════════════════════════════
+      const netAmt    = paid > 0 ? paid : netPayable;
+      const netStatus = paid >= netPayable ? 'FULLY PAID' : paid > 0 ? 'PARTIALLY PAID' : 'UNPAID';
+      roundRect(pad, y, pageW - pad * 2, 16, 3, PRIMARY);
+      text('NET PAYOUT', pad + 4, y + 5.5, 6.5, 'rgba(255,255,255,0.7)' as any, 'bold');
+      text(netPayWords, pad + 4, y + 11, 6.5, '#FFFFFFCC' as any);
+      text(inr(netAmt), pageW - pad - 4, y + 8, 14, WHITE, 'bold', 'right');
+      // Status badge
+      roundRect(pageW - pad - 28, y + 10, 24, 4.5, 1, 'rgba(255,255,255,0.2)' as any);
+      text(netStatus, pageW - pad - 4, y + 13.5, 5.5, WHITE, 'bold', 'right');
+      y += 20;
+
+      // ═══════════════════════════════════════════
+      // 7. PAYOUT TRANSACTION HISTORY (if any)
+      // ═══════════════════════════════════════════
+      const slipPayouts = payoutList.filter(p => p.staffId === staffId && p.month === monthLabel);
+      if (slipPayouts.length > 0) {
+        text('PAYMENT DETAILS', pad, y, 7, TEXT_LIGHT, 'bold');
+        y += 4;
+        slipPayouts.forEach((p, idx) => {
+          text(`Tx #${idx + 1}  ${format(parseISO(p.date), 'dd MMM yyyy')}  ${p.paymentMode || 'Cash'}${p.remarks ? '  (' + p.remarks + ')' : ''}`, pad + 3, y + 4, 7, TEXT_LIGHT);
+          text(inr(p.amount), pageW - pad - 3, y + 4, 7, TEXT_DARK, 'bold', 'right');
+          y += 6;
+        });
+        y += 2;
       }
 
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = 210; // A4 standard width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // ═══════════════════════════════════════════
+      // 8. SIGNATURE SECTION
+      // ═══════════════════════════════════════════
+      y += 10;
+      line(pad + 5,              y, pad + 55,              y, BORDER, 0.3);
+      line(pageW - pad - 55, y, pageW - pad - 5, y, BORDER, 0.3);
+      y += 4;
+      text('Employer Signature', pad + 30, y, 7, TEXT_LIGHT, 'bold', 'center');
+      text('Employee Signature', pageW - pad - 30, y, 7, TEXT_LIGHT, 'bold', 'center');
 
-      const pdf = new jsPDF({
-        orientation: imgHeight > imgWidth ? 'portrait' : 'landscape',
-        unit: 'mm',
-        format: [imgWidth, imgHeight],
-      });
+      // ── Bottom accent bar
+      rect(0, 292, pageW, 5, PRIMARY);
 
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       const filename = `Salary_Slip_${staff.name.replace(/\s+/g, '_')}_${monthLabel.replace(/\s+/g, '_')}.pdf`;
       return { blob: pdf.output('blob'), filename };
     } catch (error: any) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF: ' + (error?.message || error || 'Unknown error'));
+      alert('Failed to generate PDF: ' + (error?.message || String(error)));
       return null;
-    } finally {
-      // Restore original document.fonts.ready
-      if (originalFonts && originalReady) {
-        try {
-          Object.defineProperty(originalFonts, 'ready', {
-            get() {
-              return originalReady;
-            },
-            configurable: true
-          });
-        } catch (e) {
-          console.warn('Could not restore document.fonts.ready:', e);
-        }
-      }
     }
   };
 
+
   // 5. Download Handler
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDF = () => {
     setIsGeneratingPdf(true);
     try {
-      const pdfData = await generatePDFBlob();
+      const pdfData = generatePDFBlob();
       if (!pdfData) {
         return; // generatePDFBlob already alerts the error
       }
@@ -252,7 +399,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
       URL.revokeObjectURL(url);
     } catch (error: any) {
       console.error('Error downloading PDF:', error);
-      alert('Download error: ' + (error?.message || error || 'Unknown error'));
+      alert('Download error: ' + (error?.message || String(error)));
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -262,7 +409,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
   const handleSharePDF = async () => {
     setIsGeneratingPdf(true);
     try {
-      const pdfData = await generatePDFBlob();
+      const pdfData = generatePDFBlob();
       if (!pdfData) {
         return; // generatePDFBlob already alerts the error
       }
