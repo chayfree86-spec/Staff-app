@@ -151,13 +151,55 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
     const element = document.getElementById('print-payslip');
     if (!element) return null;
 
+    // Save original fonts.ready promise and temporarily mock it to prevent hanging
+    const originalFonts = document.fonts;
+    let originalReady: Promise<any> | null = null;
+    if (originalFonts) {
+      originalReady = originalFonts.ready;
+      try {
+        Object.defineProperty(originalFonts, 'ready', {
+          get() {
+            return Promise.resolve();
+          },
+          configurable: true
+        });
+      } catch (e) {
+        console.warn('Could not mock document.fonts.ready:', e);
+      }
+    }
+
+    // Create a timeout promise to prevent infinite hanging
+    const timeoutPromise = new Promise<null>((_, reject) =>
+      setTimeout(() => {
+        reject(new Error('PDF generation timed out (stuck on canvas generation)'));
+      }, 7000) // 7 seconds timeout
+    );
+
     try {
-      const canvas = await html2canvas(element, {
-        scale: 2.5, // High resolution capture
+      // Ensure DM Sans font is loaded before rendering
+      if (document.fonts && document.fonts.load) {
+        try {
+          await document.fonts.load('1em "DM Sans"');
+        } catch (e) {
+          console.warn('Failed to pre-load DM Sans font:', e);
+        }
+      }
+
+      const styles = window.getComputedStyle(element);
+      const bgColor = styles.backgroundColor || '#FAF9FF';
+
+      const canvasPromise = html2canvas(element, {
+        scale: 2, // Use 2x scale for sharp text and faster generation
         useCORS: true,
-        backgroundColor: null, // Keep the same view background color (as seen on screen)
-        logging: false,
+        backgroundColor: bgColor,
+        logging: true,
       });
+
+      // Race the html2canvas promise against the timeout
+      const canvas = await Promise.race([canvasPromise, timeoutPromise]);
+      if (!canvas) {
+        throw new Error('Canvas rendering returned null');
+      }
 
       const imgData = canvas.toDataURL('image/png');
       const imgWidth = 210; // A4 standard width in mm
@@ -172,9 +214,24 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       const filename = `Salary_Slip_${staff.name.replace(/\s+/g, '_')}_${monthLabel.replace(/\s+/g, '_')}.pdf`;
       return { blob: pdf.output('blob'), filename };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF: ' + (error?.message || error || 'Unknown error'));
       return null;
+    } finally {
+      // Restore original document.fonts.ready
+      if (originalFonts && originalReady) {
+        try {
+          Object.defineProperty(originalFonts, 'ready', {
+            get() {
+              return originalReady;
+            },
+            configurable: true
+          });
+        } catch (e) {
+          console.warn('Could not restore document.fonts.ready:', e);
+        }
+      }
     }
   };
 
@@ -184,8 +241,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
     try {
       const pdfData = await generatePDFBlob();
       if (!pdfData) {
-        alert('Failed to generate PDF. Please try again.');
-        return;
+        return; // generatePDFBlob already alerts the error
       }
       const { blob, filename } = pdfData;
       const url = URL.createObjectURL(blob);
@@ -194,8 +250,9 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error downloading PDF:', error);
+      alert('Download error: ' + (error?.message || error || 'Unknown error'));
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -207,8 +264,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
     try {
       const pdfData = await generatePDFBlob();
       if (!pdfData) {
-        alert('Failed to generate PDF. Please try again.');
-        return;
+        return; // generatePDFBlob already alerts the error
       }
       const { blob, filename } = pdfData;
       const file = new File([blob], filename, { type: 'application/pdf' });
@@ -233,12 +289,14 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({
         await navigator.clipboard.writeText(shareText);
         alert('PDF downloaded! Sharing files is not supported on this browser/device, but the salary slip text summary has been copied to your clipboard so you can paste it along with the PDF.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sharing PDF:', error);
+      alert('Share error: ' + (error?.message || error || 'Unknown error'));
     } finally {
       setIsGeneratingPdf(false);
     }
   };
+
 
   const getStaffRoleText = () => `${staff.salaryType} • ${staff.calculationBasis}`;
 
