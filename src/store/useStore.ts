@@ -129,6 +129,11 @@ interface AppState {
   updateStaff: (id: string, updates: Partial<Staff>) => void;
   deleteStaff: (id: string) => void;
   markAttendance: (date: string, staffId: string, status: AttendanceRecord['status']) => void;
+  // Auto-marks a configured weekly-holiday date as Holiday for every active
+  // staff member who is still unmarked on it. A holiday is deterministic (it
+  // comes from the weekly-holiday setting), so it fills in on its own instead
+  // of needing to be marked by hand.
+  autoMarkHolidayForDate: (date: string) => void;
   addAdvance: (staffId: string, amount: number, date: string, remarks: string) => void;
   updateAdvance: (id: string, amount: number, date: string, remarks: string) => void;
   deleteAdvance: (id: string) => void;
@@ -146,6 +151,23 @@ interface AppState {
 // temporary local id for the optimistic update, replaced by the real id
 // as soon as the server responds.
 const createTempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+// Today's date (YYYY-MM-DD) in India Standard Time (Asia/Kolkata) — the same
+// timezone the backend runs in (see api/_bootstrap.php). Computed in IST
+// explicitly, not from the device's local clock or UTC, so "today" always
+// matches the server and stays correct even if the device timezone is wrong.
+// This boundary is exactly what decides "today" vs a future date, so holiday
+// auto-marking must never treat a day the business considers future as today.
+const todayIST = () => {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${part('year')}-${part('month')}-${part('day')}`;
+};
 
 // Images saved while the DB column was VARCHAR(500) were truncated and can
 // never render; drop them so the initials avatar shows instead.
@@ -192,7 +214,7 @@ export const useStore = create<AppState>((set, get) => ({
   currentScreen: 'attendance', // Default screen is Attendance
   previousScreen: null,
   activeStaffProfileId: null,
-  currentDate: new Date().toISOString().split('T')[0],
+  currentDate: todayIST(),
   searchQuery: '',
   isAddStaffModalOpen: false,
   staffList: [],
@@ -315,7 +337,7 @@ export const useStore = create<AppState>((set, get) => ({
     // Auto-mark attendance from joiningDate to today (inclusive). Uses the
     // real device date, not the store's currentDate — that reflects whatever
     // day the Attendance calendar happens to be viewing, not "today".
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayIST();
     const start = parseISO(staff.joiningDate);
     const end = parseISO(today);
     const weeklyHolidays = get().settings.weeklyHoliday || [];
@@ -481,7 +503,7 @@ export const useStore = create<AppState>((set, get) => ({
       id: tempId,
       staffId,
       amount,
-      date: date || new Date().toISOString().split('T')[0],
+      date: date || todayIST(),
       month,
       paymentMode,
       remarks,
@@ -507,14 +529,49 @@ export const useStore = create<AppState>((set, get) => ({
     persist(updateSettingsRequest(merged));
   },
 
+  autoMarkHolidayForDate: (date) => {
+    const state = get();
+    // Never pre-mark the future; attendance only matters up to today.
+    if (date > todayIST()) return;
+
+    const dayName = format(parseISO(date), 'EEEE');
+    if (!(state.settings.weeklyHoliday || []).includes(dayName)) return;
+
+    const dayRecords = state.attendance[date] || {};
+    // Only active staff who had already joined by this date and aren't marked
+    // yet — never overwrite a manually-set status (e.g. Absent on a holiday).
+    const entries = state.staffList
+      .filter((staff) => staff.status === 'Active' && staff.joiningDate <= date && !dayRecords[staff.id])
+      .map((staff) => ({ staffId: staff.id, status: 'Holiday' as const }));
+    if (entries.length === 0) return;
+
+    const updatedAttendance = { ...state.attendance, [date]: { ...dayRecords } };
+    entries.forEach(({ staffId, status }) => {
+      updatedAttendance[date][staffId] = {
+        status,
+        timestamp: new Date().toISOString(),
+      };
+    });
+
+    set({ attendance: updatedAttendance });
+    persist(markAttendanceBulkRequest(date, entries));
+  },
+
   triggerAutoAttendance: () => {
     const state = get();
+
+    // Always today's real *local* date — state.currentDate is whatever day the
+    // Attendance calendar happens to be viewing, not necessarily today.
+    const dateStr = todayIST();
+
+    // Holidays fill in on their own regardless of the auto-attendance toggle
+    // (they're a fixed fact from the weekly-holiday setting, not a guess about
+    // whether staff showed up).
+    get().autoMarkHolidayForDate(dateStr);
+
     if (!state.settings.autoAttendanceEnabled) return;
 
-    // Always today's real date — state.currentDate is whatever day the
-    // Attendance calendar happens to be viewing, not necessarily today.
-    const dateStr = new Date().toISOString().split('T')[0];
-    const dayAttendance = state.attendance[dateStr] || {};
+    const dayAttendance = get().attendance[dateStr] || {};
 
     // If attendance is already marked for this date, do not overwrite it
     if (Object.keys(dayAttendance).length > 0) return;

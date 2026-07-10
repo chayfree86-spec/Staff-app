@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { CustomDatePicker } from '../components/ui/CustomDatePicker';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
@@ -11,10 +11,23 @@ export const AttendanceScreen: React.FC = () => {
     staffList,
     attendance,
     markAttendance,
+    autoMarkHolidayForDate,
     setScreen,
     setActiveStaffProfileId,
     settings,
   } = useStore();
+
+  // When a weekly-holiday date is opened, fill it in as Holiday for every
+  // active staff member automatically instead of making the user mark each
+  // one by hand. Idempotent — already-marked staff are left untouched.
+  // Keyed only on the viewed date (a primitive): the action reads the latest
+  // staff/settings/attendance from the store itself, and this screen remounts
+  // on navigation, so newly-loaded staff or a changed holiday config are
+  // always picked up — without re-firing when those objects merely get a new
+  // reference (e.g. after a background resync), which could otherwise loop.
+  useEffect(() => {
+    autoMarkHolidayForDate(currentDate);
+  }, [currentDate, autoMarkHolidayForDate]);
 
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [markingProgress, setMarkingProgress] = useState<{
