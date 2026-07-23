@@ -2,7 +2,6 @@ import React from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
 import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel } from '../utils/salary';
-import { jsPDF } from 'jspdf';
 
 interface SalarySlipModalProps {
   isOpen: boolean;
@@ -99,8 +98,12 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
   const [isDownloading, setIsDownloading] = React.useState(false);
   const [isSharing, setIsSharing] = React.useState(false);
 
-  const generatePDFBlob = (): { blob: Blob; filename: string } | null => {
+  const generatePDFBlob = async (): Promise<{ blob: Blob; filename: string } | null> => {
     try {
+      // jsPDF (and its html2canvas/dompurify deps) are heavy and only needed
+      // when a slip is actually exported, so load them on demand here instead
+      // of shipping them in the initial app bundle.
+      const { jsPDF } = await import('jspdf');
       const WHITE      = '#FFFFFF';
       const BG         = '#FAF9FF';
       const PRIMARY    = '#7C3AED';
@@ -372,9 +375,9 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
 
   const handleDownloadPDF = () => {
     setIsDownloading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
-        const pdfData = generatePDFBlob();
+        const pdfData = await generatePDFBlob();
         if (pdfData) {
           const { blob, filename } = pdfData;
           const url = URL.createObjectURL(blob);
@@ -396,7 +399,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
     setIsSharing(true);
     await new Promise(r => setTimeout(r, 50));
     try {
-      const pdfData = generatePDFBlob();
+      const pdfData = await generatePDFBlob();
       if (!pdfData) return;
       const { blob, filename } = pdfData;
       const file = new File([blob], filename, { type: 'application/pdf' });

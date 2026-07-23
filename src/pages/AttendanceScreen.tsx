@@ -305,16 +305,26 @@ export const AttendanceScreen: React.FC = () => {
                 </div>
 
                 {isHolidayDate ? (
-                  <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => handleStatusChange(staff.id, 'Holiday')}
-                      className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer ${
+                      className={`py-2.5 rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer ${
                         currentStatus === 'Holiday'
                           ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20 border-0'
                           : 'bg-app-bg border border-app-border/40 text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
-                      Mark Paid Holiday
+                      Paid Holiday
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(staff.id, 'Absent')}
+                      className={`py-2.5 rounded-xl text-xs font-bold transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer ${
+                        currentStatus === 'Absent'
+                          ? 'bg-gradient-to-r from-rose-400 to-red-500 text-white shadow-md shadow-rose-500/20 border-0'
+                          : 'bg-app-bg border border-app-border/40 text-app-text-primary hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      Absent ({stats.absent})
                     </button>
                   </div>
                 ) : (

@@ -33,36 +33,37 @@
     <!-- Service Worker Registration with Auto-Reload on Update -->
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((reg) => {
-              console.log('SW registered:', reg.scope);
-              
-              reg.onupdatefound = () => {
-                const installingWorker = reg.installing;
-                if (installingWorker) {
-                  installingWorker.onstatechange = () => {
-                    if (installingWorker.state === 'installed') {
-                      if (navigator.serviceWorker.controller) {
-                        console.log('New update installed. Reloading page...');
-                        window.location.reload();
-                      }
-                    }
-                  };
-                }
-              };
-            })
-            .catch((err) => {
-              console.error('SW registration failed:', err);
-            });
-        });
-
+        // When a newly installed worker takes control, reload once so the page
+        // is running the freshly deployed build. The guard prevents a loop.
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            window.location.reload();
-          }
+          if (refreshing) return;
+          refreshing = true;
+          window.location.reload();
+        });
+
+        window.addEventListener('load', () => {
+          // updateViaCache:'none' -> the browser never serves sw.js from its
+          // HTTP cache, so a new deploy is detected reliably.
+          navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+            .then((reg) => {
+              // Force an update check on every page load so a freshly deployed
+              // build is picked up immediately, not on the browser's own schedule.
+              reg.update();
+
+              // If a new worker is found and finishes installing, tell it to
+              // activate at once; that triggers controllerchange -> reload above.
+              reg.addEventListener('updatefound', () => {
+                const worker = reg.installing;
+                if (!worker) return;
+                worker.addEventListener('statechange', () => {
+                  if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                    worker.postMessage('SKIP_WAITING');
+                  }
+                });
+              });
+            })
+            .catch((err) => console.error('SW registration failed:', err));
         });
       }
     </script>

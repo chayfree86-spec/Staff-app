@@ -29,4 +29,19 @@ function copyApiPlugin() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(), copyApiPlugin()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Split the big, rarely-changing vendor libs into their own cached
+        // chunks so the main app bundle is smaller and browser caching is
+        // more effective across deploys.
+        manualChunks(id: string) {
+          if (id.includes('node_modules')) {
+            if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react-vendor';
+            if (id.includes('date-fns')) return 'date-vendor';
+          }
+        },
+      },
+    },
+  },
 })

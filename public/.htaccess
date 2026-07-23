@@ -1,0 +1,11 @@
+# Never let the browser cache the app shell or the service worker, so a freshly
+# deployed build is always fetched and picked up on the next page load. The
+# actual JS/CSS live under /assets/ with content-hashed filenames, so those stay
+# cacheable and only change when the build changes.
+<IfModule mod_headers.c>
+  <FilesMatch "^(index\.html|sw\.js)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+</IfModule>

@@ -100,7 +100,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             className="flex items-center justify-center gap-2.5 px-4 py-3 bg-app-surface border border-app-border rounded-xl focus:outline-none focus:border-primary transition-colors text-app-text-primary text-sm shadow-sm font-medium w-full cursor-pointer"
           >
             <span className="material-symbols-rounded text-primary">calendar_month</span>
-            <span className="font-bold">{format(selectedDate, 'dd MMM yyyy')}</span>
+            <span className="font-bold">{format(selectedDate, 'EEE, dd MMM yyyy')}</span>
           </button>
         </div>
 

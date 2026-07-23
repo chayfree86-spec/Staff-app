@@ -1,120 +1,91 @@
-const CACHE_NAME = 'staff-app-cache-v4';
-const OFFLINE_URL = '/';
+// Bump this string on any change to force old caches to be cleared on activate.
+const CACHE_NAME = 'staff-app-cache-v5';
 
-const INITIAL_CACHES = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/pwa-icon.png',
-  '/material-symbols-rounded.ttf',
-];
-
-// Helper to fetch resource with a timeout (in milliseconds)
-const fetchWithTimeout = (request, timeoutMs = 1000) => {
-  return new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => reject(new Error('Fetch timeout')), timeoutMs);
-    fetch(request).then(
-      (response) => {
-        clearTimeout(timeoutId);
-        resolve(response);
-      },
-      (err) => {
-        clearTimeout(timeoutId);
-        reject(err);
-      }
-    );
-  });
-};
+// Minimal app shell kept only so the app can still open offline. Everything
+// else (hashed build assets, icons, fonts) is cached on demand as requested.
+const OFFLINE_URL = '/index.html';
+const PRECACHE = ['/index.html', '/manifest.json', '/pwa-icon.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(INITIAL_CACHES);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE))
+      // Activate this new worker immediately instead of waiting for all tabs
+      // to close, so a freshly deployed build takes over right away.
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          // Always delete old caches to ensure fresh load
-          if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys()
+      .then((names) => Promise.all(names.map((n) => (n !== CACHE_NAME ? caches.delete(n) : null))))
+      .then(() => self.clients.claim())
   );
 });
 
+// Lets the page tell the worker to activate at once (used by the update flow).
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+});
+
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
 
-  // CRITICAL: NEVER cache API calls. Data must always come directly from the API.
-  if (event.request.url.includes('/api/')) {
-    return;
-  }
+  const url = new URL(req.url);
 
-  // Network-First with Cache-Fallback and Timeout for local static graphics, fonts, and assets:
-  // This allows updated files on the server to load immediately on refresh,
-  // while falling back to cached versions within 1 second if offline or on a slow connection.
-  const isStaticAsset = 
-    event.request.url.includes('/material-symbols-rounded.ttf') || 
-    event.request.url.includes('/pwa-icon.png') ||
-    event.request.url.includes('/favicon.svg') ||
-    event.request.url.includes('/logo-transparent.png') ||
-    event.request.url.includes('/splashbg.png');
+  // Never touch the API — data must always come straight from the server.
+  if (url.pathname.includes('/api/')) return;
 
-  if (isStaticAsset) {
+  const isNavigation =
+    req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
+
+  // HTML / page loads: ALWAYS fetch fresh from the network, bypassing the HTTP
+  // cache, so the newest index.html — which references the newest hashed
+  // JS/CSS — always loads. The cached copy is only a fallback for offline.
+  if (isNavigation) {
     event.respondWith(
-      fetchWithTimeout(event.request, 1000)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return response;
+      fetch(req, { cache: 'no-store' })
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(OFFLINE_URL, copy));
+          return res;
         })
-        .catch(() => {
-          // If timeout or network failure, load from cache instantly
-          return caches.match(event.request);
-        })
+        .catch(() => caches.match(OFFLINE_URL))
     );
     return;
   }
 
-  // Network First Strategy for other assets:
-  // Try fetching from the network first. If successful, update the cache and return the response.
-  // If the network is offline or fails, fallback to the cached version.
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // If response is valid, clone and save in cache
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // Fallback to cache if network is unavailable
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+  // Hashed build assets are content-hashed (a new build = new filenames), so
+  // they are immutable and safe to serve cache-first for instant loads.
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(req).then((cached) => {
+        if (cached) return cached;
+        return fetch(req).then((res) => {
+          if (res && res.status === 200) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(req, copy));
           }
-          // For HTML navigation requests, return the root offline URL
-          if (event.request.mode === 'navigate') {
-            return caches.match(OFFLINE_URL);
-          }
+          return res;
         });
       })
+    );
+    return;
+  }
+
+  // Everything else (icons, fonts, manifest): network-first, fall back to cache
+  // when offline so updated files show up immediately while still working offline.
+  event.respondWith(
+    fetch(req)
+      .then((res) => {
+        if (res && res.status === 200 && res.type === 'basic') {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+        }
+        return res;
+      })
+      .catch(() => caches.match(req))
   );
 });
