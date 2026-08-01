@@ -208,6 +208,11 @@ export const StaffProfileScreen: React.FC = () => {
       }
     }
 
+    if (sObj.salaryHold) {
+      const netBeforeManualHold = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);
+      holdAmount += netBeforeManualHold;
+    }
+
     const net = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);
     const due = Math.max(0, net - paid);
 
@@ -1119,6 +1124,49 @@ export const StaffProfileScreen: React.FC = () => {
                     </div>
                     <span className="text-xs font-black">+₹{releasedAmount.toLocaleString('en-IN')}</span>
                   </div>
+                )}
+
+                {staff.salaryHold ? (
+                  <div className="flex justify-between items-center px-2 py-1.5 text-rose-600 dark:text-rose-400 font-bold bg-rose-500/5 rounded-xl border border-rose-500/10">
+                    <div className="flex items-center gap-1.5">
+                      <span className="material-symbols-rounded text-sm select-none">lock</span>
+                      <span className="text-xs">Manual Hold: Active</span>
+                    </div>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const confirmed = await confirm(`Are you sure you want to release the manual salary hold for ${staff.name}?`, {
+                          title: 'Release Salary Hold',
+                          type: 'success',
+                          confirmText: 'Release'
+                        });
+                        if (confirmed) {
+                          updateStaff(staff.id, { salaryHold: false });
+                        }
+                      }}
+                      className="px-2.5 py-1 bg-rose-600 hover:bg-rose-750 text-white font-black rounded-xl text-[9px] active:scale-95 transition-all cursor-pointer"
+                    >
+                      Release
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const confirmed = await confirm(`Are you sure you want to hold the salary for ${staff.name}? This will hold the payable salary for the current and subsequent months until released.`, {
+                        title: 'Hold Salary',
+                        type: 'warning',
+                        confirmText: 'Hold'
+                      });
+                      if (confirmed) {
+                        updateStaff(staff.id, { salaryHold: true });
+                      }
+                    }}
+                    className="w-full py-2 bg-rose-50/50 dark:bg-rose-950/10 hover:bg-rose-100/50 dark:hover:bg-rose-950/20 text-rose-600 dark:text-rose-400 font-bold border border-rose-200/50 dark:border-rose-900/30 rounded-xl text-xs active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span className="material-symbols-rounded text-xs select-none">lock</span>
+                    Hold Salary
+                  </button>
                 )}
                 
                 <div className="flex justify-between items-center bg-primary text-white p-3.5 rounded-xl shadow-sm mt-1">

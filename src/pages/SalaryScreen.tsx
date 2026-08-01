@@ -253,6 +253,11 @@ export const SalaryScreen: React.FC = () => {
       }
     }
 
+    if (staff.salaryHold) {
+      const netBeforeManualHold = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);
+      holdAmount += netBeforeManualHold;
+    }
+
     const net = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);
     const due = Math.max(0, net - paid);
 

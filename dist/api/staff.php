@@ -66,6 +66,7 @@ function staff_payload_from_input(array $input): array
         'status' => $status,
         'deactivation_date' => $deactivationDate,
         'released_salary_hold' => !empty($staff['releasedSalaryHold']) ? 1 : 0,
+        'salary_hold' => !empty($staff['salaryHold']) ? 1 : 0,
     ];
 }
 
@@ -79,8 +80,8 @@ if ($action === 'create') {
                 business_id, name, father_name, mobile, mobile2, address,
                 avatar_initials, profile_image_url, monthly_salary, per_day_salary,
                 salary_type, calculation_basis, joining_date, status, deactivation_date,
-                released_salary_hold, owner_user_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                released_salary_hold, salary_hold, owner_user_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $businessId,
@@ -99,6 +100,7 @@ if ($action === 'create') {
             $payload['status'],
             $payload['deactivation_date'],
             $payload['released_salary_hold'],
+            $payload['salary_hold'],
             $auth['user_id'],
         ]);
 
@@ -176,7 +178,7 @@ if ($action === 'update') {
             name = ?, father_name = ?, mobile = ?, mobile2 = ?, address = ?,
             avatar_initials = ?, profile_image_url = ?, monthly_salary = ?,
             per_day_salary = ?, salary_type = ?, calculation_basis = ?,
-            joining_date = ?, status = ?, deactivation_date = ?, released_salary_hold = ?
+            joining_date = ?, status = ?, deactivation_date = ?, released_salary_hold = ?, salary_hold = ?
          WHERE id = ? AND business_id = ?'
     );
     $stmt->execute([
@@ -195,6 +197,7 @@ if ($action === 'update') {
         $payload['status'],
         $payload['deactivation_date'],
         $payload['released_salary_hold'],
+        $payload['salary_hold'],
         $id,
         $businessId,
     ]);

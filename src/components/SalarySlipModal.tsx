@@ -91,6 +91,11 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
     }
   }
 
+  if (staff.salaryHold) {
+    const netBeforeManualHold = Math.max(0, earned - advanceAdjusted - deduction - holdAmount + releasedAmount);
+    holdAmount += netBeforeManualHold;
+  }
+
   const netPayable = Math.max(0, earned - advanceAdjusted - deduction - holdAmount + releasedAmount);
 
   const [isDownloading, setIsDownloading] = React.useState(false);

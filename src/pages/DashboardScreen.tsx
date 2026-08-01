@@ -78,7 +78,25 @@ export const DashboardScreen: React.FC = () => {
       .filter((p) => p.staffId === staffId && p.month === currentMonthLabel)
       .reduce((sum, item) => sum + item.amount, 0);
 
-    const net = Math.max(0, earned - totalAdv - deduction);
+    let holdAmount = 0;
+    let releasedAmount = 0;
+    const joiningCycle = getSalaryCycleForDate(staff.joiningDate, settings.salaryCycleStart);
+    const holdDays = settings.newStaffSalaryHoldDays || 0;
+    if (holdDays > 0) {
+      if (joiningCycle.label === currentCycle.label) {
+        if (staff.releasedSalaryHold) {
+          releasedAmount = Math.round(holdDays * perDayVal);
+        } else {
+          holdAmount = Math.min(earned, Math.round(holdDays * perDayVal));
+        }
+      }
+    }
+    if (staff.salaryHold) {
+      const netBeforeManualHold = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);
+      holdAmount += netBeforeManualHold;
+    }
+
+    const net = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);
     const due = Math.max(0, net - paid);
 
     return { earned, paid, due };

@@ -85,6 +85,10 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
     $stmt->execute([$staffId, $cycle['start'], $cycle['end']]);
     $deduction = (int) $stmt->fetchColumn();
 
+    $stmtSnap = $pdo->prepare('SELECT hold FROM salary_slip_snapshots WHERE staff_id = ? AND salary_month = ? LIMIT 1');
+    $stmtSnap->execute([$staffId, $salaryMonth]);
+    $existingHold = (int) ($stmtSnap->fetchColumn() ?: 0);
+
     $holdAmount = 0;
     $releasedAmount = 0;
     if ($holdDays > 0) {
@@ -104,6 +108,16 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
             && !(bool) $staff['released_salary_hold']
         ) {
             $releasedAmount = (int) round($holdDays * $perDayVal);
+        }
+    }
+
+    if ((bool) $staff['salary_hold']) {
+        $netBeforeManualHold = max(0, $earned - $advanceAdjusted - $deduction - $holdAmount + $releasedAmount);
+        $holdAmount += $netBeforeManualHold;
+    } else {
+        if ($existingHold > 0) {
+            $releasedAmount += $existingHold;
+            $holdAmount += $existingHold;
         }
     }
 
