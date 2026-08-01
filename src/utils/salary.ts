@@ -118,6 +118,9 @@ export function getEarnedSalary(
     perDaySalary: number;
     salaryType: 'Monthly' | 'Daily';
     calculationBasis: 'Attendance Based' | 'Fixed Salary';
+    joiningDate: string;
+    status: 'Active' | 'Inactive';
+    deactivationDate?: string;
   },
   totalDaysCredited: number,
   perDayVal: number,
@@ -137,6 +140,20 @@ export function getEarnedSalary(
       return 0;
     }
     const daysInCycle = daysBetweenInclusive(cycle.start, cycle.end);
+
+    // Calculate how many days they were actually employed in this cycle
+    const empStart = staff.joiningDate > cycle.start ? staff.joiningDate : cycle.start;
+    const empEnd = staff.status === 'Inactive' && staff.deactivationDate && staff.deactivationDate < cycle.end
+      ? staff.deactivationDate
+      : cycle.end;
+
+    const daysEmployed = empStart <= empEnd ? daysBetweenInclusive(empStart, empEnd) : 0;
+
+    if (daysEmployed < daysInCycle) {
+      // Mid-month joining/deactivation: pay directly based on total days credited
+      return Math.round(totalDaysCredited * perDayVal);
+    }
+
     const absentDays = daysInCycle - totalDaysCredited;
     const earnedDays = Math.max(0, 30 - absentDays);
     return Math.round(earnedDays * perDayVal);

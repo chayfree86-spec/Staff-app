@@ -63,9 +63,23 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
             $earned = 0;
         } else {
             $daysInCycle = (int) ((strtotime($cycle['end']) - strtotime($cycle['start'])) / 86400) + 1;
-            $absentDays = $daysInCycle - $totalDaysCredited;
-            $earnedDays = max(0, 30 - $absentDays);
-            $earned = (int) round($earnedDays * $perDayVal);
+
+            $empStart = $staff['joining_date'] > $cycle['start'] ? $staff['joining_date'] : $cycle['start'];
+            $empEnd = ($staff['status'] === 'inactive' && $staff['deactivation_date'] && $staff['deactivation_date'] < $cycle['end'])
+                ? $staff['deactivation_date']
+                : $cycle['end'];
+
+            $daysEmployed = ($empStart <= $empEnd)
+                ? (int) ((strtotime($empEnd) - strtotime($empStart)) / 86400) + 1
+                : 0;
+
+            if ($daysEmployed < $daysInCycle) {
+                $earned = (int) round($totalDaysCredited * $perDayVal);
+            } else {
+                $absentDays = $daysInCycle - $totalDaysCredited;
+                $earnedDays = max(0, 30 - $absentDays);
+                $earned = (int) round($earnedDays * $perDayVal);
+            }
         }
     } else {
         $earned = (int) round($totalDaysCredited * $perDayVal);
