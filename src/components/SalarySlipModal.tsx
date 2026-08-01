@@ -61,7 +61,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
   };
   const outstandingAdvance = getStaffOutstandingAdvance(staffId);
 
-  const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, targetCycle, settings.monthCalculation);
+  const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, targetCycle, settings.monthCalculation, currentDate);
 
   const advanceAdjusted = Math.abs(
     advanceList

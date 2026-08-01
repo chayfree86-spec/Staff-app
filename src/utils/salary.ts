@@ -125,7 +125,8 @@ export function getEarnedSalary(
   totalDaysCredited: number,
   perDayVal: number,
   cycle: SalaryCycle,
-  monthCalculation: 'Actual Calendar Month' | 'Fixed 30 Days'
+  monthCalculation: 'Actual Calendar Month' | 'Fixed 30 Days',
+  currentDate?: string
 ): number {
   if (staff.calculationBasis === 'Fixed Salary' && staff.salaryType === 'Monthly') {
     return staff.monthlySalary;
@@ -154,8 +155,10 @@ export function getEarnedSalary(
       return Math.round(totalDaysCredited * perDayVal);
     }
 
-    const absentDays = daysInCycle - totalDaysCredited;
-    const earnedDays = Math.max(0, 30 - absentDays);
+    const elapsedEnd = currentDate && currentDate < cycle.end ? currentDate : cycle.end;
+    const elapsedDays = elapsedEnd >= cycle.start ? daysBetweenInclusive(cycle.start, elapsedEnd) : 0;
+    const actualAbsentDays = Math.max(0, elapsedDays - totalDaysCredited);
+    const earnedDays = Math.max(0, Math.min(totalDaysCredited, 30 - actualAbsentDays));
     return Math.round(earnedDays * perDayVal);
   }
 

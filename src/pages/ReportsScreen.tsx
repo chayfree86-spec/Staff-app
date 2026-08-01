@@ -93,7 +93,7 @@ export const ReportsScreen: React.FC = () => {
     const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
     const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
 
-    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, targetCycle, settings.monthCalculation);
+    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, targetCycle, settings.monthCalculation, currentDate);
 
     const advanceAdjusted = Math.abs(
       advanceList

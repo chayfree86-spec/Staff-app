@@ -63,7 +63,7 @@ export const StaffScreen: React.FC = () => {
     const perDayVal = getEffectivePerDayRate(staff, currentCycle, settings.monthCalculation);
     const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
     const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
-    return getEarnedSalary(staff, totalDaysCredited, perDayVal, currentCycle, settings.monthCalculation);
+    return getEarnedSalary(staff, totalDaysCredited, perDayVal, currentCycle, settings.monthCalculation, currentDate);
   };
 
   const handleAddStaff = async (e: React.FormEvent) => {

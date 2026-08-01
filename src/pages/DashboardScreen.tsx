@@ -64,7 +64,7 @@ export const DashboardScreen: React.FC = () => {
     const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
     const totalDaysCredited = daysPresent + daysHalf * 0.5 + creditedHoliday;
     const perDayVal = getEffectivePerDayRate(staff, currentCycle, settings.monthCalculation);
-    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, currentCycle, settings.monthCalculation);
+    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, currentCycle, settings.monthCalculation, currentDate);
 
     const totalAdv = advanceList
       .filter((a) => a.staffId === staffId && a.date >= currentCycle.start && a.date <= currentCycle.end)

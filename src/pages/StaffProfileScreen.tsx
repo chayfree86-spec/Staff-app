@@ -115,7 +115,7 @@ export const StaffProfileScreen: React.FC = () => {
     const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
     const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
 
-    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, joiningCycle, settings.monthCalculation);
+    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, joiningCycle, settings.monthCalculation, currentDate);
 
     return Math.min(earned, Math.round(holdDays * perDayVal));
   };
@@ -176,7 +176,7 @@ export const StaffProfileScreen: React.FC = () => {
     const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
     const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
 
-    const earned = getEarnedSalary(sObj, totalDaysCredited, perDayVal, targetCycle, settings.monthCalculation);
+    const earned = getEarnedSalary(sObj, totalDaysCredited, perDayVal, targetCycle, settings.monthCalculation, currentDate);
 
     const totalAdv = advanceList
       .filter(a => a.staffId === staffId && a.date >= targetCycle.start && a.date <= targetCycle.end && a.amount < 0)

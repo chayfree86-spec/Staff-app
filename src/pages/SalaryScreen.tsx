@@ -99,7 +99,7 @@ export const SalaryScreen: React.FC = () => {
     const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
     const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
 
-    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, joiningCycle, settings.monthCalculation);
+    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, joiningCycle, settings.monthCalculation, currentDate);
 
     return Math.min(earned, Math.round(holdDays * perDayVal));
   };
@@ -211,7 +211,7 @@ export const SalaryScreen: React.FC = () => {
     const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
 
     // Earned salary based on calculation basis
-    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, targetCycle, settings.monthCalculation);
+    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, targetCycle, settings.monthCalculation, currentDate);
 
     // 2. Outstanding Advance (adjusted/returned advances)
     const totalAdv = advanceList
