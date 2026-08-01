@@ -453,6 +453,36 @@ export const StaffProfileScreen: React.FC = () => {
   const paidAmount = profileSalaryDetails.paid;
   const outstandingHold = getStaffOutstandingHold(staff.id);
 
+  const perDayVal = getEffectivePerDayRate(staff, profileCycle, settings.monthCalculation);
+  const joiningCycleForHold = getSalaryCycleForDate(staff.joiningDate, settings.salaryCycleStart);
+  const holdDaysForHold = settings.newStaffSalaryHoldDays || 0;
+  let joiningHoldAmount = 0;
+  let joiningReleasedAmount = 0;
+  if (holdDaysForHold > 0) {
+    if (joiningCycleForHold.label === profileCycle.label) {
+      if (staff.releasedSalaryHold) {
+        joiningReleasedAmount = Math.round(holdDaysForHold * perDayVal);
+      } else {
+        joiningHoldAmount = Math.min(earnedSalary, Math.round(holdDaysForHold * perDayVal));
+      }
+    }
+    if (
+      staff.status === 'Inactive' &&
+      staff.deactivationDate &&
+      staff.deactivationDate >= profileCycle.start &&
+      staff.deactivationDate <= profileCycle.end
+    ) {
+      if (!staff.releasedSalaryHold) {
+        joiningReleasedAmount = Math.round(holdDaysForHold * perDayVal);
+      }
+    }
+  }
+
+  const netBeforeManualHold = Math.max(0, earnedSalary - totalAdvances - totalAdjusted - joiningHoldAmount + joiningReleasedAmount);
+  const manualHoldAmount = staff.salaryHold && staff.salaryHold > 0
+    ? Math.min(netBeforeManualHold, Math.round(staff.salaryHold * perDayVal))
+    : 0;
+
   // Calendar helpers
   const isFutureMonth = (dateStr: string) => {
     const dateObj = parseISO(dateStr);
@@ -703,6 +733,42 @@ export const StaffProfileScreen: React.FC = () => {
             <span className={`w-1.5 h-1.5 rounded-full ${staff.status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'} shrink-0`} />
             <span>{staff.status === 'Active' ? 'Active' : 'Inactive'}</span>
           </button>
+
+          {/* Hold/Release Salary Toggle */}
+          {staff.salaryHold && staff.salaryHold > 0 ? (
+            <button
+              onClick={async () => {
+                const confirmed = await confirm(`Are you sure you want to release the manual salary hold for ${staff.name}?`, {
+                  title: 'Release Salary Hold',
+                  type: 'success',
+                  confirmText: 'Release'
+                });
+                if (confirmed) {
+                  updateStaff(staff.id, { salaryHold: 0 });
+                }
+              }}
+              className="px-3 py-2 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
+              title="Click to release held salary"
+            >
+              <span className="material-symbols-rounded select-none text-sm font-black">lock</span>
+              <span>Held ({staff.salaryHold}d)</span>
+            </button>
+          ) : (
+            <button
+              onClick={async () => {
+                const perDayVal = getEffectivePerDayRate(staff, profileCycle, settings.monthCalculation);
+                const defaultHoldDays = Math.round(profileSalaryDetails.earned / perDayVal) || 30;
+                setHoldDaysInput(String(defaultHoldDays));
+                setIsHoldSalaryDialogOpen(true);
+              }}
+              className="px-3 py-2 rounded-xl border border-app-border bg-app-surface text-app-text-secondary hover:text-rose-600 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
+              title="Click to hold salary"
+            >
+              <span className="material-symbols-rounded select-none text-sm">lock_open</span>
+              <span>Hold Salary</span>
+            </button>
+          )}
+
 
           {/* Update button */}
           <button
@@ -1129,43 +1195,32 @@ export const StaffProfileScreen: React.FC = () => {
                   </div>
                 )}
 
-                {staff.salaryHold && staff.salaryHold > 0 ? (
+                {staff.salaryHold && staff.salaryHold > 0 && (
                   <div className="flex justify-between items-center px-2 py-1.5 text-rose-600 dark:text-rose-400 font-bold bg-rose-500/5 rounded-xl border border-rose-500/10">
                     <div className="flex items-center gap-1.5">
                       <span className="material-symbols-rounded text-sm select-none">lock</span>
                       <span className="text-xs">Manual Hold: Active ({staff.salaryHold} Days)</span>
                     </div>
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        const confirmed = await confirm(`Are you sure you want to release the manual salary hold for ${staff.name}?`, {
-                          title: 'Release Salary Hold',
-                          type: 'success',
-                          confirmText: 'Release'
-                        });
-                        if (confirmed) {
-                          updateStaff(staff.id, { salaryHold: 0 });
-                        }
-                      }}
-                      className="px-2.5 py-1 bg-rose-600 hover:bg-rose-750 text-white font-black rounded-xl text-[9px] active:scale-95 transition-all cursor-pointer"
-                    >
-                      Release
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black">₹{manualHoldAmount.toLocaleString('en-IN')}</span>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const confirmed = await confirm(`Are you sure you want to release the manual salary hold for ${staff.name}?`, {
+                            title: 'Release Salary Hold',
+                            type: 'success',
+                            confirmText: 'Release'
+                          });
+                          if (confirmed) {
+                            updateStaff(staff.id, { salaryHold: 0 });
+                          }
+                        }}
+                        className="px-2.5 py-1 bg-rose-600 hover:bg-rose-750 text-white font-black rounded-xl text-[9px] active:scale-95 transition-all cursor-pointer"
+                      >
+                        Release
+                      </button>
+                    </div>
                   </div>
-                ) : (
-                  <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      const perDayVal = getEffectivePerDayRate(staff, profileCycle, settings.monthCalculation);
-                      const defaultHoldDays = Math.round(profileSalaryDetails.earned / perDayVal) || 30;
-                      setHoldDaysInput(String(defaultHoldDays));
-                      setIsHoldSalaryDialogOpen(true);
-                    }}
-                    className="w-full py-2 bg-rose-50/50 dark:bg-rose-950/10 hover:bg-rose-100/50 dark:hover:bg-rose-950/20 text-rose-600 dark:text-rose-400 font-bold border border-rose-200/50 dark:border-rose-900/30 rounded-xl text-xs active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <span className="material-symbols-rounded text-xs select-none">lock</span>
-                    Hold Salary (₹{netPayable.toLocaleString('en-IN')})
-                  </button>
                 )}
                 
                 <div className="flex justify-between items-center bg-primary text-white p-3.5 rounded-xl shadow-sm mt-1">
