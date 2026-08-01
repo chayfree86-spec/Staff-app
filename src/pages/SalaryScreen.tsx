@@ -310,8 +310,7 @@ export const SalaryScreen: React.FC = () => {
   const handleOpenPayModal = (staffId: string, dueAmount: number) => {
     setPayoutStaffId(staffId);
     
-    const { defaultMonth } = getPayoutMonths();
-    setPayoutMonth(defaultMonth);
+    setPayoutMonth(selectedMonthLabel);
     setPayoutDate(currentDate);
     setPayoutMode('Cash');
     setPayoutRemarks('');
@@ -319,10 +318,10 @@ export const SalaryScreen: React.FC = () => {
     setCustomAdvanceDeductAmount('');
     setPayoutError('');
 
-    const targetYM = getYearMonthFromLabel(defaultMonth);
+    const targetYM = selectedYearMonth;
     const selectedStaff = staffList.find(s => s.id === staffId);
     if (selectedStaff) {
-      const details = getSalaryDetails(selectedStaff.id, targetYM, defaultMonth);
+      const details = getSalaryDetails(selectedStaff.id, targetYM, selectedMonthLabel);
       setPayoutAmount(details.due.toString());
     } else {
       setPayoutAmount(dueAmount.toString());
