@@ -91,9 +91,10 @@ export const DashboardScreen: React.FC = () => {
         }
       }
     }
-    if (staff.salaryHold) {
+    if (staff.salaryHold && staff.salaryHold > 0) {
       const netBeforeManualHold = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);
-      holdAmount += netBeforeManualHold;
+      const manualHoldAmount = Math.min(netBeforeManualHold, Math.round(staff.salaryHold * perDayVal));
+      holdAmount += manualHoldAmount;
     }
 
     const net = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);

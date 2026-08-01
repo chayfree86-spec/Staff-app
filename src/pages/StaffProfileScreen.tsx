@@ -40,6 +40,8 @@ export const StaffProfileScreen: React.FC = () => {
   const [isEditTxOpen, setIsEditTxOpen] = useState(false);
   const [isAdvHistoryOpen, setIsAdvHistoryOpen] = useState(false);
   const [isDedHistoryOpen, setIsDedHistoryOpen] = useState(false);
+  const [isHoldSalaryDialogOpen, setIsHoldSalaryDialogOpen] = useState(false);
+  const [holdDaysInput, setHoldDaysInput] = useState('');
 
   // Month navigation state for profile view
   const [profileDate, setProfileDate] = useState(currentDate);
@@ -208,9 +210,10 @@ export const StaffProfileScreen: React.FC = () => {
       }
     }
 
-    if (sObj.salaryHold) {
+    if (sObj.salaryHold && sObj.salaryHold > 0) {
       const netBeforeManualHold = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);
-      holdAmount += netBeforeManualHold;
+      const manualHoldAmount = Math.min(netBeforeManualHold, Math.round(sObj.salaryHold * perDayVal));
+      holdAmount += manualHoldAmount;
     }
 
     const net = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);
@@ -1126,11 +1129,11 @@ export const StaffProfileScreen: React.FC = () => {
                   </div>
                 )}
 
-                {staff.salaryHold ? (
+                {staff.salaryHold && staff.salaryHold > 0 ? (
                   <div className="flex justify-between items-center px-2 py-1.5 text-rose-600 dark:text-rose-400 font-bold bg-rose-500/5 rounded-xl border border-rose-500/10">
                     <div className="flex items-center gap-1.5">
                       <span className="material-symbols-rounded text-sm select-none">lock</span>
-                      <span className="text-xs">Manual Hold: Active</span>
+                      <span className="text-xs">Manual Hold: Active ({staff.salaryHold} Days)</span>
                     </div>
                     <button
                       onClick={async (e) => {
@@ -1141,7 +1144,7 @@ export const StaffProfileScreen: React.FC = () => {
                           confirmText: 'Release'
                         });
                         if (confirmed) {
-                          updateStaff(staff.id, { salaryHold: false });
+                          updateStaff(staff.id, { salaryHold: 0 });
                         }
                       }}
                       className="px-2.5 py-1 bg-rose-600 hover:bg-rose-750 text-white font-black rounded-xl text-[9px] active:scale-95 transition-all cursor-pointer"
@@ -1153,19 +1156,15 @@ export const StaffProfileScreen: React.FC = () => {
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
-                      const confirmed = await confirm(`Are you sure you want to hold the salary for ${staff.name}? This will hold the payable salary for the current and subsequent months until released.`, {
-                        title: 'Hold Salary',
-                        type: 'warning',
-                        confirmText: 'Hold'
-                      });
-                      if (confirmed) {
-                        updateStaff(staff.id, { salaryHold: true });
-                      }
+                      const perDayVal = getEffectivePerDayRate(staff, profileCycle, settings.monthCalculation);
+                      const defaultHoldDays = Math.round(profileSalaryDetails.earned / perDayVal) || 30;
+                      setHoldDaysInput(String(defaultHoldDays));
+                      setIsHoldSalaryDialogOpen(true);
                     }}
                     className="w-full py-2 bg-rose-50/50 dark:bg-rose-950/10 hover:bg-rose-100/50 dark:hover:bg-rose-950/20 text-rose-600 dark:text-rose-400 font-bold border border-rose-200/50 dark:border-rose-900/30 rounded-xl text-xs active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <span className="material-symbols-rounded text-xs select-none">lock</span>
-                    Hold Salary
+                    Hold Salary (₹{netPayable.toLocaleString('en-IN')})
                   </button>
                 )}
                 
@@ -2178,6 +2177,64 @@ export const StaffProfileScreen: React.FC = () => {
               </div>
             );
           })()}
+        </CustomDialog>
+      )}
+
+      {isHoldSalaryDialogOpen && (
+        <CustomDialog
+          isOpen={isHoldSalaryDialogOpen}
+          onClose={() => setIsHoldSalaryDialogOpen(false)}
+          title={`Hold Salary - ${staff.name}`}
+          actions={
+            <>
+              <button
+                onClick={() => setIsHoldSalaryDialogOpen(false)}
+                className="px-4 py-2 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const days = parseInt(holdDaysInput, 10);
+                  if (isNaN(days) || days <= 0) {
+                    await alert('Please enter a valid number of days.', { type: 'warning' });
+                    return;
+                  }
+                  const maxDays = 31;
+                  if (days > maxDays) {
+                    await alert(`Number of days cannot exceed ${maxDays}.`, { type: 'warning' });
+                    return;
+                  }
+                  updateStaff(staff.id, { salaryHold: days });
+                  setIsHoldSalaryDialogOpen(false);
+                }}
+                className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm shadow-rose-500/10"
+              >
+                Confirm Hold
+              </button>
+            </>
+          }
+        >
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5 select-none">
+              <span className="text-[10px] font-bold text-app-text-secondary uppercase tracking-wider">
+                Days to Hold
+              </span>
+              <span className="text-xs text-app-text-secondary leading-normal">
+                Enter the number of days of salary to hold.
+              </span>
+            </div>
+            <input
+              type="number"
+              min={1}
+              max={31}
+              value={holdDaysInput}
+              onChange={(e) => setHoldDaysInput(e.target.value)}
+              className="w-full px-4 py-3 bg-app-bg border border-app-border rounded-xl text-sm text-app-text-primary font-bold focus:outline-none focus:border-primary no-spinners"
+              placeholder="e.g. 5"
+              autoFocus
+            />
+          </div>
         </CustomDialog>
       )}
 

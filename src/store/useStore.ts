@@ -38,7 +38,7 @@ export interface Staff {
   address?: string;
   profileImage?: string;
   releasedSalaryHold?: boolean;
-  salaryHold?: boolean;
+  salaryHold?: number;
 }
 
 export interface AttendanceRecord {

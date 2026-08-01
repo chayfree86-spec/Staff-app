@@ -91,9 +91,10 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
     }
   }
 
-  if (staff.salaryHold) {
+  if (staff.salaryHold && staff.salaryHold > 0) {
     const netBeforeManualHold = Math.max(0, earned - advanceAdjusted - deduction - holdAmount + releasedAmount);
-    holdAmount += netBeforeManualHold;
+    const manualHoldAmount = Math.min(netBeforeManualHold, Math.round(staff.salaryHold * perDayVal));
+    holdAmount += manualHoldAmount;
   }
 
   const netPayable = Math.max(0, earned - advanceAdjusted - deduction - holdAmount + releasedAmount);
