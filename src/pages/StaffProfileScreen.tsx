@@ -1162,7 +1162,10 @@ export const StaffProfileScreen: React.FC = () => {
                   <div className="flex justify-between items-center px-2 py-1.5 text-rose-600 dark:text-rose-400 font-bold bg-rose-500/5 rounded-xl border border-rose-500/10">
                     <div className="flex items-center gap-1.5">
                       <span className="material-symbols-rounded text-sm select-none">lock</span>
-                      <span className="text-xs">Manual Hold: Active ({getHoldDaysCount(staff.salaryHold, 30)} Days)</span>
+                      <span className="text-xs">
+                        Manual Hold: Active ({getHoldDaysCount(staff.salaryHold, 30)} Days
+                        {staff.salaryHoldMonth ? ` - ${format(parseISO(staff.salaryHoldMonth + '-01'), 'MMM yyyy')}` : ''})
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-black">₹{manualHoldAmount.toLocaleString('en-IN')}</span>
@@ -1175,7 +1178,7 @@ export const StaffProfileScreen: React.FC = () => {
                             confirmText: 'Release'
                           });
                           if (confirmed) {
-                            updateStaff(staff.id, { salaryHold: 0 });
+                            updateStaff(staff.id, { salaryHold: 0, salaryHoldMonth: null });
                           }
                         }}
                         className="px-2.5 py-1 bg-rose-600 hover:bg-rose-750 text-white font-black rounded-xl text-[9px] active:scale-95 transition-all cursor-pointer"
@@ -2237,7 +2240,7 @@ export const StaffProfileScreen: React.FC = () => {
                     await alert(`Number of days cannot exceed ${maxDays}.`, { type: 'warning' });
                     return;
                   }
-                  updateStaff(staff.id, { salaryHold: days });
+                  updateStaff(staff.id, { salaryHold: days, salaryHoldMonth: profileCycle.label });
                   setIsHoldSalaryDialogOpen(false);
                 }}
                 className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm shadow-rose-500/10"

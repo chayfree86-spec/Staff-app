@@ -56,6 +56,7 @@ function load_bootstrap_data(PDO $pdo, string $businessId): array
             'profileImage' => $row['profile_image_url'],
             'releasedSalaryHold' => (bool) $row['released_salary_hold'],
             'salaryHold' => (int) $row['salary_hold'],
+            'salaryHoldMonth' => $row['salary_hold_month'],
         ];
     }, $staffRows);
 

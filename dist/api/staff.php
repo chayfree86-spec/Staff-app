@@ -67,6 +67,7 @@ function staff_payload_from_input(array $input): array
         'deactivation_date' => $deactivationDate,
         'released_salary_hold' => !empty($staff['releasedSalaryHold']) ? 1 : 0,
         'salary_hold' => (int) ($staff['salaryHold'] ?? 0),
+        'salary_hold_month' => str_or_null($staff['salaryHoldMonth'] ?? null),
     ];
 }
 
@@ -80,8 +81,8 @@ if ($action === 'create') {
                 business_id, name, father_name, mobile, mobile2, address,
                 avatar_initials, profile_image_url, monthly_salary, per_day_salary,
                 salary_type, calculation_basis, joining_date, status, deactivation_date,
-                released_salary_hold, salary_hold, owner_user_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                released_salary_hold, salary_hold, salary_hold_month, owner_user_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $businessId,
@@ -101,6 +102,7 @@ if ($action === 'create') {
             $payload['deactivation_date'],
             $payload['released_salary_hold'],
             $payload['salary_hold'],
+            $payload['salary_hold_month'],
             $auth['user_id'],
         ]);
 
@@ -178,7 +180,7 @@ if ($action === 'update') {
             name = ?, father_name = ?, mobile = ?, mobile2 = ?, address = ?,
             avatar_initials = ?, profile_image_url = ?, monthly_salary = ?,
             per_day_salary = ?, salary_type = ?, calculation_basis = ?,
-            joining_date = ?, status = ?, deactivation_date = ?, released_salary_hold = ?, salary_hold = ?
+            joining_date = ?, status = ?, deactivation_date = ?, released_salary_hold = ?, salary_hold = ?, salary_hold_month = ?
          WHERE id = ? AND business_id = ?'
     );
     $stmt->execute([
@@ -198,6 +200,7 @@ if ($action === 'update') {
         $payload['deactivation_date'],
         $payload['released_salary_hold'],
         $payload['salary_hold'],
+        $payload['salary_hold_month'],
         $id,
         $businessId,
     ]);
