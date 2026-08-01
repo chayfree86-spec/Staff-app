@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { CustomDialog } from '../components/ui/CustomDialog';
 import { CustomSelect } from '../components/ui/CustomSelect';
@@ -27,6 +27,12 @@ export const SalaryScreen: React.FC = () => {
   } = useStore();
 
   const [selectedCycle, setSelectedCycle] = useState('Current Month');
+  const [hasManuallyChangedCycle, setHasManuallyChangedCycle] = useState(false);
+
+  const handleCycleChange = (val: string) => {
+    setSelectedCycle(val);
+    setHasManuallyChangedCycle(true);
+  };
   
   // Payout Modal states
   const [payoutStaffId, setPayoutStaffId] = useState<string | null>(null);
@@ -265,6 +271,31 @@ export const SalaryScreen: React.FC = () => {
     return { earned, advance: totalAdv, deduction, net, paid, due, holdAmount, releasedAmount };
   };
 
+  const pendingStaffCount = visibleStaff.filter(staff => {
+    const details = getSalaryDetails(staff.id, selectedYearMonth, selectedMonthLabel);
+    return details.due > 0;
+  }).length;
+
+  useEffect(() => {
+    if (hasManuallyChangedCycle || staffList.length === 0) return;
+
+    const hasPendingInPrevious = staffList.some(staff => {
+      const isStaffVisibleInPrev = staff.status === 'Active' || (
+        staff.status === 'Inactive' && staff.deactivationDate && staff.deactivationDate >= previousCycle.start && staff.deactivationDate <= previousCycle.end
+      );
+      if (!isStaffVisibleInPrev) return false;
+
+      const details = getSalaryDetails(staff.id, previousCycle.label, previousMonthLabel);
+      return details.due > 0;
+    });
+
+    if (hasPendingInPrevious) {
+      setSelectedCycle('Last Month');
+    } else {
+      setSelectedCycle('Current Month');
+    }
+  }, [staffList, attendance, advanceList, deductionList, payoutList, previousCycle.label, previousCycle.start, previousCycle.end, previousMonthLabel, hasManuallyChangedCycle]);
+
   const summaries = visibleStaff.reduce(
     (acc, staff) => {
       const details = getSalaryDetails(staff.id, selectedYearMonth, selectedMonthLabel);
@@ -360,13 +391,30 @@ export const SalaryScreen: React.FC = () => {
           <div className="bg-app-surface border border-app-border/40 rounded-[17px] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4 h-full justify-center">
             <CustomSelect
               value={selectedCycle}
-              onChange={setSelectedCycle}
+              onChange={handleCycleChange}
               options={[
                 { value: 'Current Month', label: currentMonthLabel },
-                { value: 'Last Month', label: 'Last Month' },
+                { value: 'Last Month', label: previousMonthLabel },
               ]}
               className="w-full"
             />
+            <div className="flex items-center gap-1.5 mt-1 select-none">
+              {pendingStaffCount > 0 ? (
+                <>
+                  <span className="material-symbols-rounded text-rose-500 text-base">pending_actions</span>
+                  <span className="text-[11px] text-rose-500 font-extrabold uppercase tracking-wider">
+                    {pendingStaffCount} staff salary not created yet
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-rounded text-emerald-500 text-base">check_circle</span>
+                  <span className="text-[11px] text-emerald-500 font-extrabold uppercase tracking-wider">
+                    All salaries created & settled
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
