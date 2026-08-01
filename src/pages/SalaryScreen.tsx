@@ -7,7 +7,7 @@ import { format, parseISO } from 'date-fns';
 import { useAlertConfirm } from '../components/ui/AlertConfirmProvider';
 import { SalarySlipModal } from '../components/SalarySlipModal';
 import { getProfileGradientStyle } from '../utils/gradient';
-import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel } from '../utils/salary';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary } from '../utils/salary';
 
 export const SalaryScreen: React.FC = () => {
   const { confirm } = useAlertConfirm();
@@ -93,9 +93,7 @@ export const SalaryScreen: React.FC = () => {
     const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
     const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
 
-    const earned = staff.calculationBasis === 'Fixed Salary' && staff.salaryType === 'Monthly'
-      ? staff.monthlySalary
-      : Math.round(totalDaysCredited * perDayVal);
+    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, joiningCycle, settings.monthCalculation);
 
     return Math.min(earned, Math.round(holdDays * perDayVal));
   };
@@ -207,9 +205,7 @@ export const SalaryScreen: React.FC = () => {
     const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
 
     // Earned salary based on calculation basis
-    const earned = staff.calculationBasis === 'Fixed Salary' && staff.salaryType === 'Monthly'
-      ? staff.monthlySalary
-      : Math.round(totalDaysCredited * perDayVal);
+    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, targetCycle, settings.monthCalculation);
 
     // 2. Outstanding Advance (adjusted/returned advances)
     const totalAdv = advanceList

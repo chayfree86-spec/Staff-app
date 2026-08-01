@@ -1,7 +1,7 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
-import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel } from '../utils/salary';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary } from '../utils/salary';
 
 interface SalarySlipModalProps {
   isOpen: boolean;
@@ -61,9 +61,7 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
   };
   const outstandingAdvance = getStaffOutstandingAdvance(staffId);
 
-  const earned = staff.calculationBasis === 'Fixed Salary' && staff.salaryType === 'Monthly'
-    ? staff.monthlySalary
-    : Math.round(totalDaysCredited * perDayVal);
+  const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, targetCycle, settings.monthCalculation);
 
   const advanceAdjusted = Math.abs(
     advanceList

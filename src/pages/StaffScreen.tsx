@@ -5,7 +5,7 @@ import { CustomSelect } from '../components/ui/CustomSelect';
 import { useAlertConfirm } from '../components/ui/AlertConfirmProvider';
 import { CustomDatePicker } from '../components/ui/CustomDatePicker';
 import { getProfileGradientStyle } from '../utils/gradient';
-import { getEffectivePerDayRate, getSalaryCycleForDate } from '../utils/salary';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getEarnedSalary } from '../utils/salary';
 
 export const StaffScreen: React.FC = () => {
   const {
@@ -63,7 +63,7 @@ export const StaffScreen: React.FC = () => {
     const perDayVal = getEffectivePerDayRate(staff, currentCycle, settings.monthCalculation);
     const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
     const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
-    return Math.round(totalDaysCredited * perDayVal);
+    return getEarnedSalary(staff, totalDaysCredited, perDayVal, currentCycle, settings.monthCalculation);
   };
 
   const handleAddStaff = async (e: React.FormEvent) => {

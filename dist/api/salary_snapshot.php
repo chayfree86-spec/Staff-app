@@ -56,9 +56,20 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
     $perDayVal = effective_per_day_rate($staff, $cycle, $monthCalculation);
     $monthlySalary = (int) $staff['monthly_salary'];
 
-    $earned = ($staff['calculation_basis'] === 'fixed_salary' && $staff['salary_type'] === 'monthly')
-        ? $monthlySalary
-        : (int) round($totalDaysCredited * $perDayVal);
+    if ($staff['calculation_basis'] === 'fixed_salary' && $staff['salary_type'] === 'monthly') {
+        $earned = $monthlySalary;
+    } elseif ($staff['salary_type'] === 'monthly' && $staff['calculation_basis'] === 'attendance_based' && $monthCalculation === 'fixed_30_days') {
+        if ($totalDaysCredited == 0) {
+            $earned = 0;
+        } else {
+            $daysInCycle = (int) ((strtotime($cycle['end']) - strtotime($cycle['start'])) / 86400) + 1;
+            $absentDays = $daysInCycle - $totalDaysCredited;
+            $earnedDays = max(0, 30 - $absentDays);
+            $earned = (int) round($earnedDays * $perDayVal);
+        }
+    } else {
+        $earned = (int) round($totalDaysCredited * $perDayVal);
+    }
 
     $stmt = $pdo->prepare(
         "SELECT COALESCE(SUM(amount), 0) FROM staff_transactions

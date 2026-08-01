@@ -111,3 +111,37 @@ export function getEffectivePerDayRate(
 
   return Math.round(staff.monthlySalary / days);
 }
+
+export function getEarnedSalary(
+  staff: {
+    monthlySalary: number;
+    perDaySalary: number;
+    salaryType: 'Monthly' | 'Daily';
+    calculationBasis: 'Attendance Based' | 'Fixed Salary';
+  },
+  totalDaysCredited: number,
+  perDayVal: number,
+  cycle: SalaryCycle,
+  monthCalculation: 'Actual Calendar Month' | 'Fixed 30 Days'
+): number {
+  if (staff.calculationBasis === 'Fixed Salary' && staff.salaryType === 'Monthly') {
+    return staff.monthlySalary;
+  }
+
+  if (
+    staff.salaryType === 'Monthly' &&
+    staff.calculationBasis === 'Attendance Based' &&
+    monthCalculation === 'Fixed 30 Days'
+  ) {
+    if (totalDaysCredited === 0) {
+      return 0;
+    }
+    const daysInCycle = daysBetweenInclusive(cycle.start, cycle.end);
+    const absentDays = daysInCycle - totalDaysCredited;
+    const earnedDays = Math.max(0, 30 - absentDays);
+    return Math.round(earnedDays * perDayVal);
+  }
+
+  return Math.round(totalDaysCredited * perDayVal);
+}
+

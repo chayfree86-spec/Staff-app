@@ -4,7 +4,7 @@ import { CustomSelect } from '../components/ui/CustomSelect';
 import { SalarySlipModal } from '../components/SalarySlipModal';
 import { format, parseISO } from 'date-fns';
 import { getProfileGradientStyle } from '../utils/gradient';
-import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel } from '../utils/salary';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary } from '../utils/salary';
 
 export const ReportsScreen: React.FC = () => {
   const {
@@ -93,9 +93,7 @@ export const ReportsScreen: React.FC = () => {
     const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
     const totalDaysCredited = daysPresent + (daysHalf * 0.5) + creditedHoliday;
 
-    const earned = staff.calculationBasis === 'Fixed Salary' && staff.salaryType === 'Monthly'
-      ? staff.monthlySalary
-      : Math.round(totalDaysCredited * perDayVal);
+    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, targetCycle, settings.monthCalculation);
 
     const advanceAdjusted = Math.abs(
       advanceList

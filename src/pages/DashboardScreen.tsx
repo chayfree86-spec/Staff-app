@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
 import { getProfileGradientStyle } from '../utils/gradient';
-import { getEffectivePerDayRate, getSalaryCycleForDate } from '../utils/salary';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getEarnedSalary } from '../utils/salary';
 import { listBusinessesRequest } from '../api/client';
 
 export const DashboardScreen: React.FC = () => {
@@ -64,7 +64,7 @@ export const DashboardScreen: React.FC = () => {
     const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
     const totalDaysCredited = daysPresent + daysHalf * 0.5 + creditedHoliday;
     const perDayVal = getEffectivePerDayRate(staff, currentCycle, settings.monthCalculation);
-    const earned = Math.round(totalDaysCredited * perDayVal);
+    const earned = getEarnedSalary(staff, totalDaysCredited, perDayVal, currentCycle, settings.monthCalculation);
 
     const totalAdv = advanceList
       .filter((a) => a.staffId === staffId && a.date >= currentCycle.start && a.date <= currentCycle.end)
