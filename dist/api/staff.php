@@ -66,7 +66,7 @@ function staff_payload_from_input(array $input): array
         'status' => $status,
         'deactivation_date' => $deactivationDate,
         'released_salary_hold' => !empty($staff['releasedSalaryHold']) ? 1 : 0,
-        'salary_hold' => !empty($staff['salaryHold']) ? 1 : 0,
+        'salary_hold' => (int) ($staff['salaryHold'] ?? 0),
     ];
 }
 

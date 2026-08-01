@@ -126,8 +126,7 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
     }
 
     if ((int) $staff['salary_hold'] > 0) {
-        $netBeforeManualHold = max(0, $earned - $advanceAdjusted - $deduction - $holdAmount + $releasedAmount);
-        $manualHoldAmount = min($netBeforeManualHold, (int) round((int) $staff['salary_hold'] * $perDayVal));
+        $manualHoldAmount = (int) round((int) $staff['salary_hold'] * $perDayVal);
         $holdAmount += $manualHoldAmount;
     } else {
         if ($existingHold > 0) {

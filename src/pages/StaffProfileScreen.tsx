@@ -7,7 +7,7 @@ import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'd
 import { useAlertConfirm } from '../components/ui/AlertConfirmProvider';
 import { SalarySlipModal } from '../components/SalarySlipModal';
 import { getProfileGradientStyle } from '../utils/gradient';
-import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary } from '../utils/salary';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary, getHoldDaysCount } from '../utils/salary';
 
 export const StaffProfileScreen: React.FC = () => {
   const { confirm, alert } = useAlertConfirm();
@@ -210,9 +210,9 @@ export const StaffProfileScreen: React.FC = () => {
       }
     }
 
-    if (sObj.salaryHold && sObj.salaryHold > 0) {
-      const netBeforeManualHold = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);
-      const manualHoldAmount = Math.min(netBeforeManualHold, Math.round(sObj.salaryHold * perDayVal));
+    const manualHoldDays = getHoldDaysCount(sObj.salaryHold, 30);
+    if (manualHoldDays > 0) {
+      const manualHoldAmount = Math.round(manualHoldDays * perDayVal);
       holdAmount += manualHoldAmount;
     }
 
@@ -478,10 +478,8 @@ export const StaffProfileScreen: React.FC = () => {
     }
   }
 
-  const netBeforeManualHold = Math.max(0, earnedSalary - totalAdvances - totalAdjusted - joiningHoldAmount + joiningReleasedAmount);
-  const manualHoldAmount = staff.salaryHold && staff.salaryHold > 0
-    ? Math.min(netBeforeManualHold, Math.round(staff.salaryHold * perDayVal))
-    : 0;
+  const manualHoldDays = getHoldDaysCount(staff.salaryHold, 30);
+  const manualHoldAmount = manualHoldDays > 0 ? Math.round(manualHoldDays * perDayVal) : 0;
 
   // Calendar helpers
   const isFutureMonth = (dateStr: string) => {
@@ -733,41 +731,6 @@ export const StaffProfileScreen: React.FC = () => {
             <span className={`w-1.5 h-1.5 rounded-full ${staff.status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'} shrink-0`} />
             <span>{staff.status === 'Active' ? 'Active' : 'Inactive'}</span>
           </button>
-
-          {/* Hold/Release Salary Toggle */}
-          {staff.salaryHold && staff.salaryHold > 0 ? (
-            <button
-              onClick={async () => {
-                const confirmed = await confirm(`Are you sure you want to release the manual salary hold for ${staff.name}?`, {
-                  title: 'Release Salary Hold',
-                  type: 'success',
-                  confirmText: 'Release'
-                });
-                if (confirmed) {
-                  updateStaff(staff.id, { salaryHold: 0 });
-                }
-              }}
-              className="px-3 py-2 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
-              title="Click to release held salary"
-            >
-              <span className="material-symbols-rounded select-none text-sm font-black">lock</span>
-              <span>Held ({staff.salaryHold}d)</span>
-            </button>
-          ) : (
-            <button
-              onClick={async () => {
-                const perDayVal = getEffectivePerDayRate(staff, profileCycle, settings.monthCalculation);
-                const defaultHoldDays = Math.round(profileSalaryDetails.earned / perDayVal) || 30;
-                setHoldDaysInput(String(defaultHoldDays));
-                setIsHoldSalaryDialogOpen(true);
-              }}
-              className="px-3 py-2 rounded-xl border border-app-border bg-app-surface text-app-text-secondary hover:text-rose-600 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
-              title="Click to hold salary"
-            >
-              <span className="material-symbols-rounded select-none text-sm">lock_open</span>
-              <span>Hold Salary</span>
-            </button>
-          )}
 
 
           {/* Update button */}
@@ -1195,11 +1158,11 @@ export const StaffProfileScreen: React.FC = () => {
                   </div>
                 )}
 
-                {staff.salaryHold && staff.salaryHold > 0 && (
+                {getHoldDaysCount(staff.salaryHold, 30) > 0 ? (
                   <div className="flex justify-between items-center px-2 py-1.5 text-rose-600 dark:text-rose-400 font-bold bg-rose-500/5 rounded-xl border border-rose-500/10">
                     <div className="flex items-center gap-1.5">
                       <span className="material-symbols-rounded text-sm select-none">lock</span>
-                      <span className="text-xs">Manual Hold: Active ({staff.salaryHold} Days)</span>
+                      <span className="text-xs">Manual Hold: Active ({getHoldDaysCount(staff.salaryHold, 30)} Days)</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-black">₹{manualHoldAmount.toLocaleString('en-IN')}</span>
@@ -1221,6 +1184,20 @@ export const StaffProfileScreen: React.FC = () => {
                       </button>
                     </div>
                   </div>
+                ) : (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const perDayVal = getEffectivePerDayRate(staff, profileCycle, settings.monthCalculation);
+                      const defaultHoldDays = Math.round(profileSalaryDetails.earned / perDayVal) || 30;
+                      setHoldDaysInput(String(defaultHoldDays));
+                      setIsHoldSalaryDialogOpen(true);
+                    }}
+                    className="w-full py-2 bg-app-surface text-app-text-secondary hover:text-rose-600 font-bold border border-app-border rounded-xl text-xs active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:border-rose-200/50 dark:hover:border-rose-900/30"
+                  >
+                    <span className="material-symbols-rounded text-xs select-none">lock_open</span>
+                    Hold Salary (₹{netPayable.toLocaleString('en-IN')})
+                  </button>
                 )}
                 
                 <div className="flex justify-between items-center bg-primary text-white p-3.5 rounded-xl shadow-sm mt-1">

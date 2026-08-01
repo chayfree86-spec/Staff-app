@@ -162,3 +162,14 @@ export function getEarnedSalary(
   return Math.round(totalDaysCredited * perDayVal);
 }
 
+export function getHoldDaysCount(salaryHoldVal: number | boolean | undefined, defaultDays: number = 30): number {
+  if (typeof salaryHoldVal === 'number') {
+    return salaryHoldVal;
+  }
+  if (salaryHoldVal === true) {
+    return defaultDays;
+  }
+  return 0;
+}
+
+

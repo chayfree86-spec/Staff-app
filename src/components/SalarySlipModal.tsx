@@ -1,7 +1,7 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
-import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary } from '../utils/salary';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary, getHoldDaysCount } from '../utils/salary';
 
 interface SalarySlipModalProps {
   isOpen: boolean;
@@ -91,9 +91,9 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
     }
   }
 
-  if (staff.salaryHold && staff.salaryHold > 0) {
-    const netBeforeManualHold = Math.max(0, earned - advanceAdjusted - deduction - holdAmount + releasedAmount);
-    const manualHoldAmount = Math.min(netBeforeManualHold, Math.round(staff.salaryHold * perDayVal));
+  const manualHoldDays = getHoldDaysCount(staff.salaryHold, 30);
+  if (manualHoldDays > 0) {
+    const manualHoldAmount = Math.round(manualHoldDays * perDayVal);
     holdAmount += manualHoldAmount;
   }
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
 import { getProfileGradientStyle } from '../utils/gradient';
-import { getEffectivePerDayRate, getSalaryCycleForDate, getEarnedSalary } from '../utils/salary';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getEarnedSalary, getHoldDaysCount } from '../utils/salary';
 import { listBusinessesRequest } from '../api/client';
 
 export const DashboardScreen: React.FC = () => {
@@ -91,9 +91,9 @@ export const DashboardScreen: React.FC = () => {
         }
       }
     }
-    if (staff.salaryHold && staff.salaryHold > 0) {
-      const netBeforeManualHold = Math.max(0, earned - totalAdv - deduction - holdAmount + releasedAmount);
-      const manualHoldAmount = Math.min(netBeforeManualHold, Math.round(staff.salaryHold * perDayVal));
+    const manualHoldDays = getHoldDaysCount(staff.salaryHold, 30);
+    if (manualHoldDays > 0) {
+      const manualHoldAmount = Math.round(manualHoldDays * perDayVal);
       holdAmount += manualHoldAmount;
     }
 
