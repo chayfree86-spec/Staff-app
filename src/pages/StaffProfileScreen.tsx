@@ -83,6 +83,7 @@ export const StaffProfileScreen: React.FC = () => {
   const [payoutError, setPayoutError] = useState('');
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [deactivationDateInput, setDeactivationDateInput] = useState(currentDate);
+  const [isDeactivateCalOpen, setIsDeactivateCalOpen] = useState(false);
 
   const getStaffOutstandingAdvance = (staffId: string) => {
     const staffAdvances = advanceList.filter((a) => a.staffId === staffId);
@@ -1506,6 +1507,7 @@ export const StaffProfileScreen: React.FC = () => {
         isOpen={isDeactivateModalOpen}
         onClose={() => setIsDeactivateModalOpen(false)}
         title={`Deactivate ${staff.name}`}
+        bodyClass={isDeactivateCalOpen ? 'max-h-[320px]' : 'max-h-[70vh]'}
         actions={
           <>
             <button
@@ -1532,7 +1534,9 @@ export const StaffProfileScreen: React.FC = () => {
             <CustomDatePicker
               value={deactivationDateInput}
               onChange={(val) => setDeactivationDateInput(val)}
+              onOpenChange={setIsDeactivateCalOpen}
               className="w-full"
+              inline
             />
           </div>
         </div>
