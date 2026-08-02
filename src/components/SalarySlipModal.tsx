@@ -41,6 +41,9 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
   Object.entries(attendance).forEach(([dateStr, record]) => {
     if (dateStr > currentDate) return;
     if (dateStr >= targetCycle.start && dateStr <= targetCycle.end && record[staffId]) {
+      if (staff.status === 'Inactive' && staff.deactivationDate && dateStr >= staff.deactivationDate) {
+        return;
+      }
       const status = record[staffId].status;
       if (status === 'Present')  presentDays++;
       if (status === 'Absent')   absentDays++;

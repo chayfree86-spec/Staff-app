@@ -81,6 +81,8 @@ export const StaffProfileScreen: React.FC = () => {
   const [advanceDeductType, setAdvanceDeductType] = useState<'none' | 'full' | 'custom'>('none');
   const [customAdvanceDeductAmount, setCustomAdvanceDeductAmount] = useState('');
   const [payoutError, setPayoutError] = useState('');
+  const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
+  const [deactivationDateInput, setDeactivationDateInput] = useState(currentDate);
 
   const getStaffOutstandingAdvance = (staffId: string) => {
     const staffAdvances = advanceList.filter((a) => a.staffId === staffId);
@@ -411,15 +413,17 @@ export const StaffProfileScreen: React.FC = () => {
   daysInMonth.forEach((day) => {
     const dateStr = format(day, 'yyyy-MM-dd');
     if (dateStr > currentDate) return;
-    const record = attendance[dateStr]?.[staff.id];
-    let status = record?.status || null;
-    if (!status && staff.status === 'Inactive' && staff.deactivationDate && dateStr >= staff.deactivationDate) {
-      status = 'Absent';
+    if (staff.status === 'Inactive' && staff.deactivationDate && dateStr >= staff.deactivationDate) {
+      absentDays++;
+      return;
     }
-    if (status === 'Present') presentDays++;
-    if (status === 'Absent') absentDays++;
-    if (status === 'Half Day') halfDays++;
-    if (status === 'Holiday') holidayDays++;
+    const record = attendance[dateStr]?.[staff.id];
+    if (record) {
+      if (record.status === 'Present') presentDays++;
+      if (record.status === 'Absent') absentDays++;
+      if (record.status === 'Half Day') halfDays++;
+      if (record.status === 'Holiday') holidayDays++;
+    }
   });
 
   // Note: presentDays/absentDays/halfDays/holidayDays above stay tied to the
@@ -540,7 +544,7 @@ export const StaffProfileScreen: React.FC = () => {
     const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
     const record = attendance[dStr]?.[staff.id];
     if (staff.status === 'Inactive' && staff.deactivationDate && dStr >= staff.deactivationDate) {
-      return record?.status || 'Absent';
+      return 'Absent';
     }
     return record?.status || null;
   };
@@ -618,6 +622,15 @@ export const StaffProfileScreen: React.FC = () => {
       calculationBasis: editBasis as 'Attendance Based' | 'Fixed Salary',
     });
     setIsEditModalOpen(false);
+  };
+
+  const handleDeactivateSubmit = () => {
+    updateStaff(staff.id, {
+      status: 'Inactive',
+      deactivationDate: deactivationDateInput,
+    });
+    markAttendance(deactivationDateInput, staff.id, 'Absent');
+    setIsDeactivateModalOpen(false);
   };
 
   const handleAddAdvance = (e: React.FormEvent) => {
@@ -713,23 +726,21 @@ export const StaffProfileScreen: React.FC = () => {
           <button
             onClick={async () => {
               const isDeactivating = staff.status === 'Active';
-              const message = isDeactivating
-                ? `Are you sure you want to deactivate ${staff.name}? Deactivating will automatically mark them as Absent for today.`
-                : `Are you sure you want to activate ${staff.name}?`;
-              
-              const confirmed = await confirm(message, {
-                title: isDeactivating ? 'Deactivate Staff' : 'Activate Staff',
-                type: isDeactivating ? 'danger' : 'success',
-                confirmText: isDeactivating ? 'Deactivate' : 'Activate',
-              });
-
-              if (confirmed) {
-                updateStaff(staff.id, {
-                  status: isDeactivating ? 'Inactive' : 'Active',
-                  deactivationDate: isDeactivating ? currentDate : undefined,
+              if (isDeactivating) {
+                setDeactivationDateInput(currentDate);
+                setIsDeactivateModalOpen(true);
+              } else {
+                const confirmed = await confirm(`Are you sure you want to activate ${staff.name}?`, {
+                  title: 'Activate Staff',
+                  type: 'success',
+                  confirmText: 'Activate',
                 });
-                if (isDeactivating) {
-                  markAttendance(currentDate, staff.id, 'Absent');
+
+                if (confirmed) {
+                  updateStaff(staff.id, {
+                    status: 'Active',
+                    deactivationDate: undefined,
+                  });
                 }
               }
             }}
@@ -1490,6 +1501,42 @@ export const StaffProfileScreen: React.FC = () => {
         </form>
       </CustomDialog>
 
+      {/* Deactivate Staff Modal */}
+      <CustomDialog
+        isOpen={isDeactivateModalOpen}
+        onClose={() => setIsDeactivateModalOpen(false)}
+        title={`Deactivate ${staff.name}`}
+        actions={
+          <>
+            <button
+              onClick={() => setIsDeactivateModalOpen(false)}
+              className="px-4 py-2 bg-app-bg border border-app-border text-app-text-secondary hover:text-app-text-primary rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeactivateSubmit}
+              className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm shadow-rose-500/10"
+            >
+              Deactivate
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4 text-left">
+          <p className="text-xs text-app-text-secondary leading-relaxed font-medium">
+            Please select the date on which you want to deactivate **{staff.name}**. Deactivating will automatically mark their attendance as **Absent** for this date and all subsequent days.
+          </p>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-app-text-secondary uppercase">Deactivation Date</label>
+            <CustomDatePicker
+              value={deactivationDateInput}
+              onChange={(val) => setDeactivationDateInput(val)}
+              className="w-full"
+            />
+          </div>
+        </div>
+      </CustomDialog>
 
       {/* Add Advance Modal */}
       <CustomDialog

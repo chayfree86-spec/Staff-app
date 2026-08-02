@@ -195,20 +195,7 @@ export function getDeactivatedAbsentDays(
   const start = new Date(sy, sm - 1, sd);
   const end = new Date(ey, em - 1, ed);
 
-  let unmarkedDays = 0;
-  const current = new Date(start);
-  while (current <= end) {
-    const yStr = current.getFullYear();
-    const mStr = String(current.getMonth() + 1).padStart(2, '0');
-    const dStr = String(current.getDate()).padStart(2, '0');
-    const dateKey = `${yStr}-${mStr}-${dStr}`;
-    const record = attendance[dateKey]?.[staff.id];
-    if (!record || record.status === 'Unmarked') {
-      unmarkedDays++;
-    }
-    current.setDate(current.getDate() + 1);
-  }
-  return unmarkedDays;
+  return Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
 }
 
 

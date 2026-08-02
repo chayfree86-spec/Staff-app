@@ -33,13 +33,18 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
 
     $cycle = salary_cycle_for_label($monthLabel, $cycleStartDay);
 
+    $countsEnd = $cycle['end'];
+    if ($staff['status'] === 'inactive' && $staff['deactivation_date'] && $staff['deactivation_date'] <= $cycle['end']) {
+        $countsEnd = date('Y-m-d', strtotime($staff['deactivation_date'] . ' - 1 day'));
+    }
+
     $stmt = $pdo->prepare(
         "SELECT status, COUNT(*) AS cnt FROM attendance_records
          WHERE business_id = ? AND staff_id = ? AND attendance_date BETWEEN ? AND ?
            AND attendance_date <= CURRENT_DATE()
          GROUP BY status"
     );
-    $stmt->execute([$businessId, $staffId, $cycle['start'], $cycle['end']]);
+    $stmt->execute([$businessId, $staffId, $cycle['start'], $countsEnd]);
     $counts = ['present' => 0, 'absent' => 0, 'half_day' => 0, 'holiday' => 0];
     foreach ($stmt->fetchAll() as $row) {
         if (isset($counts[$row['status']])) {
@@ -56,16 +61,8 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
         $today = date('Y-m-d');
         $deactEnd = min($today, $cycle['end']);
         if ($deactStart <= $deactEnd) {
-            $stmt = $pdo->prepare(
-                "SELECT COUNT(DISTINCT attendance_date) FROM attendance_records
-                 WHERE business_id = ? AND staff_id = ? AND attendance_date BETWEEN ? AND ?"
-            );
-            $stmt->execute([$businessId, $staffId, $deactStart, $deactEnd]);
-            $markedDays = (int) $stmt->fetchColumn();
-            
             $totalDeactDays = (int) round((strtotime($deactEnd) - strtotime($deactStart)) / 86400) + 1;
-            $unmarkedDeactDays = max(0, $totalDeactDays - $markedDays);
-            $absentDays += $unmarkedDeactDays;
+            $absentDays += $totalDeactDays;
         }
     }
 
