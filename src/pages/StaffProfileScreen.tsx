@@ -7,7 +7,7 @@ import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'd
 import { useAlertConfirm } from '../components/ui/AlertConfirmProvider';
 import { SalarySlipModal } from '../components/SalarySlipModal';
 import { getProfileGradientStyle } from '../utils/gradient';
-import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary, getHoldDaysCount } from '../utils/salary';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary, getHoldDaysCount, getDeactivatedAbsentDays } from '../utils/salary';
 
 export const StaffProfileScreen: React.FC = () => {
   const { confirm, alert } = useAlertConfirm();
@@ -412,12 +412,14 @@ export const StaffProfileScreen: React.FC = () => {
     const dateStr = format(day, 'yyyy-MM-dd');
     if (dateStr > currentDate) return;
     const record = attendance[dateStr]?.[staff.id];
-    if (record) {
-      if (record.status === 'Present') presentDays++;
-      if (record.status === 'Absent') absentDays++;
-      if (record.status === 'Half Day') halfDays++;
-      if (record.status === 'Holiday') holidayDays++;
+    let status = record?.status || null;
+    if (!status && staff.status === 'Inactive' && staff.deactivationDate && dateStr >= staff.deactivationDate) {
+      status = 'Absent';
     }
+    if (status === 'Present') presentDays++;
+    if (status === 'Absent') absentDays++;
+    if (status === 'Half Day') halfDays++;
+    if (status === 'Holiday') holidayDays++;
   });
 
   // Note: presentDays/absentDays/halfDays/holidayDays above stay tied to the
@@ -513,6 +515,12 @@ export const StaffProfileScreen: React.FC = () => {
     return dStr === staff.joiningDate;
   };
 
+  const isDeactivationDate = (dayNum: number) => {
+    if (staff.status !== 'Inactive' || !staff.deactivationDate) return false;
+    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+    return dStr === staff.deactivationDate;
+  };
+
   const daysInMonthCount = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 = Sunday, 1 = Monday
   const firstDayIndex = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // Align to M, T, W, T, F, S, S
@@ -531,6 +539,9 @@ export const StaffProfileScreen: React.FC = () => {
   const getDayDetails = (dayNum: number) => {
     const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
     const record = attendance[dStr]?.[staff.id];
+    if (staff.status === 'Inactive' && staff.deactivationDate && dStr >= staff.deactivationDate) {
+      return record?.status || 'Absent';
+    }
     return record?.status || null;
   };
 
@@ -917,7 +928,6 @@ export const StaffProfileScreen: React.FC = () => {
                   <div>S</div>
                 </div>
 
-                {/* Grid cells */}
                 <div className="grid grid-cols-7 gap-2 pt-2">
                   {calendarDays.map((dayNum, idx) => {
                     if (dayNum === null) {
@@ -932,6 +942,7 @@ export const StaffProfileScreen: React.FC = () => {
                     const status = getDayDetails(dayNum);
                     const isFuture = isFutureDay(dayNum);
                     const isJoinDay = isJoiningDate(dayNum);
+                    const isDeactDay = isDeactivationDate(dayNum);
                     
                     return (
                       <div
@@ -947,12 +958,19 @@ export const StaffProfileScreen: React.FC = () => {
                           'border-app-border bg-app-bg text-app-text-secondary active:scale-95 cursor-pointer'
                         }`}
                       >
-                        <span className={isJoinDay ? 'mt-0.5' : ''}>{dayNum}</span>
+                        <span className={(isJoinDay || isDeactDay) ? 'mt-0.5' : ''}>{dayNum}</span>
                         {isJoinDay && (
                           <span className={`text-[7px] font-black uppercase tracking-tighter mt-0.5 leading-none ${
                             status ? 'text-white/90' : 'text-primary'
                           }`}>
                             Join
+                          </span>
+                        )}
+                        {isDeactDay && (
+                          <span className={`text-[7px] font-black uppercase tracking-tighter mt-0.5 leading-none ${
+                            status ? 'text-white/90' : 'text-rose-500'
+                          }`}>
+                            Inactive
                           </span>
                         )}
                       </div>

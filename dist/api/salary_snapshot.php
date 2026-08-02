@@ -50,6 +50,25 @@ function recompute_salary_slip_snapshot(PDO $pdo, string $businessId, int $staff
     $absentDays = $counts['absent'];
     $halfDays = $counts['half_day'];
     $holidayDays = $counts['holiday'];
+
+    if ($staff['status'] === 'inactive' && $staff['deactivation_date']) {
+        $deactStart = max($staff['deactivation_date'], $cycle['start']);
+        $today = date('Y-m-d');
+        $deactEnd = min($today, $cycle['end']);
+        if ($deactStart <= $deactEnd) {
+            $stmt = $pdo->prepare(
+                "SELECT COUNT(DISTINCT attendance_date) FROM attendance_records
+                 WHERE business_id = ? AND staff_id = ? AND attendance_date BETWEEN ? AND ?"
+            );
+            $stmt->execute([$businessId, $staffId, $deactStart, $deactEnd]);
+            $markedDays = (int) $stmt->fetchColumn();
+            
+            $totalDeactDays = (int) round((strtotime($deactEnd) - strtotime($deactStart)) / 86400) + 1;
+            $unmarkedDeactDays = max(0, $totalDeactDays - $markedDays);
+            $absentDays += $unmarkedDeactDays;
+        }
+    }
+
     $creditedHolidayDays = $isHolidayPaid ? $holidayDays : 0;
     $totalDaysCredited = $presentDays + ($halfDays * 0.5) + $creditedHolidayDays;
 

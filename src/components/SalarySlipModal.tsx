@@ -1,7 +1,7 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
 import { format, parseISO } from 'date-fns';
-import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary, getHoldDaysCount } from '../utils/salary';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary, getHoldDaysCount, getDeactivatedAbsentDays } from '../utils/salary';
 
 interface SalarySlipModalProps {
   isOpen: boolean;
@@ -48,6 +48,9 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
       if (status === 'Holiday')  holidayDays++;
     }
   });
+
+  const defaultAbsentDays = getDeactivatedAbsentDays(staff, targetCycle, attendance, currentDate);
+  absentDays += defaultAbsentDays;
 
   const creditedHolidayDays = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : holidayDays;
   const totalDaysCredited = presentDays + (halfDays * 0.5) + creditedHolidayDays;
@@ -317,7 +320,10 @@ export const SalarySlipModal: React.FC<SalarySlipModalProps> = ({ isOpen, onClos
           if (dayNum >= 1 && dayNum <= totalCalDays) {
             const dateStr = `${cycleYear}-${String(cycleMonthIdx).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
             const attRecord = attendance[dateStr]?.[staffId];
-            const status = attRecord?.status;
+            let status = attRecord?.status;
+            if (!status && staff.status === 'Inactive' && staff.deactivationDate && dateStr >= staff.deactivationDate) {
+              status = 'Absent';
+            }
 
             let bgColor = WHITE;
             let numColor = '#64748B';

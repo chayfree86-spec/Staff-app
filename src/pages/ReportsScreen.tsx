@@ -4,7 +4,7 @@ import { CustomSelect } from '../components/ui/CustomSelect';
 import { SalarySlipModal } from '../components/SalarySlipModal';
 import { format, parseISO } from 'date-fns';
 import { getProfileGradientStyle } from '../utils/gradient';
-import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary, getHoldDaysCount } from '../utils/salary';
+import { getEffectivePerDayRate, getSalaryCycleForDate, getSalaryCycleForLabel, getEarnedSalary, getHoldDaysCount, getDeactivatedAbsentDays } from '../utils/salary';
 
 export const ReportsScreen: React.FC = () => {
   const {
@@ -88,6 +88,9 @@ export const ReportsScreen: React.FC = () => {
         if (status === 'Holiday') daysHoliday++;
       }
     });
+
+    const defaultAbsentDays = getDeactivatedAbsentDays(staff, targetCycle, attendance, currentDate);
+    daysAbsent += defaultAbsentDays;
 
     const perDayVal = getEffectivePerDayRate(staff, targetCycle, settings.monthCalculation);
     const creditedHoliday = settings.weeklyHolidayPaid === 'Unpaid' ? 0 : daysHoliday;
